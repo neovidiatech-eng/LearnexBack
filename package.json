@@ -1,0 +1,54 @@
+{
+  "name": "learnx",
+  "version": "1.0.0",
+  "description": "LearnX LMS Backend",
+  "main": "./src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node ./src/index.js",
+    "dev": "node --watch ./src/index.js",
+    "prisma:generate": "prisma generate --schema=./prisma",
+    "prisma:migrate": "prisma migrate dev --schema=./prisma",
+    "prisma:studio": "prisma studio --schema=./prisma",
+    "seed": "node prisma/seed.js",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:build": "docker compose build",
+    "docker:logs": "docker compose logs -f",
+    "docker:restart": "docker compose restart"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "crypto-js": "^4.2.0",
+    "dotenv": "^17.4.2",
+    "exceljs": "^4.4.0",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "google-auth-library": "^11.0.2",
+    "helmet": "^8.3.0",
+    "i18next": "^26.4.2",
+    "i18next-fs-backend": "^2.6.8",
+    "i18next-http-middleware": "^3.9.9",
+    "ioredis": "^6.0.0",
+    "joi": "^18.2.5",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.4.0",
+    "nanoid": "^6.0.1",
+    "nodemailer": "^9.0.6",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "prisma": "^6.19.3"
+  },
+  "prisma": {
+    "schema": "./prisma",
+    "seed": "node prisma/seed.js"
+  }
+}

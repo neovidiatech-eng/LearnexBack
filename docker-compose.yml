@@ -1,0 +1,80 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: learnx_app
+    restart: unless-stopped
+    ports:
+      - "3015:3015"
+    env_file:
+      - .env
+    environment:
+      - PORT=3015
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-learnx_db}:${POSTGRES_PASSWORD:-LearnX_Secret_DB_Pass_2026!}@postgres:5432/${POSTGRES_DB:-learnx_db}?schema=public
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - learnx_network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: learnx_postgres
+    restart: unless-stopped
+    ports:
+      - "5435:5432"
+    env_file:
+      - .env
+    volumes:
+      - learnx_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-learnx_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - learnx_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: learnx_redis
+    restart: unless-stopped
+    ports:
+      - "6394:6379"
+    volumes:
+      - learnx_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - learnx_network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: learnx_pgadmin
+    restart: unless-stopped
+    ports:
+      - "5056:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@learnx.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin123}
+    depends_on:
+      - postgres
+    networks:
+      - learnx_network
+
+volumes:
+  learnx_pgdata:
+    driver: local
+  learnx_redisdata:
+    driver: local
+
+networks:
+  learnx_network:
+    driver: bridge

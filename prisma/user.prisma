@@ -1,0 +1,59 @@
+model User {
+  id              String    @id @default(uuid())
+  email           String    @unique
+  password        String?
+  firstName       String
+  lastName        String
+  phone           String?   @unique
+  country         String?
+  profilePhoto    String?
+  provider        String    @default("SYSTEM")
+  status          String    @default("ACTIVE")
+  confirmEmail    DateTime?
+  confirmEmailOtp String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  roleId          String?
+  role            Role?     @relation(fields: [roleId], references: [id], onDelete: SetNull)
+
+  student           Student?
+  teacher           Teacher?
+
+  courses           Course[]           @relation("TutorCourses")
+  courseEnrollments CourseEnrollment[] @relation("StudentEnrollments")
+  courseReviews     CourseReview[]     @relation("StudentCourseReviews")
+
+  @@index([roleId])
+  @@index([status])
+  @@index([email])
+  @@map("users")
+}
+
+model Student {
+  id          String    @id @default(uuid())
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dateOfBirth DateTime?
+  notes       String?   @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("students")
+}
+
+model Teacher {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject         String
+  experienceYears Int      @default(0)
+  bio             String?  @db.Text
+  linkedinUrl     String?
+  cvUrl           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@map("teachers")
+}

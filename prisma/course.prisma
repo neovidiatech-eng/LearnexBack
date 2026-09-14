@@ -1,0 +1,166 @@
+model Category {
+  id            String                @id @default(uuid())
+  slug          String                @unique
+  image         String?
+  coursesCount  Int                   @default(0)
+  studentsCount Int                   @default(0)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  courses       Course[]
+  translations  CategoryTranslation[]
+
+  @@map("categories")
+}
+
+model CategoryTranslation {
+  id          String   @id @default(uuid())
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  locale      String //ar en fr
+  name        String
+  description String   @db.Text
+
+  @@unique([categoryId, locale])
+  @@unique([name, locale])
+  @@map("category_translations")
+}
+
+model Course {
+  id                 String              @id @default(uuid())
+  thumbnail          String?
+  previewVideoUrl    String?
+  level              String              @default("BEGINNER")
+  status             String              @default("DRAFT")
+  enrollmentType     String              @default("PAID")
+  language           String              @default("english")
+  originalPrice      Decimal             @default(0.0) @db.Decimal(10, 2)
+  salePrice          Decimal?            @db.Decimal(10, 2)
+  currency           String              @default("USD")
+  durationHours      Int                 @default(0)
+  totalLessonsCount  Int                 @default(0)
+  totalStudentsCount Int                 @default(0)
+  totalRevenue       Decimal             @default(0.0) @db.Decimal(12, 2)
+  avgRating          Decimal             @default(0.0) @db.Decimal(3, 2)
+  reviewsCount       Int                 @default(0)
+  completionRate     Decimal             @default(0.0) @db.Decimal(5, 2)
+  tags               String[]            @default([])
+  hasCertificate     Boolean             @default(true)
+  scheduledAt        DateTime?
+  categoryId         String
+  category           Category            @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  instructorId       String
+  instructor         User                @relation("TutorCourses", fields: [instructorId], references: [id], onDelete: Restrict)
+  sections           CourseSection[]
+  enrollments        CourseEnrollment[]
+  reviews            CourseReview[]
+  translations       CourseTranslation[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@index([categoryId])
+  @@index([instructorId])
+  @@index([status])
+  @@map("courses")
+}
+
+model CourseTranslation {
+  id               String   @id @default(uuid())
+  courseId         String
+  course           Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  locale           String //ar en fr
+  title            String
+  whatYouWillLearn String[] @default([])
+  requirements     String[] @default([])
+  description      String   @db.Text
+
+  @@unique([courseId, locale])
+  @@map("course_translations")
+}
+
+model CourseSection {
+  id           String                     @id @default(uuid())
+  order        Int                        @default(1)
+  courseId     String
+  course       Course                     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons      CourseLesson[]
+  translations CourseSectionTranslation[]
+  createdAt    DateTime                   @default(now())
+  updatedAt    DateTime                   @updatedAt
+
+  @@index([courseId])
+  @@map("course_sections")
+}
+
+model CourseSectionTranslation {
+  id        String        @id @default(uuid())
+  sectionId String
+  section   CourseSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  locale    String //ar en fr
+  title     String
+
+  @@unique([sectionId, locale])
+  @@map("course_section_translations")
+}
+
+model CourseLesson {
+  id              String                    @id @default(uuid())
+  durationMinutes Int                       @default(0)
+  type            String                    @default("VIDEO")
+  contentUrl      String?
+  isFreePreview   Boolean                   @default(false)
+  order           Int                       @default(1)
+  sectionId       String
+  section         CourseSection             @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  translations    CourseLessonTranslation[]
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+
+  @@index([sectionId])
+  @@map("course_lessons")
+}
+
+model CourseLessonTranslation {
+  id          String       @id @default(uuid())
+  lessonId    String
+  lesson      CourseLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  locale      String //ar en fr
+  title       String
+  description String?      @db.Text
+
+  @@unique([lessonId, locale])
+  @@map("course_lesson_translations")
+}
+
+model CourseEnrollment {
+  id              String    @id @default(uuid())
+  studentId       String
+  student         User      @relation("StudentEnrollments", fields: [studentId], references: [id], onDelete: Cascade)
+  courseId        String
+  course          Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  status          String    @default("ACTIVE")
+  progressPercent Decimal   @default(0.0) @db.Decimal(5, 2)
+  paidAmount      Decimal   @default(0.0) @db.Decimal(10, 2)
+  enrolledAt      DateTime  @default(now())
+  completedAt     DateTime?
+
+  @@unique([studentId, courseId])
+  @@index([courseId])
+  @@index([studentId])
+  @@map("course_enrollments")
+}
+
+model CourseReview {
+  id        String   @id @default(uuid())
+  rating    Int
+  comment   String   @db.Text
+  studentId String
+  student   User     @relation("StudentCourseReviews", fields: [studentId], references: [id], onDelete: Cascade)
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, courseId])
+  @@index([courseId])
+  @@map("course_reviews")
+}
