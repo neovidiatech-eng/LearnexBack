@@ -1,10 +1,12 @@
 import * as DBService from "../../../db/db.service.js";
-import { getFileUrl } from "../../../utils/multer/file.utils.js";
+import { deleteFile } from "../../../utils/multer/file.utils.js";
 
-export const getAllCategoriesService = async (
-  { page = 1, limit = 10, search = "", locale = "en" } = {},
-  req = null
-) => {
+export const getAllCategoriesService = async ({
+  page = 1,
+  limit = 10,
+  search = "",
+  locale = "en",
+} = {}) => {
   const where = {
     ...(search
       ? {
@@ -62,18 +64,13 @@ export const getAllCategoriesService = async (
     select,
   });
 
-  const formattedCategories = result.items.map((cat) => ({
-    ...cat,
-    image: getFileUrl(cat.image, req),
-  }));
-
   return {
-    categories: formattedCategories,
+    categories: result.items,
     pagination: result.pagination,
   };
 };
 
-export const getCategoryByIdService = async (categoryId, locale, req = null) => {
+export const getCategoryByIdService = async (categoryId, locale) => {
   const category = await DBService.findFirst({
     model: "category",
     where: { id: categoryId },
@@ -107,12 +104,10 @@ export const getCategoryByIdService = async (categoryId, locale, req = null) => 
     throw error;
   }
 
-  category.image = getFileUrl(category.image, req);
-
   return { category };
 };
 
-export const createCategoryService = async (body, file, query = {}, req = null) => {
+export const createCategoryService = async (body, file, query = {}) => {
   const { name, description, locale = "en" } = body;
   const slug = (
     body.slug ||
@@ -123,12 +118,12 @@ export const createCategoryService = async (body, file, query = {}, req = null) 
       .replace(/^-+|-+$/g, "")
   ).trim();
 
-  const existingCategory = await DBService.findFirst({
-    model: "category",
-    where: { slug },
-  });
-
-  if (existingCategory) {
+  if (
+    await DBService.findFirst({
+      model: "category",
+      where: { slug },
+    })
+  ) {
     const error = new Error("SLUG_ALREADY_EXISTS");
     error.cause = 409;
     throw error;
@@ -155,16 +150,13 @@ export const createCategoryService = async (body, file, query = {}, req = null) 
     },
   });
 
-  category.image = getFileUrl(category.image, req);
-
   return { category };
 };
 
 export const editCategoryService = async (
   categoryId,
-  { name, description, slug, locale = "en" },
-  file,
-  req = null
+  { name, description, locale = "en" },
+  file
 ) => {
   const categoryExists = await DBService.findFirst({
     model: "category",
@@ -177,64 +169,44 @@ export const editCategoryService = async (
     throw error;
   }
 
-  if (slug && slug !== categoryExists.slug) {
-    const slugConflict = await DBService.findFirst({
-      model: "category",
-      where: { slug, NOT: { id: categoryId } },
-    });
-    if (slugConflict) {
-      const error = new Error("SLUG_ALREADY_IN_USE");
-      error.cause = 409;
-      throw error;
-    }
-  }
-
-  const updateData = {};
-  if (slug !== undefined) updateData.slug = slug;
-  if (file) updateData.image = file.relativeDestination;
-
-  if (Object.keys(updateData).length > 0) {
-    await DBService.updateOne({
-      model: "category",
-      where: { id: categoryId },
-      data: updateData,
-    });
-  }
-
-  if (name !== undefined || description !== undefined) {
-    await DBService.upsert({
-      model: "categoryTranslation",
-      where: {
-        categoryId_locale: {
-          categoryId,
-          locale,
-        },
-      },
-      update: {
-        ...(name !== undefined ? { name } : {}),
-        ...(description !== undefined ? { description } : {}),
-      },
-      create: {
-        categoryId,
-        locale,
-        name: name || "",
-        description: description || "",
-      },
-    });
-  }
-
-  const updatedCategory = await DBService.findFirst({
+  const updatedCategory = await DBService.updateOne({
     model: "category",
     where: { id: categoryId },
+    data: {
+      ...(file && {
+        image: file.relativeDestination,
+      }),
+
+      translations: {
+        update: {
+          where: {
+            categoryId_locale: {
+              categoryId,
+              locale,
+            },
+          },
+          data: {
+            ...(name !== undefined && { name }),
+            ...(description !== undefined && { description }),
+          },
+        },
+      },
+    },
     include: {
       translations: true,
     },
   });
 
-  updatedCategory.image = getFileUrl(updatedCategory.image, req);
+  if (file && categoryExists.image) {
+    deleteFile(categoryExists.image);
+  }
 
-  return { category: updatedCategory };
+  return {
+    category: updatedCategory,
+  };
 };
+;
+
 
 export const deleteCategoryService = async (categoryId) => {
   const categoryExists = await DBService.findFirst({
@@ -246,6 +218,10 @@ export const deleteCategoryService = async (categoryId) => {
     const error = new Error("CATEGORY_NOT_FOUND");
     error.cause = 404;
     throw error;
+  }
+
+  if (categoryExists.image) {
+    deleteFile(categoryExists.image);
   }
 
   await DBService.deleteOne({

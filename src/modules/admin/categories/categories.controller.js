@@ -2,7 +2,7 @@ import * as categoriesService from "./categories.service.js";
 import { asyncHandler, successResponse } from "../../../utils/response.js";
 
 export const getAllCategories = asyncHandler(async (req, res) => {
-  const result = await categoriesService.getAllCategoriesService(req.query, req);
+  const result = await categoriesService.getAllCategoriesService(req.query);
   return successResponse({
     res,
     message: "CATEGORIES_FETCHED_SUCCESSFULLY",
@@ -14,7 +14,6 @@ export const getCategoryById = asyncHandler(async (req, res) => {
   const result = await categoriesService.getCategoryByIdService(
     req.params.categoryId,
     req.query.locale,
-    req
   );
   return successResponse({
     res,
@@ -28,7 +27,6 @@ export const createCategory = asyncHandler(async (req, res) => {
     req.body,
     req.file,
     req.query,
-    req
   );
   return successResponse({
     res,
@@ -43,7 +41,6 @@ export const editCategory = asyncHandler(async (req, res) => {
     req.params.categoryId,
     req.body,
     req.file,
-    req
   );
   return successResponse({
     res,
