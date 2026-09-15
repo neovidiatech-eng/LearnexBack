@@ -1,7 +1,7 @@
 import "dotenv/config";
 import express from "express";
 
-import { seedAdmin } from "./db/seed.db.js";
+
 import { setupSwagger } from "./config/swagger.js";
 import authRouter from "./modules/auth/auth.routes.js";
 import adminAuthRouter from "./modules/admin/auth/auth.routes.js";
@@ -17,8 +17,7 @@ const bootstrap = async () => {
   const app = express();
   const port = process.env.PORT || 3000;
 
-  // Seed default data
-  await seedAdmin();
+
 
   app.use(express.json());
   app.use("/uploads", express.static(path.resolve("./uploads")));
