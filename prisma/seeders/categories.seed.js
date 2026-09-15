@@ -1,6 +1,3 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
-
 const categoriesData = [
   {
     slug: "web-development",
@@ -39,7 +36,7 @@ const categoriesData = [
   },
 ];
 
-async function seedCategories() {
+export async function seedCategories(prisma) {
   console.log("🌱 Seeding categories...");
 
   const categories = [];
@@ -49,9 +46,7 @@ async function seedCategories() {
       update: {},
       create: {
         slug: cat.slug,
-        translations: {
-          create: cat.translations,
-        },
+        translations: { create: cat.translations },
       },
       include: { translations: true },
     });
@@ -61,5 +56,3 @@ async function seedCategories() {
   console.log(`✅ Seeded ${categories.length} categories`);
   return categories;
 }
-
-module.exports = { seedCategories };

@@ -1,25 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
-
 const rolesData = [
-  {
-    name: "ADMIN",
-    description: "Full system access",
-    isSystem: true,
-  },
-  {
-    name: "TEACHER",
-    description: "Can create and manage courses",
-    isSystem: true,
-  },
-  {
-    name: "STUDENT",
-    description: "Can enroll in courses",
-    isSystem: true,
-  },
+  { name: "ADMIN", description: "Full system access", isSystem: true },
+  { name: "TEACHER", description: "Can create and manage courses", isSystem: true },
+  { name: "STUDENT", description: "Can enroll in courses", isSystem: true },
 ];
 
-async function seedRoles() {
+export async function seedRoles(prisma) {
   console.log("🌱 Seeding roles...");
 
   const roles = [];
@@ -35,5 +20,3 @@ async function seedRoles() {
   console.log(`✅ Seeded ${roles.length} roles`);
   return roles;
 }
-
-module.exports = { seedRoles };
