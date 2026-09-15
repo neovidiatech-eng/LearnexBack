@@ -1,4 +1,6 @@
-import prisma from "./connection.db.js";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 const getClient = (model, prismaClient = prisma) => {
   const client = prismaClient[model];
