@@ -1,7 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
-
-async function seedEnrollments(students, courses) {
+export async function seedEnrollments(prisma, students, courses) {
   console.log("🌱 Seeding enrollments...");
 
   // Each student enrolls in specific courses
@@ -50,5 +47,3 @@ async function seedEnrollments(students, courses) {
   console.log(`✅ Seeded ${enrollments.length} enrollments`);
   return enrollments;
 }
-
-module.exports = { seedEnrollments };

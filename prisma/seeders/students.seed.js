@@ -1,6 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
-const bcrypt = require("bcryptjs");
-const prisma = new PrismaClient();
+import bcrypt from "bcryptjs";
 
 const studentsData = [
   {
@@ -50,7 +48,7 @@ const studentsData = [
   },
 ];
 
-async function seedStudents(roles) {
+export async function seedStudents(prisma, roles) {
   console.log("🌱 Seeding students...");
 
   const studentRole = roles.find((r) => r.name === "STUDENT");
@@ -86,5 +84,3 @@ async function seedStudents(roles) {
   console.log(`✅ Seeded ${students.length} students`);
   return students;
 }
-
-module.exports = { seedStudents };

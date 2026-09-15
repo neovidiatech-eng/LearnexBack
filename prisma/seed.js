@@ -1,12 +1,12 @@
-const { PrismaClient } = require("@prisma/client");
-const { seedRoles } = require("./seeders/roles.seed");
-const { seedPermissions } = require("./seeders/permission.seed");
-const { seedAdmin } = require("./seeders/admin.seed");
-const { seedCategories } = require("./seeders/categories.seed");
-const { seedTeachers } = require("./seeders/teachers.seed");
-const { seedStudents } = require("./seeders/students.seed");
-const { seedCourses } = require("./seeders/courses.seed");
-const { seedEnrollments } = require("./seeders/enrollments.seed");
+import { PrismaClient } from "@prisma/client";
+import { seedRoles } from "./seeders/roles.seed.js";
+import { seedPermissions } from "./seeders/permission.seed.js";
+import { seedAdmin } from "./seeders/admin.seed.js";
+import { seedCategories } from "./seeders/categories.seed.js";
+import { seedTeachers } from "./seeders/teachers.seed.js";
+import { seedStudents } from "./seeders/students.seed.js";
+import { seedCourses } from "./seeders/courses.seed.js";
+import { seedEnrollments } from "./seeders/enrollments.seed.js";
 
 const prisma = new PrismaClient();
 
@@ -14,28 +14,28 @@ async function main() {
   console.log("🚀 Starting database seeding...\n");
 
   // 1. Roles (no dependencies)
-  const roles = await seedRoles();
+  const roles = await seedRoles(prisma);
 
   // 2. Permissions + assign to roles (depends on roles)
-  await seedPermissions(roles);
+  await seedPermissions(prisma, roles);
 
   // 3. Admin (independent)
-  await seedAdmin();
+  await seedAdmin(prisma);
 
   // 4. Categories (independent)
-  const categories = await seedCategories();
+  const categories = await seedCategories(prisma);
 
   // 5. Teachers (depends on roles)
-  const teachers = await seedTeachers(roles);
+  const teachers = await seedTeachers(prisma, roles);
 
   // 6. Students (depends on roles)
-  const students = await seedStudents(roles);
+  const students = await seedStudents(prisma, roles);
 
   // 7. Courses (depends on teachers + categories)
-  const courses = await seedCourses(teachers, categories);
+  const courses = await seedCourses(prisma, teachers, categories);
 
   // 8. Enrollments (depends on students + courses)
-  await seedEnrollments(students, courses);
+  await seedEnrollments(prisma, students, courses);
 
   console.log("\n✅ Database seeding completed successfully!");
 }
