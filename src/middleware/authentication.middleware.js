@@ -1,11 +1,11 @@
 import { asyncHandler } from "../utils/response.js";
 import {
   decodedToken,
-  tokenTypeEnum,
+  
 } from "../utils/security/token.security.js";
-
+import { tokenTypeEnum } from "../utils/Enums/token.enum.js";
 export const authentication = ({
-  tokenType = tokenTypeEnum.access,
+  tokenType = tokenTypeEnum.ACCESS,
 } = {}) => {
   return asyncHandler(async (req, res, next) => {
     const result = await decodedToken({
@@ -33,7 +33,7 @@ export const auth = ({
       })) || {};
     req.user = user;
     req.decoded = decoded;
-    const userRole = req.user?.role || req.decoded?.role;
+    const userRole = req.user?.role.name || req.decoded?.role;
     if (!accessRoles.includes(userRole)) {
       return next(new Error("UNAUTHORIZED_ACCOUNT", { cause: 403 }));
     }
