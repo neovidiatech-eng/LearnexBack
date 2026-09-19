@@ -12,6 +12,8 @@ const bootstrap = async () => {
   const app = express();
   const port = process.env.PORT || 3000;
 
+  app.set("trust proxy", true);
+
 
 
   app.use(express.json());

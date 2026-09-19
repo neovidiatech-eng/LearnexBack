@@ -1,7 +1,7 @@
 import { Router } from "express";
 import * as authController from "./auth.controller.js";
 import { authentication } from "../../../middleware/authentication.middleware.js";
-import { tokenTypeEnum } from "../../../utils/security/token.security.js";
+import { tokenTypeEnum } from "../../../utils/Enums/token.enum.js";
 import { validation } from "../../../middleware/validation.middleware.js";
 import * as validators from "./auth.validation.js";
 
@@ -60,5 +60,5 @@ router.get(
   authentication({ tokenType: tokenTypeEnum.refresh }),
   authController.getNewCredentials
 );
-
+router.post("/logout",authentication(),authController.logout)
 export default router;
