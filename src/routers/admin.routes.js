@@ -4,7 +4,7 @@ import adminStudentRouter from "../modules/admin/student/student.routes.js"
 import adminTeacherRouter from "../modules/admin/teacher/teacher.routes.js"
 import adminCategoriesRouter from "../modules/admin/categories/categories.routes.js"
 import adminCoursesRouter from "../modules/admin/courses/courses.routes.js"
-import activitylogsRouter from "../modules/acitvitylogs/activitylogs.route.js"
+import activitylogsRouter from "../modules/admin/acitvitylogs/activitylogs.route.js"
 
 
 const router=Router();

@@ -3,7 +3,7 @@ import * as authController from "./auth.controller.js";
 import * as authValidation from "./auth.validation.js";
 import { authentication } from "../../middleware/authentication.middleware.js";
 import { validation } from "../../middleware/validation.middleware.js";
-import { tokenTypeEnum } from "../../utils/security/token.security.js";
+import { tokenTypeEnum } from "../../utils/Enums/token.enum.js";
 
 const router = Router();
 

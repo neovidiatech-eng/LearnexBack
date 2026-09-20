@@ -1,5 +1,5 @@
 import joi from "joi";
-import { generalFields } from "../../utils/validation/generalField.js";
+import { generalFields } from "../../../utils/validation/generalField.js";
 
 export const getActivityLogs = {
   query: joi.object({
