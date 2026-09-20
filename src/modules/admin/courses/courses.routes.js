@@ -8,6 +8,8 @@ import {
   authorize,
 } from "../../../middleware/authorization.middleware.js";
 import { PERMISSIONS_V2 } from "../../../Constants/permissions.constants.js";
+import { fileValidation } from "../../../utils/multer/fileValidation.js";
+import { localFileUpload } from "../../../utils/multer/local.multer.js";
 
 const router = Router();
 
@@ -15,8 +17,16 @@ router.post(
   "/",
   authentication(),
   authorizeResource("courses"),
+  localFileUpload({
+    customPath: "courses",
+    validation: [...fileValidation.image, ...fileValidation.video],
+    maxSizeInMB: 100,
+  }).fields([
+    { name: "thumbnail", maxCount: 1 },
+    { name: "previewVideo", maxCount: 1 },
+  ]),
   validation(coursesValidation.createCourse),
-  coursesController.createCourse
+  coursesController.createCourse,
 );
 
 router.get(
@@ -24,7 +34,7 @@ router.get(
   authentication(),
   authorizeResource("courses"),
   validation(coursesValidation.getAllCourses),
-  coursesController.getAllCourses
+  coursesController.getAllCourses,
 );
 
 router.get(
@@ -32,15 +42,23 @@ router.get(
   authentication(),
   authorizeResource("courses"),
   validation(coursesValidation.getCourseById),
-  coursesController.getCourseById
+  coursesController.getCourseById,
 );
 
 router.patch(
   "/:courseId",
   authentication(),
   authorizeResource("courses"),
+  localFileUpload({
+    customPath: "courses",
+    validation: [...fileValidation.image, ...fileValidation.video],
+    maxSizeInMB: 100,
+  }).fields([
+    { name: "thumbnail", maxCount: 1 },
+    { name: "previewVideo", maxCount: 1 },
+  ]),
   validation(coursesValidation.updateCourse),
-  coursesController.updateCourse
+  coursesController.updateCourse,
 );
 
 router.patch(
@@ -48,7 +66,7 @@ router.patch(
   authentication(),
   authorize(PERMISSIONS_V2.COURSES.UPDATE),
   validation(coursesValidation.updateCourseStatus),
-  coursesController.updateCourseStatus
+  coursesController.updateCourseStatus,
 );
 
 router.delete(
@@ -56,7 +74,7 @@ router.delete(
   authentication(),
   authorizeResource("courses"),
   validation(coursesValidation.deleteCourse),
-  coursesController.deleteCourse
+  coursesController.deleteCourse,
 );
 
 router.delete(
@@ -64,7 +82,7 @@ router.delete(
   authentication(),
   authorizeResource("courses"),
   validation(coursesValidation.deleteSection),
-  coursesController.deleteSectionCourse
+  coursesController.deleteSectionCourse,
 );
 
 router.post(
@@ -72,7 +90,7 @@ router.post(
   authentication(),
   authorizeResource("courses"),
   validation(coursesValidation.createSection),
-  coursesController.createSection
+  coursesController.createSection,
 );
 
 router.patch(
@@ -80,7 +98,7 @@ router.patch(
   authentication(),
   authorizeResource("courses"),
   validation(coursesValidation.updateSection),
-  coursesController.updateSection
+  coursesController.updateSection,
 );
 
 router.post(
@@ -88,7 +106,7 @@ router.post(
   authentication(),
   authorizeResource("courses"),
   validation(coursesValidation.createLesson),
-  coursesController.createLesson
+  coursesController.createLesson,
 );
 
 router.patch(
@@ -96,7 +114,7 @@ router.patch(
   authentication(),
   authorizeResource("courses"),
   validation(coursesValidation.updateLesson),
-  coursesController.updateLesson
+  coursesController.updateLesson,
 );
 
 router.delete(
@@ -104,7 +122,7 @@ router.delete(
   authentication(),
   authorizeResource("courses"),
   validation(coursesValidation.deleteLesson),
-  coursesController.deleteLesson
+  coursesController.deleteLesson,
 );
 
 export default router;

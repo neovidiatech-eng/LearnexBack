@@ -47,7 +47,7 @@ const bootstrap = async () => {
   app.use(globalErrorHandling);
 
   return app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+    console.log(`Server is running on port ${port} 💕`);
     console.log(`Swagger Docs available at http://localhost:${port}/api-docs`);
   });
 };
