@@ -1,0 +1,630 @@
+{
+  "info": {
+    "name": "LearnexBack – Full Test Flow",
+    "_postman_id": "learnex-test-collection-v1",
+    "description": "Complete test flow: Registration → Email Confirmation → Login → Activity Logs.\n\nالـ Collection دي بتغطي:\n1. Signup (student)\n2. Confirm Email (OTP)\n3. Login\n4. Activity Logs (stats / list / by id)\n\nاشتغل بالـ Environment `LearnexBack ENV` مع المتغيرات دي:\n- `baseUrl`  → http://localhost:3015/api/v1\n- `accessToken` → بيتحدث أوتوماتيك من الـ login response\n- `refreshToken` → بيتحدث أوتوماتيك\n- `testEmail` → الإيميل اللي بيتبعت\n- `testOtp` → OTP بتحطه يدوي بعد وصول الإيميل\n- `activityLogId` → بيتحدث أوتوماتيك من أول log في الـ list",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3015/api/v1", "type": "string" },
+    { "key": "accessToken", "value": "", "type": "string" },
+    { "key": "refreshToken", "value": "", "type": "string" },
+    { "key": "testEmail", "value": "", "type": "string" },
+    { "key": "testOtp", "value": "", "type": "string" },
+    { "key": "activityLogId", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "🔐 Auth",
+      "item": [
+        {
+          "name": "1 – Signup (Student)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('testEmail', `testuser_${ts}@learnex.io`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Response has success flag', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "});",
+                  "pm.test('Response contains user data', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.data).to.have.property('email');",
+                  "    pm.expect(json.data.email).to.eq(pm.collectionVariables.get('testEmail'));",
+                  "});",
+                  "console.log('✅ User registered:', pm.collectionVariables.get('testEmail'));",
+                  "console.log('👉 Check your email for OTP, set testOtp variable, then run step 2.');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Test User Learnex\",\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"Test@123456!\",\n  \"phone\": \"01012345678\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "signup"]
+            }
+          }
+        },
+        {
+          "name": "1b – Signup (Duplicate Email → 409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 409 (email already exists)', () => pm.response.to.have.status(409));",
+                  "pm.test('Error message is EMAIL_ALREADY_EXISTS', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.message).to.include('EMAIL_ALREADY_EXISTS');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Test User Learnex\",\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"Test@123456!\",\n  \"phone\": \"01012345678\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "signup"]
+            }
+          }
+        },
+        {
+          "name": "1c – Signup (Validation Fail → 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 400 (validation error)', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"notanemail\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "signup"]
+            }
+          }
+        },
+        {
+          "name": "2 – Confirm Email (OTP)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Email confirmed successfully', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.expect(json.data.verified).to.be.true;",
+                  "});",
+                  "console.log('✅ Email confirmed. You can now login.');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"otp\": \"{{testOtp}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/confirm-email",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "confirm-email"]
+            }
+          }
+        },
+        {
+          "name": "2b – Confirm Email (Wrong OTP → 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 400 (invalid OTP)', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"otp\": \"000000\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/confirm-email",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "confirm-email"]
+            }
+          }
+        },
+        {
+          "name": "3 – Login (Before Confirm → 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 403 (account not verified)', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"Test@123456!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "4 – Login (Success)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response has tokens', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.data.credentials).to.have.property('accessToken');",
+                  "    pm.expect(json.data.credentials).to.have.property('refreshToken');",
+                  "});",
+                  "const json = pm.response.json();",
+                  "const creds = json.data.credentials;",
+                  "pm.collectionVariables.set('accessToken', creds.accessToken);",
+                  "pm.collectionVariables.set('refreshToken', creds.refreshToken);",
+                  "console.log('✅ Logged in. Tokens saved.');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"Test@123456!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "4b – Login (Wrong Password → 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 400 (invalid credentials)', () => pm.response.to.have.status(400));",
+                  "pm.test('Error is INVALID_CREDENTIALS', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.message).to.include('INVALID_CREDENTIALS');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"WrongPassword!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "5 – Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('New accessToken returned', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.data.credentials).to.have.property('accessToken');",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('accessToken', json.data.credentials.accessToken);",
+                  "console.log('✅ Access token refreshed.');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{refreshToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh-token",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh-token"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 Activity Logs",
+      "item": [
+        {
+          "name": "0 – Admin Login (Get Admin Token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has access token', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.data.credentials).to.have.property('accessToken');",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('accessToken', json.data.credentials.accessToken);",
+                  "pm.collectionVariables.set('refreshToken', json.data.credentials.refreshToken);",
+                  "console.log('✅ Admin logged in. Token saved.');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@learnx.com\",\n  \"password\": \"Password@123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "1 – Get Activity Stats",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Stats has required fields', () => {",
+                  "    const data = pm.response.json().data;",
+                  "    pm.expect(data).to.have.property('total');",
+                  "    pm.expect(data).to.have.property('login');",
+                  "    pm.expect(data).to.have.property('logout');",
+                  "    pm.expect(data).to.have.property('failed');",
+                  "});",
+                  "pm.test('Stats values are numbers', () => {",
+                  "    const data = pm.response.json().data;",
+                  "    pm.expect(data.total).to.be.a('number');",
+                  "    pm.expect(data.login).to.be.a('number');",
+                  "    pm.expect(data.logout).to.be.a('number');",
+                  "    pm.expect(data.failed).to.be.a('number');",
+                  "});",
+                  "pm.test('total >= login + logout', () => {",
+                  "    const data = pm.response.json().data;",
+                  "    pm.expect(data.total).to.be.at.least(data.login + data.logout);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/admin/activityLogs/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "activityLogs", "stats"]
+            }
+          }
+        },
+        {
+          "name": "2 – Get Activity Logs (Default Pagination)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response has logs array and total', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.data).to.have.property('logs');",
+                  "    pm.expect(json.data).to.have.property('total');",
+                  "    pm.expect(json.data).to.have.property('page');",
+                  "    pm.expect(json.data.logs).to.be.an('array');",
+                  "});",
+                  "pm.test('Page defaults to 1', () => {",
+                  "    pm.expect(pm.response.json().data.page).to.eq(1);",
+                  "});",
+                  "const logs = pm.response.json().data.logs;",
+                  "if (logs.length > 0) {",
+                  "    pm.collectionVariables.set('activityLogId', logs[0].id);",
+                  "    console.log('✅ First log ID saved:', logs[0].id);",
+                  "} else {",
+                  "    console.warn('⚠️ No logs found. Make sure the DB has data.');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/admin/activityLogs",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "activityLogs"]
+            }
+          }
+        },
+        {
+          "name": "3 – Get Activity Logs (Filter action=login)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('All returned logs have action LOGIN', () => {",
+                  "    const logs = pm.response.json().data.logs;",
+                  "    logs.forEach(log => {",
+                  "        pm.expect(log.action).to.eq('LOGIN');",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/admin/activityLogs?action=login&page=1&limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "activityLogs"],
+              "query": [
+                { "key": "action", "value": "login" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "5" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "4 – Get Activity Logs (Search by userName)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Returned logs match search term', () => {",
+                  "    const logs = pm.response.json().data.logs;",
+                  "    logs.forEach(log => {",
+                  "        pm.expect(log.userName.toLowerCase()).to.include('admin');",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/admin/activityLogs?search=admin",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "activityLogs"],
+              "query": [{ "key": "search", "value": "admin" }]
+            }
+          }
+        },
+        {
+          "name": "5 – Get Activity Logs (Invalid action → 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 400 (validation error)', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/admin/activityLogs?action=invalid_action",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "activityLogs"],
+              "query": [{ "key": "action", "value": "invalid_action" }]
+            }
+          }
+        },
+        {
+          "name": "6 – Get Activity Log By ID (Success)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Log has expected fields', () => {",
+                  "    const log = pm.response.json().data;",
+                  "    pm.expect(log).to.have.property('id');",
+                  "    pm.expect(log).to.have.property('action');",
+                  "    pm.expect(log).to.have.property('status');",
+                  "    pm.expect(log).to.have.property('createdAt');",
+                  "});",
+                  "pm.test('ID matches requested ID', () => {",
+                  "    const log = pm.response.json().data;",
+                  "    pm.expect(log.id).to.eq(pm.collectionVariables.get('activityLogId'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/admin/activityLogs/{{activityLogId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "activityLogs", "{{activityLogId}}"]
+            }
+          }
+        },
+        {
+          "name": "7 – Get Activity Log By ID (Not Found → 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 404 (log not found)', () => pm.response.to.have.status(404));",
+                  "pm.test('Error message is ACTIVITY_LOG_NOT_FOUND', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.message).to.include('ACTIVITY_LOG_NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/admin/activityLogs/00000000-0000-0000-0000-000000000000",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "activityLogs", "00000000-0000-0000-0000-000000000000"]
+            }
+          }
+        },
+        {
+          "name": "8 – Get Activity Log By ID (Invalid UUID → 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 400 (invalid UUID format)', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/admin/activityLogs/not-a-valid-uuid",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "activityLogs", "not-a-valid-uuid"]
+            }
+          }
+        },
+        {
+          "name": "9 – Get Activity Logs (No Auth → 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 401 (unauthorized)', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/activityLogs",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "activityLogs"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

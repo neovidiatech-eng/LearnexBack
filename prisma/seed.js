@@ -7,6 +7,7 @@ import { seedTeachers } from "./seeders/teachers.seed.js";
 import { seedStudents } from "./seeders/students.seed.js";
 import { seedCourses } from "./seeders/courses.seed.js";
 import { seedEnrollments } from "./seeders/enrollments.seed.js";
+import { seedActivityLogs } from "./seeders/activityLogs.seed.js";
 
 const prisma = new PrismaClient();
 
@@ -36,6 +37,9 @@ async function main() {
 
   // 8. Enrollments (depends on students + courses)
   await seedEnrollments(prisma, students, courses);
+
+  // 9. Activity Logs (independent)
+  await seedActivityLogs(prisma);
 
   console.log("\n✅ Database seeding completed successfully!");
 }
