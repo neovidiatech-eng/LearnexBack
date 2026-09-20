@@ -70,7 +70,7 @@ export const assignCourses = asyncHandler(async (req, res, next) => {
 export const updateCv = asyncHandler(async (req, res, next) => {
   const result = await teacherService.updateTeacherCvService(
     req.params.teacherId,
-    req.body.cvUrl
+    req.file,
   );
   return successResponse({
     res,
