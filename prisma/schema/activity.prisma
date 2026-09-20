@@ -1,24 +1,22 @@
 model ActivityLog {
-    id          String   @id @default(uuid())
-    
-    actorId     String?
-    
+  id String @id @default(uuid())
 
-    userName    String
-    role        String
+  actorId String?
 
-    action      String
-    module      String   @default("Auth")
-    status      String   @default("SUCCESS")
-    ipAddress    String?
+  userName String
+  role     String
 
-    createdAt   DateTime @default(now())
+  action    String
+  module    String  @default("Auth")
+  status    String  @default("SUCCESS")
+  ipAddress String?
 
-    @@index([actorId])
-    @@index([module])
-    @@index([action])
-    @@index([status])
-    @@index([createdAt])
+  createdAt DateTime @default(now())
 
-    @@map("activity_logs")
+  @@index([actorId])
+  @@index([module])
+  @@index([action])
+  @@index([status])
+  @@index([createdAt])
+  @@map("activity_logs")
 }

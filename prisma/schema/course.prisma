@@ -164,3 +164,36 @@ model CourseReview {
   @@index([courseId])
   @@map("course_reviews")
 }
+
+model Coupon {
+  id             String             @id @default(uuid())
+  name           String
+  code           String             @unique
+  discountType   String
+  discountValue  Decimal            @db.Decimal(10, 2)
+  startDate      DateTime
+  expirationDate DateTime
+  usageLimit     Int
+  usedCount      Int                @default(0)
+  maxUsesPerUser Int
+  redemptions    CoupunRedemption[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("coupons")
+}
+
+model CoupunRedemption {
+  id            String   @id @default(uuid())
+  coupunId      String
+  copun         Coupon   @relation(fields: [coupunId], references: [id], onDelete: Cascade)
+  studentId     String
+  student       User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  discountValue Decimal  @db.Decimal(10, 2)
+  redeemedAt    DateTime @default(now())
+
+  @@index([coupunId])
+  @@index([studentId])
+  @@map("coupun_redemptions")
+}
