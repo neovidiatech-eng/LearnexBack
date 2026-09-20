@@ -263,7 +263,7 @@ export const updateTeacherService = async (body, teacherId) => {
     bio,
     linkedinUrl,
     country,
-    profilePhoto,
+    
   } = body;
 
   const existingTeacher = await dbService.findFirst({
@@ -321,7 +321,6 @@ export const updateTeacherService = async (body, teacherId) => {
           ...(encPhone && { phone: encPhone }),
           ...(country && { country }),
           ...(status && { status }),
-          ...(profilePhoto !== undefined && { profilePhoto }),
         },
       },
     },
@@ -398,7 +397,7 @@ export const assignCoursesToTeacherService = async (
     throw error;
   }
 
-  if (courseIds.length > 0) {
+  if (courseIds.length) {
     const courses = await dbService.findMany({
       model: "course",
       where: { id: { in: courseIds } },
@@ -424,7 +423,7 @@ export const assignCoursesToTeacherService = async (
   };
 };
 
-export const updateTeacherCvService = async (teacherId, cvUrl) => {
+export const updateTeacherCvService = async (teacherId, file) => {
   const teacher = await dbService.findFirst({
     model: "teacher",
     where: {
@@ -441,12 +440,12 @@ export const updateTeacherCvService = async (teacherId, cvUrl) => {
   const updatedTeacher = await dbService.updateOne({
     model: "teacher",
     where: { id: teacher.id },
-    data: { cvUrl },
-    select: {
-      id: true,
-      cvUrl: true,
-      updatedAt: true,
+    data: {
+      ...(file && {
+        image: file.relativeDestination,
+      }),
     },
+
   });
 
   return updatedTeacher;
