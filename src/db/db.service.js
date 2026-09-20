@@ -159,6 +159,9 @@ export const findManyWithPaginationAndCount = async ({
     pagination: { page: p, limit: take, totalItems, totalPages, hasNextPage },
   };
 };
+export const queryRaw = (query,...values)=>{
+    return prisma.$queryRaw(query,...values);
+}
 
 export const create = ({ model, data, include, select }) => {
   return getClient(model).create({
