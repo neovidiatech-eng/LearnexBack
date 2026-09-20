@@ -14,7 +14,7 @@ export const loginService = async ({ email, password,ipAddress }) => {
   if (!admin) {
     await logActivity({
       actorId:null,
-      userName:null,
+      userName:email,
       role:roleEnum.ADMIN,
       action:ACTIVITY_ACTIONS.LOGIN,
       status:ACTIVITY_STATUS.FAILED,
