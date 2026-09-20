@@ -1,5 +1,5 @@
-import dbService from "../../db/db.service.js"
-import { ACTIVITY_ACTIONS, ACTIVITY_STATUS } from "../../utils/Enums/activity.enum.js"
+import dbService from "../../../db/db.service.js"
+import { ACTIVITY_ACTIONS, ACTIVITY_STATUS } from "../../../utils/Enums/activity.enum.js"
 
 export const getActivityStats = async() =>{
     const [total,login,logout,failed] = await Promise.all([

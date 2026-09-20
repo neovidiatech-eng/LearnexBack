@@ -1,4 +1,4 @@
-import { asyncHandler, successResponse } from "../../utils/response.js";
+import { asyncHandler, successResponse } from "../../../utils/response.js";
 import * as activitylogsService from "./activitylogs.service.js";
 
 export const getActivityStats = asyncHandler(async(req,res)=>{
