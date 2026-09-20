@@ -49,7 +49,7 @@ model Course {
   categoryId         String
   category           Category            @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   instructorId       String
-  instructor         User                @relation("TutorCourses", fields: [instructorId], references: [id], onDelete: Restrict)
+  instructor         User                @relation("TutorCourses", fields: [instructorId], references: [id], onDelete: Cascade)
   sections           CourseSection[]
   enrollments        CourseEnrollment[]
   reviews            CourseReview[]

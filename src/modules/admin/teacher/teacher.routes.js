@@ -23,6 +23,12 @@ router.get(
   validation(teacherValidation.getAllTeachers),
   teacherController.getAllTeacher,
 );
+router.get(
+  "/export",
+  authentication(),
+  authorizeResource("teachers"),
+  teacherController.exportTeachers,
+);
 
 router.get(
   "/:teacherId",
@@ -46,6 +52,7 @@ router.patch(
   validation(teacherValidation.changeStatus),
   teacherController.changeTeacherStatus,
 );
+
 router.patch(
   "/:teacherId/assign-courses",
   authentication(),
@@ -53,6 +60,7 @@ router.patch(
   validation(teacherValidation.assignCourses),
   teacherController.assignCourses,
 );
+
 router.patch(
   "/:teacherId/cv",
   authentication(),
@@ -60,9 +68,16 @@ router.patch(
   localFileUpload({
     customPath: "teachers",
     validation: fileValidation.image,
-  }).single("image"),
+  }).single("cvUrl"),
   validation(teacherValidation.updateCv),
   teacherController.updateCv,
 );
 
+router.delete(
+  "/:teacherId",
+  authentication(),
+  authorizeResource("teachers"),
+  validation(teacherValidation.getTeacherById),
+  teacherController.deleteTeacher,
+);
 export default router;
