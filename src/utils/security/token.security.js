@@ -1,8 +1,8 @@
 import jwt from "jsonwebtoken";
 import * as DBService from "../../db/db.service.js";
 import { roleEnum } from "../Enums/role.enum.js";
+import { tokenTypeEnum } from "../Enums/token.enum.js";
 
-export const tokenTypeEnum = { access: "access", refresh: "refresh" };
 
 export const generateToken = async ({
   payload = {},
@@ -22,7 +22,7 @@ export const verifyToken = async ({
 export const decodedToken = async ({
   next,
   authorization = "",
-  tokenType = tokenTypeEnum.access,
+  tokenType = tokenTypeEnum.ACCESS,
 } = {}) => {
   const [bearer, token] = authorization?.split(" ") || [];
   if (!bearer || !token) {
@@ -32,7 +32,7 @@ export const decodedToken = async ({
   const decoded = await verifyToken({
     token,
     signature:
-      tokenType === tokenTypeEnum.access
+      tokenType === tokenTypeEnum.ACCESS
         ? process.env.ACCESS_TOKEN_SIGNATURE
         : process.env.REFRESH_TOKEN_SIGNATURE,
   });

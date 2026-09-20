@@ -15,10 +15,10 @@ model User {
   updatedAt       DateTime  @updatedAt
   roleId          String?
   role            Role?     @relation(fields: [roleId], references: [id], onDelete: SetNull)
-
+  
   student           Student?
   teacher           Teacher?
-
+  
   courses           Course[]           @relation("TutorCourses")
   courseEnrollments CourseEnrollment[] @relation("StudentEnrollments")
   courseReviews     CourseReview[]     @relation("StudentCourseReviews")
@@ -56,4 +56,4 @@ model Teacher {
 
   @@index([userId])
   @@map("teachers")
-}
+}
