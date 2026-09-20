@@ -442,10 +442,14 @@ export const updateTeacherCvService = async (teacherId, file) => {
     where: { id: teacher.id },
     data: {
       ...(file && {
-        image: file.relativeDestination,
+        cvUrl: file.relativeDestination,
       }),
     },
-
+    select: {
+      id: true,
+      cvUrl: true,
+      updatedAt: true,
+    },
   });
 
   return updatedTeacher;
@@ -457,22 +461,12 @@ export const deleteTeacherService = async (teacherId) => {
     where: {
       OR: [{ id: teacherId }, { userId: teacherId }],
     },
-    include: {
-      user: {
-        include: { courses: { select: { id: true } } },
-      },
-    },
+    select: { userId: true },
   });
 
   if (!teacher) {
     const error = new Error("TEACHER_NOT_FOUND");
     error.cause = 404;
-    throw error;
-  }
-
-  if (teacher.user?.courses && teacher.user.courses.length > 0) {
-    const error = new Error("TEACHER_HAS_ASSIGNED_COURSES");
-    error.cause = 400;
     throw error;
   }
 

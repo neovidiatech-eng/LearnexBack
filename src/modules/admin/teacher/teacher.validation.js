@@ -100,11 +100,6 @@ export const assignCourses = {
 
 export const updateCv = {
   params: getTeacherById.params,
-  body: joi
-    .object()
-    .keys({
-      cvUrl: joi.string().uri().required(),
-    })
-    .required()
-    .options({ allowUnknown: false }),
+  file: joi.object(generalFields.file).required(),
 };
+
