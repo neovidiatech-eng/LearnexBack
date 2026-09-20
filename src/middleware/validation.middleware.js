@@ -14,6 +14,17 @@ export const validation = (schema) => {
             return { message: element.message, path: element.path[0] };
           }),
         });
+      } else {
+        if (key === "query") {
+          Object.defineProperty(req, "query", {
+            value: validationResult.value,
+            writable: true,
+            configurable: true,
+            enumerable: true,
+          });
+        } else {
+          req[key] = validationResult.value;
+        }
       }
     }
     if (validationError.length) {

@@ -2,7 +2,7 @@ import * as coursesService from "./courses.service.js";
 import { asyncHandler, successResponse } from "../../../utils/response.js";
 
 export const createCourse = asyncHandler(async (req, res) => {
-  const course = await coursesService.createCourseService(req.body);
+  const course = await coursesService.createCourseService(req.body, req.files);
   return successResponse({
     res,
     status: 201,
@@ -30,7 +30,11 @@ export const getCourseById = asyncHandler(async (req, res) => {
 });
 
 export const updateCourse = asyncHandler(async (req, res) => {
-  const result = await coursesService.updateCourseService(req.body, req.params);
+  const result = await coursesService.updateCourseService(
+    req.body,
+    req.params,
+    req.files,
+  );
   return successResponse({
     res,
     message: "COURSE_UPDATED_SUCCESSFULLY",

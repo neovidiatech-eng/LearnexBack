@@ -6,36 +6,50 @@ import {
   enrollmentTypeEnum,
   lessonTypeEnum,
 } from "../../../utils/Enums/index.js";
+import { jsonArray } from "../../../utils/validation/jsonField.js";
 
-export const lessonSchema = joi.object({
+const translationSchema = joi.object({
+  locale: joi.string().valid("en", "ar", "fr").required(),
+  title: joi.string().min(3).max(255).trim().required(),
+  description: joi.string().min(10).trim().required(),
+  whatYouWillLearn: jsonArray(joi.string().trim()).default([]),
+  requirements: jsonArray(joi.string().trim()).default([]),
+});
+
+const sectionTranslationSchema = joi.object({
+  locale: joi.string().valid("en", "ar", "fr").required(),
   title: joi.string().min(2).max(255).trim().required(),
+});
+
+const lessonTranslationSchema = joi.object({
+  locale: joi.string().valid("en", "ar", "fr").required(),
+  title: joi.string().min(2).max(255).trim().required(),
+  description: joi.string().allow("", null).optional(),
+});
+
+const lessonSchema = joi.object({
+  order: joi.number().integer().min(1).optional(),
   durationMinutes: joi.number().integer().min(0).default(0),
-  duration: joi.number().min(0).optional(),
   type: joi
     .string()
     .valid(...Object.values(lessonTypeEnum))
     .default(lessonTypeEnum.VIDEO),
   contentUrl: joi.string().uri().allow("", null).optional(),
-  description: joi.string().allow("", null).optional(),
   isFreePreview: joi.boolean().default(false),
-  order: joi.number().integer().min(1).optional(),
+  translations: jsonArray(lessonTranslationSchema, { required: true }),
 });
 
-export const sectionSchema = joi.object({
-  title: joi.string().min(2).max(255).trim().required(),
+const sectionSchema = joi.object({
   order: joi.number().integer().min(1).optional(),
-  lessons: joi.array().items(lessonSchema).default([]),
+  translations: jsonArray(sectionTranslationSchema, { required: true }),
+  lessons: jsonArray(lessonSchema).default([]),
 });
 
 export const createCourse = {
   body: joi
     .object({
-      title: joi.string().min(3).max(255).trim().required(),
-      description: joi.string().min(10).trim().required(),
       categoryId: generalFields.id.required(),
-      category: joi.string().optional(),
       instructorId: generalFields.id.optional(),
-      instructor: joi.string().optional(),
       level: joi
         .string()
         .valid(...Object.values(courseLevelEnum))
@@ -44,7 +58,6 @@ export const createCourse = {
         .string()
         .valid(...Object.values(courseStatusEnum))
         .default(courseStatusEnum.DRAFT),
-      publishSettings: joi.string().optional(),
       enrollmentType: joi
         .string()
         .valid(...Object.values(enrollmentTypeEnum))
@@ -54,17 +67,12 @@ export const createCourse = {
       salePrice: joi.number().min(0).allow(null).optional(),
       currency: joi.string().default("USD"),
       durationHours: joi.number().min(0).optional(),
-      duration: joi.number().min(0).optional(),
       totalLessonsCount: joi.number().integer().min(0).optional(),
-      lessons: joi.number().integer().min(0).optional(),
-      tags: joi.array().items(joi.string().trim()).default([]),
-      whatYouWillLearn: joi.array().items(joi.string().trim()).default([]),
-      requirements: joi.array().items(joi.string().trim()).default([]),
+      tags: jsonArray(joi.string().trim()).default([]),
       hasCertificate: joi.boolean().default(true),
-      thumbnail: joi.string().uri().allow("", null).optional(),
-      previewVideoUrl: joi.string().uri().allow("", null).optional(),
       scheduledAt: joi.date().iso().allow(null).optional(),
-      sections: joi.array().items(sectionSchema).default([]),
+      translations: jsonArray(translationSchema, { required: true }),
+      sections: jsonArray(sectionSchema).default([]),
     })
     .required(),
 };
@@ -77,8 +85,6 @@ export const updateCourse = {
     .required(),
   body: joi
     .object({
-      title: joi.string().min(3).max(255).trim(),
-      description: joi.string().min(10).trim(),
       categoryId: generalFields.id,
       instructorId: generalFields.id,
       level: joi.string().valid(...Object.values(courseLevelEnum)),
@@ -90,16 +96,27 @@ export const updateCourse = {
       currency: joi.string(),
       durationHours: joi.number().min(0),
       totalLessonsCount: joi.number().integer().min(0),
-      tags: joi.array().items(joi.string().trim()),
-      whatYouWillLearn: joi.array().items(joi.string().trim()),
-      requirements: joi.array().items(joi.string().trim()),
+      tags: jsonArray(joi.string().trim()), 
       hasCertificate: joi.boolean(),
-      thumbnail: joi.string().uri().allow("", null),
-      previewVideoUrl: joi.string().uri().allow("", null),
       scheduledAt: joi.date().iso().allow(null),
+      translations: jsonArray(translationSchema),
+      sections: jsonArray(sectionSchema), 
     })
     .min(1)
     .required(),
+  files: joi
+    .object({
+      thumbnail: joi
+        .array()
+        .items(joi.object(generalFields.file).unknown(true))
+        .optional(),
+      previewVideo: joi
+        .array()
+        .items(joi.object(generalFields.file).unknown(true))
+        .optional(),
+    })
+    .unknown(true)
+    .optional(),
 };
 
 export const updateCourseStatus = {

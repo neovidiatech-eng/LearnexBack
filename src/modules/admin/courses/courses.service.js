@@ -6,22 +6,17 @@ import {
   enrollmentTypeEnum,
   lessonTypeEnum,
 } from "../../../utils/Enums/index.js";
+import { deleteFile } from "../../../utils/multer/file.utils.js";
 
-export const createCourseService = async (body) => {
+export const createCourseService = async (body, reqFiles) => {
   const {
-    title,
-    description,
     categoryId,
     instructorId,
     level = courseLevelEnum.BEGINNER,
-    thumbnail,
     language = "english",
     durationHours,
     totalLessonsCount,
     tags = [],
-    whatYouWillLearn = [],
-    requirements = [],
-    previewVideoUrl,
     enrollmentType = enrollmentTypeEnum.PAID,
     originalPrice,
     salePrice,
@@ -29,6 +24,7 @@ export const createCourseService = async (body) => {
     hasCertificate = true,
     status = courseStatusEnum.DRAFT,
     scheduledAt,
+    translations = [],
     sections = [],
   } = body;
 
@@ -48,7 +44,7 @@ export const createCourseService = async (body) => {
       where: {
         id: instructorId,
         role: {
-          name: { in: ["teacher", "tutor", "TEACHER", "TUTOR"] },
+          name: { equals: roleEnum.TEACHER, mode: "insensitive" },
         },
       },
     });
@@ -61,23 +57,23 @@ export const createCourseService = async (body) => {
 
   const calculatedLessonsCount =
     totalLessonsCount ||
-    sections.reduce((acc, sec) => acc + (sec.lessons?.length || 0), 0);
+    sections.reduce((acc, section) => acc + (section.lessons?.length || 0), 0);
+
+  const thumbnail = reqFiles?.thumbnail?.[0]?.relativeDestination || null;
+  const previewVideoUrl =
+    reqFiles?.previewVideo?.[0]?.relativeDestination || null;
 
   const newCourse = await DBService.create({
     model: "course",
     data: {
-      title,
-      description,
       categoryId,
-      ...(instructorId ? { instructorId } : {}),
+      instructorId,
       level,
       thumbnail,
       language,
       durationHours: Number(durationHours) || 0,
       totalLessonsCount: calculatedLessonsCount,
       tags,
-      whatYouWillLearn,
-      requirements,
       previewVideoUrl,
       enrollmentType,
       originalPrice: Number(originalPrice) || 0,
@@ -86,44 +82,41 @@ export const createCourseService = async (body) => {
       hasCertificate,
       status,
       scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
-      ...(sections.length > 0 && {
-        sections: {
-          create: sections.map((sec, secIdx) => ({
-            title: sec.title,
-            order: sec.order || secIdx + 1,
-            lessons: {
-              create: (sec.lessons || []).map((les, lesIdx) => ({
-                title: les.title,
-                order: les.order || lesIdx + 1,
-                durationMinutes:
-                  Number(les.durationMinutes || les.duration) || 0,
-                type: les.type || lessonTypeEnum.VIDEO,
-                contentUrl: les.contentUrl,
-                description: les.description,
-                isFreePreview: les.isFreePreview ?? false,
-              })),
-            },
-          })),
-        },
-      }),
-    },
-    include: {
-      category: { select: { id: true, name: true, slug: true } },
-      instructor: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-        },
+      translations: {
+        create: translations.map((translation) => ({
+          locale: translation.locale,
+          title: translation.title,
+          description: translation.description,
+          whatYouWillLearn: translation.whatYouWillLearn || [],
+          requirements: translation.requirements || [],
+        })),
       },
       sections: {
-        orderBy: { order: "asc" },
-        include: {
-          lessons: {
-            orderBy: { order: "asc" },
+        create: sections.map((section, sectionIndex) => ({
+          order: section.order || sectionIndex + 1,
+          translations: {
+            create: (section.translations || []).map((translation) => ({
+              locale: translation.locale,
+              title: translation.title,
+            })),
           },
-        },
+          lessons: {
+            create: (section.lessons || []).map((lesson, lessonIndex) => ({
+              order: lesson.order || lessonIndex + 1,
+              durationMinutes: Number(lesson.durationMinutes) || 0,
+              type: lesson.type || lessonTypeEnum.VIDEO,
+              contentUrl: lesson.contentUrl,
+              isFreePreview: lesson.isFreePreview ?? false,
+              translations: {
+                create: (lesson.translations || []).map((translation) => ({
+                  locale: translation.locale,
+                  title: translation.title,
+                  description: translation.description,
+                })),
+              },
+            })),
+          },
+        })),
       },
     },
   });
@@ -288,28 +281,23 @@ export const getCourseByIdService = async ({ courseId }) => {
   return { course };
 };
 
-export const updateCourseService = async (body, params) => {
+export const updateCourseService = async (body, params, reqFiles) => {
   const {
-    title,
-    description,
     categoryId,
     instructorId,
-    level = courseLevelEnum.BEGINNER,
-    thumbnail,
-    language = "english",
+    level,
+    language,
     durationHours,
     totalLessonsCount,
-    tags = [],
-    whatYouWillLearn = [],
-    requirements = [],
-    previewVideoUrl,
-    enrollmentType = enrollmentTypeEnum.PAID,
+    tags,
+    enrollmentType,
     originalPrice,
     salePrice,
-    currency = "USD",
-    hasCertificate = true,
-    status = courseStatusEnum.DRAFT,
+    currency,
+    hasCertificate,
+    status,
     scheduledAt,
+    translations = [],
     sections = [],
   } = body;
 
@@ -324,51 +312,113 @@ export const updateCourseService = async (body, params) => {
     throw error;
   }
 
+  if (instructorId) {
+    const instructor = await DBService.findFirst({
+      model: "user",
+      where: {
+        id: instructorId,
+        role: { name: { equals: roleEnum.TEACHER, mode: "insensitive" } },
+      },
+    });
+    if (!instructor) {
+      const error = new Error("INSTRUCTOR_NOT_FOUND_OR_INVALID");
+      error.cause = 404;
+      throw error;
+    }
+  }
+
   const calculatedLessonsCount =
-    totalLessonsCount ||
-    sections.reduce((acc, sec) => acc + (sec.lessons?.length || 0), 0);
+    totalLessonsCount !== undefined
+      ? totalLessonsCount
+      : sections.length > 0
+        ? sections.reduce((acc, sec) => acc + (sec.lessons?.length || 0), 0)
+        : undefined;
+
+  const newThumbnail = reqFiles?.thumbnail?.[0]?.relativeDestination;
+  const newPreviewVideo = reqFiles?.previewVideo?.[0]?.relativeDestination;
 
   const course = await DBService.updateOne({
     model: "course",
-    where: {
-      id: courseId,
-    },
+    where: { id: courseId },
     data: {
-      title,
-      description,
-      categoryId,
-      ...(instructorId ? { instructorId } : {}),
-      level,
-      thumbnail,
-      language,
-      durationHours: Number(durationHours) || 0,
-      totalLessonsCount: calculatedLessonsCount,
-      tags,
-      whatYouWillLearn,
-      requirements,
-      previewVideoUrl,
-      enrollmentType,
-      originalPrice: Number(originalPrice) || 0,
-      salePrice: salePrice ? Number(salePrice) : null,
-      currency,
-      hasCertificate,
-      status,
-      scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
+      ...(categoryId !== undefined && { categoryId }),
+      ...(instructorId !== undefined && { instructorId }),
+      ...(level !== undefined && { level }),
+      ...(newThumbnail && { thumbnail: newThumbnail }),
+      ...(newPreviewVideo && { previewVideoUrl: newPreviewVideo }),
+      ...(language !== undefined && { language }),
+      ...(durationHours !== undefined && {
+        durationHours: Number(durationHours),
+      }),
+      ...(calculatedLessonsCount !== undefined && {
+        totalLessonsCount: calculatedLessonsCount,
+      }),
+      ...(tags !== undefined && { tags }),
+      ...(enrollmentType !== undefined && { enrollmentType }),
+      ...(originalPrice !== undefined && {
+        originalPrice: Number(originalPrice),
+      }),
+      ...(salePrice !== undefined && {
+        salePrice: salePrice ? Number(salePrice) : null,
+      }),
+      ...(currency !== undefined && { currency }),
+      ...(hasCertificate !== undefined && { hasCertificate }),
+      ...(status !== undefined && { status }),
+      ...(scheduledAt !== undefined && {
+        scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
+      }),
+
+      ...(translations.length > 0 && {
+        translations: {
+          upsert: translations.map((t) => ({
+            where: { courseId_locale: { courseId, locale: t.locale } },
+            create: {
+              locale: t.locale,
+              title: t.title,
+              description: t.description,
+              whatYouWillLearn: t.whatYouWillLearn || [],
+              requirements: t.requirements || [],
+            },
+            update: {
+              ...(t.title !== undefined && { title: t.title }),
+              ...(t.description !== undefined && {
+                description: t.description,
+              }),
+              ...(t.whatYouWillLearn !== undefined && {
+                whatYouWillLearn: t.whatYouWillLearn,
+              }),
+              ...(t.requirements !== undefined && {
+                requirements: t.requirements,
+              }),
+            },
+          })),
+        },
+      }),
+
       ...(sections.length > 0 && {
         sections: {
           create: sections.map((sec, secIdx) => ({
-            title: sec.title,
             order: sec.order || secIdx + 1,
+            translations: {
+              create: (sec.translations || []).map((t) => ({
+                locale: t.locale,
+                title: t.title,
+              })),
+            },
             lessons: {
               create: (sec.lessons || []).map((les, lesIdx) => ({
-                title: les.title,
                 order: les.order || lesIdx + 1,
-                durationMinutes:
-                  Number(les.durationMinutes || les.duration) || 0,
+                durationMinutes: Number(les.durationMinutes) || 0,
                 type: les.type || lessonTypeEnum.VIDEO,
                 contentUrl: les.contentUrl,
-                description: les.description,
                 isFreePreview: les.isFreePreview ?? false,
+                translations: {
+                  create: (les.translations || []).map((t) => ({
+                    locale: t.locale,
+                    title: t.title,
+                    description: t.description,
+                  })),
+                },
               })),
             },
           })),
@@ -377,9 +427,7 @@ export const updateCourseService = async (body, params) => {
     },
     include: {
       translations: true,
-      category: {
-        select: { id: true, slug: true, translations: true },
-      },
+      category: { select: { id: true, slug: true, translations: true } },
       instructor: {
         select: {
           id: true,
@@ -393,18 +441,21 @@ export const updateCourseService = async (body, params) => {
       sections: {
         orderBy: { order: "asc" },
         include: {
+          translations: true,
           lessons: {
             orderBy: { order: "asc" },
+            include: { translations: true },
           },
         },
       },
     },
   });
 
-  if (!course) {
-    const error = new Error("COURSE_NOT_FOUND");
-    error.cause = 404;
-    throw error;
+  if (newThumbnail && existingCourse.thumbnail) {
+    deleteFile(existingCourse.thumbnail);
+  }
+  if (newPreviewVideo && existingCourse.previewVideoUrl) {
+    deleteFile(existingCourse.previewVideoUrl);
   }
 
   return { course };
@@ -458,6 +509,12 @@ export const deleteCourseService = async ({ courseId }) => {
     const error = new Error("COURSE_NOT_FOUND");
     error.cause = 404;
     throw error;
+  }
+  if (existingCourse.thumbnail) {
+    deleteFile(existingCourse.thumbnail);
+  }
+  if (existingCourse.previewVideoUrl) {
+    deleteFile(existingCourse.previewVideoUrl);
   }
 
   await DBService.deleteOne({
