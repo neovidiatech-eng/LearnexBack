@@ -7,3 +7,4 @@ export * from "./enrollmentType.enum.js";
 export * from "./lessonType.enum.js";
 export * from "./enrollmentStatus.enum.js";
 export * from "./token.enum.js";
+export * from "./offer.enum.js";
