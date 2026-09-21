@@ -56,6 +56,12 @@ export const PERMISSIONS_V2 = {
     DELETE: "teachers:delete",
     READ_MY_STUDENTS: "teachers:read_my_students",
   },
+  OFFERS: {
+    READ: "offers:read",
+    CREATE: "offers:create",
+    UPDATE: "offers:update",
+    DELETE: "offers:delete",
+  },
 
   // Staff Management
   STAFF: {
