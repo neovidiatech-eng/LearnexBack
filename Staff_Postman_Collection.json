@@ -1,0 +1,392 @@
+{
+	"info": {
+		"_postman_id": "c1f7a2b9-6d8e-49e2-a3b4-5f6e7d8c9a0b",
+		"name": "LearnX - Admin Staff API",
+		"description": "Postman collection for testing Admin Staff Module endpoints in LearnX LMS.\n\nAll endpoints require Admin JWT authentication. Student and Teacher roles are excluded at the database layer.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Admin Login (Get Token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    var token = jsonData.data?.credentials?.access_token || jsonData.data?.token;",
+									"    if (token) {",
+									"        pm.collectionVariables.set(\"token\", token);",
+									"        console.log(\"Token automatically saved to collection variables.\");",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@learnex.com\",\n  \"password\": \"Admin@123456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Log in as an Admin to obtain access token."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Staff Management",
+			"item": [
+				{
+					"name": "1. Get Staff Roles",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    var roles = jsonData.data;",
+									"    if (roles && roles.length > 0) {",
+									"        pm.collectionVariables.set(\"staffRoleId\", roles[0].id);",
+									"        console.log(\"First staff role ID saved:\", roles[0].id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/staff/roles",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"staff",
+								"roles"
+							]
+						},
+						"description": "Fetch list of valid roles for staff members. Automatically excludes student and teacher roles."
+					},
+					"response": []
+				},
+				{
+					"name": "2. Create Staff Member",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    var staffId = jsonData.data?.id;",
+									"    if (staffId) {",
+									"        pm.collectionVariables.set(\"staffId\", staffId);",
+									"        console.log(\"Created staff ID saved:\", staffId);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Sarah Connor\",\n  \"email\": \"sarah.connor@example.com\",\n  \"password\": \"Staff@123456\",\n  \"roleId\": \"{{staffRoleId}}\",\n  \"status\": \"ACTIVE\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/staff",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"staff"
+							]
+						},
+						"description": "Creates a new staff member with a non-student, non-teacher role."
+					},
+					"response": []
+				},
+				{
+					"name": "3. Get Staff List (Paginated)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/staff?page=1&limit=10&sortBy=createdAt&sortOrder=desc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"staff"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt"
+								},
+								{
+									"key": "sortOrder",
+									"value": "desc"
+								}
+							]
+						},
+						"description": "Fetch paginated staff list. Never returns users with student or teacher roles."
+					},
+					"response": []
+				},
+				{
+					"name": "4. Get Staff List (Filtered by Search)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/staff?search=Sarah",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"staff"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "Sarah"
+								}
+							]
+						},
+						"description": "Search staff members by name or email."
+					},
+					"response": []
+				},
+				{
+					"name": "5. Get Staff List (Filtered by Role)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/staff?roleId={{staffRoleId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"staff"
+							],
+							"query": [
+								{
+									"key": "roleId",
+									"value": "{{staffRoleId}}"
+								}
+							]
+						},
+						"description": "Filter staff members by role ID."
+					},
+					"response": []
+				},
+				{
+					"name": "6. Get Staff Member by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/staff/{{staffId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"staff",
+								"{{staffId}}"
+							]
+						},
+						"description": "Get detailed staff information by user ID."
+					},
+					"response": []
+				},
+				{
+					"name": "7. Update Staff Member",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Sarah Connor Updated\",\n  \"status\": \"ACTIVE\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/staff/{{staffId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"staff",
+								"{{staffId}}"
+							]
+						},
+						"description": "Update staff details (name, email, roleId, status)."
+					},
+					"response": []
+				},
+				{
+					"name": "8. Export Staff List (Excel)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/staff/export",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"staff",
+								"export"
+							]
+						},
+						"description": "Downloads an Excel spreadsheet (.xlsx) containing all staff members."
+					},
+					"response": []
+				},
+				{
+					"name": "9. Delete Staff Member",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/staff/{{staffId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"staff",
+								"{{staffId}}"
+							]
+						},
+						"description": "Soft deletes or removes a staff member by ID."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3015/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "staffRoleId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "staffId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

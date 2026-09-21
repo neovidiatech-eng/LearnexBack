@@ -9,7 +9,7 @@ export const asyncHandler = (fn) => {
   };
 };
 
-//success response
+// success response with i18n translation support
 export const successResponse = ({
   res,
   message = "SUCCESS",
@@ -19,14 +19,19 @@ export const successResponse = ({
   if (status === 204) {
     return res.status(204).send();
   }
-  return res.status(status).json({ message, data });
+  const req = res.req;
+  const translatedMessage = req?.t ? req.t(message, { defaultValue: message }) : message;
+  return res.status(status).json({ message: translatedMessage, data });
 };
 
-//global error handling
+// global error handling with i18n translation support
 export const globalErrorHandling = (error, req, res, next) => {
+  const messageKey = error.message || "INTERNAL_SERVER_ERROR";
+  const translatedMessage = req?.t ? req.t(messageKey, { defaultValue: messageKey }) : messageKey;
+
   return res.status(error.cause || 400).json({
-    message: error.message,
-    error,
+    message: translatedMessage,
+    error: process.env.MOOD === "DEV" ? error : undefined,
     stack: process.env.MOOD === "DEV" ? error.stack : undefined,
   });
 };

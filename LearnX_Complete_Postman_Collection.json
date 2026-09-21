@@ -1,0 +1,800 @@
+{
+	"info": {
+		"_postman_id": "11223344-5566-7788-9900-aabbccddeeff",
+		"name": "LearnX LMS - Complete API Collection",
+		"description": "Complete Postman collection containing ALL endpoints with valid sample data for LearnX LMS.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "01. Auth",
+			"item": [
+				{
+					"name": "User Signup",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"John Doe\",\n  \"email\": \"student@example.com\",\n  \"password\": \"SecretPassword123!\",\n  \"phone\": \"01012345678\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/signup",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "signup"]
+						}
+					}
+				},
+				{
+					"name": "Teacher Signup",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"Jane Smith\",\n  \"email\": \"teacher@example.com\",\n  \"password\": \"TeacherSecret123!\",\n  \"phone\": \"01198765432\",\n  \"subject\": \"Computer Science\",\n  \"experienceYears\": 5,\n  \"bio\": \"Experienced Web Development Instructor\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/teacher/signup",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "teacher", "signup"]
+						}
+					}
+				},
+				{
+					"name": "User Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"student@example.com\",\n  \"password\": \"SecretPassword123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Confirm Email OTP",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"student@example.com\",\n  \"otp\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/confirm-email",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "confirm-email"]
+						}
+					}
+				},
+				{
+					"name": "Refresh Access Token",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{refreshToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/refresh-token",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "refresh-token"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "02. Admin Auth",
+			"item": [
+				{
+					"name": "Admin Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@learnx.com\",\n  \"password\": \"Password@123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Refresh Admin Token",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{refreshToken}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/auth/refresh-token",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "auth", "refresh-token"]
+						}
+					}
+				},
+				{
+					"name": "Admin Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/auth/logout",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "auth", "logout"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "03. Admin Roles",
+			"item": [
+				{
+					"name": "Create Role (Multilingual)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"color\": \"#3357FF\",\n  \"translations\": [\n    {\n      \"lang\": \"en\",\n      \"name\": \"Content Editor\",\n      \"slug\": \"content-editor\"\n    },\n    {\n      \"lang\": \"ar\",\n      \"name\": \"محرر محتوى\",\n      \"slug\": \"content-editor-ar\"\n    }\n  ],\n  \"permissions\": [\n    \"courses:read\",\n    \"courses:create\",\n    \"categories:read\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/roles",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "roles"]
+						}
+					}
+				},
+				{
+					"name": "Get All Roles",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/roles?page=1&limit=10&lang=en",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "roles"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "10" },
+								{ "key": "lang", "value": "en" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Role By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/roles/:roleId?lang=en",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "roles", ":roleId"],
+							"variable": [{ "key": "roleId", "value": "ROLE_UUID_HERE" }]
+						}
+					}
+				},
+				{
+					"name": "Update Role",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"color\": \"#00FF88\",\n  \"translations\": [\n    {\n      \"lang\": \"en\",\n      \"name\": \"Senior Content Editor\"\n    }\n  ],\n  \"permissions\": [\n    \"courses:read\",\n    \"courses:create\",\n    \"courses:update\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/roles/:roleId",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "roles", ":roleId"],
+							"variable": [{ "key": "roleId", "value": "ROLE_UUID_HERE" }]
+						}
+					}
+				},
+				{
+					"name": "Delete Role",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/roles/:roleId",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "roles", ":roleId"],
+							"variable": [{ "key": "roleId", "value": "ROLE_UUID_HERE" }]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "04. Admin Students",
+			"item": [
+				{
+					"name": "Create Student",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Ahmed\",\n  \"lastName\": \"Hassan\",\n  \"email\": \"ahmed.hassan@example.com\",\n  \"password\": \"Password@123!\",\n  \"phone\": \"01011112222\",\n  \"country\": \"Egypt\",\n  \"dateOfBirth\": \"2000-01-15T00:00:00.000Z\",\n  \"status\": \"ACTIVE\",\n  \"notes\": \"New enrolled student\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/students",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "students"]
+						}
+					}
+				},
+				{
+					"name": "Get All Students",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/students?page=1&limit=10&search=&status=ACTIVE",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "students"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "10" },
+								{ "key": "search", "value": "" },
+								{ "key": "status", "value": "ACTIVE" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Export Students",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/students/export",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "students", "export"]
+						}
+					}
+				},
+				{
+					"name": "Get Student By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/students/:studentId",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "students", ":studentId"],
+							"variable": [{ "key": "studentId", "value": "STUDENT_UUID_HERE" }]
+						}
+					}
+				},
+				{
+					"name": "Update Student",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Ahmed\",\n  \"lastName\": \"Ali\",\n  \"email\": \"ahmed.hassan@example.com\",\n  \"password\": \"Password@123!\",\n  \"phone\": \"01011112222\",\n  \"country\": \"Egypt\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/students/:studentId",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "students", ":studentId"],
+							"variable": [{ "key": "studentId", "value": "STUDENT_UUID_HERE" }]
+						}
+					}
+				},
+				{
+					"name": "Change Student Status",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"INACTIVE\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/students/:studentId/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "students", ":studentId", "status"],
+							"variable": [{ "key": "studentId", "value": "STUDENT_UUID_HERE" }]
+						}
+					}
+				},
+				{
+					"name": "Delete Student",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/students/:studentId",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "students", ":studentId"],
+							"variable": [{ "key": "studentId", "value": "STUDENT_UUID_HERE" }]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "05. Admin Teachers",
+			"item": [
+				{
+					"name": "Create Teacher",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Mohamed\",\n  \"lastName\": \"Mahmoud\",\n  \"email\": \"mohamed.teacher@example.com\",\n  \"password\": \"TeacherPass123!\",\n  \"phone\": \"01234567890\",\n  \"subject\": \"Mathematics\",\n  \"experienceYears\": 7,\n  \"status\": \"ACTIVE\",\n  \"bio\": \"Senior Math Teacher with over 7 years of experience\",\n  \"linkedinUrl\": \"https://linkedin.com/in/mohamed-math\",\n  \"country\": \"Egypt\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/teachers",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "teachers"]
+						}
+					}
+				},
+				{
+					"name": "Get All Teachers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/teachers?page=1&limit=10&search=&status=ACTIVE",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "teachers"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "10" },
+								{ "key": "search", "value": "" },
+								{ "key": "status", "value": "ACTIVE" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Export Teachers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/teachers/export",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "teachers", "export"]
+						}
+					}
+				},
+				{
+					"name": "Get Teacher By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/teachers/:teacherId",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "teachers", ":teacherId"],
+							"variable": [{ "key": "teacherId", "value": "TEACHER_UUID_HERE" }]
+						}
+					}
+				},
+				{
+					"name": "Update Teacher",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"Mohamed\",\n  \"lastName\": \"Mahmoud\",\n  \"experienceYears\": 8,\n  \"subject\": \"Advanced Mathematics\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/teachers/:teacherId",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "teachers", ":teacherId"],
+							"variable": [{ "key": "teacherId", "value": "TEACHER_UUID_HERE" }]
+						}
+					}
+				},
+				{
+					"name": "Assign Courses to Teacher",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"courseIds\": [\n    \"COURSE_UUID_1\",\n    \"COURSE_UUID_2\"\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/teachers/:teacherId/assign-courses",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "teachers", ":teacherId", "assign-courses"],
+							"variable": [{ "key": "teacherId", "value": "TEACHER_UUID_HERE" }]
+						}
+					}
+				},
+				{
+					"name": "Delete Teacher",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/teachers/:teacherId",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "teachers", ":teacherId"],
+							"variable": [{ "key": "teacherId", "value": "TEACHER_UUID_HERE" }]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "06. Admin Categories",
+			"item": [
+				{
+					"name": "Create Category",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Web Development\",\n  \"description\": \"Learn HTML, CSS, JavaScript, React and Node.js\",\n  \"slug\": \"web-development\",\n  \"locale\": \"en\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/categories",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "categories"]
+						}
+					}
+				},
+				{
+					"name": "Get All Categories",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/categories?page=1&limit=10&search=&locale=en",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "categories"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "10" },
+								{ "key": "search", "value": "" },
+								{ "key": "locale", "value": "en" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Category By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/categories/:categoryId?locale=en",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "categories", ":categoryId"],
+							"query": [{ "key": "locale", "value": "en" }],
+							"variable": [{ "key": "categoryId", "value": "CATEGORY_UUID_HERE" }]
+						}
+					}
+				},
+				{
+					"name": "Edit Category",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Fullstack Web Development\",\n  \"description\": \"Master frontend and backend web development technologies\",\n  \"locale\": \"en\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/categories/:categoryId",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "categories", ":categoryId"],
+							"variable": [{ "key": "categoryId", "value": "CATEGORY_UUID_HERE" }]
+						}
+					}
+				},
+				{
+					"name": "Delete Category",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/categories/:categoryId",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "categories", ":categoryId"],
+							"variable": [{ "key": "categoryId", "value": "CATEGORY_UUID_HERE" }]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "07. Admin Courses",
+			"item": [
+				{
+					"name": "Create Course",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"categoryId\": \"CATEGORY_UUID_HERE\",\n  \"instructorId\": \"USER_TEACHER_UUID_HERE\",\n  \"level\": \"BEGINNER\",\n  \"language\": \"english\",\n  \"durationHours\": 12,\n  \"enrollmentType\": \"PAID\",\n  \"originalPrice\": 99.99,\n  \"salePrice\": 49.99,\n  \"currency\": \"USD\",\n  \"hasCertificate\": true,\n  \"status\": \"DRAFT\",\n  \"translations\": [\n    {\n      \"locale\": \"en\",\n      \"title\": \"Complete Node.js Bootcamp\",\n      \"description\": \"Build modern backend API services with Node.js and Express.\",\n      \"whatYouWillLearn\": [\"Express.js\", \"Prisma ORM\", \"PostgreSQL\"],\n      \"requirements\": [\"Basic JavaScript knowledge\"]\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/courses",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "courses"]
+						}
+					}
+				},
+				{
+					"name": "Get All Courses",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/courses?page=1&limit=10&search=&status=DRAFT",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "courses"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "10" },
+								{ "key": "search", "value": "" },
+								{ "key": "status", "value": "DRAFT" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Course By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/courses/:courseId?locale=en",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "courses", ":courseId"],
+							"query": [{ "key": "locale", "value": "en" }],
+							"variable": [{ "key": "courseId", "value": "COURSE_UUID_HERE" }]
+						}
+					}
+				},
+				{
+					"name": "Update Course Status",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"PUBLISHED\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/courses/:courseId/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "courses", ":courseId", "status"],
+							"variable": [{ "key": "courseId", "value": "COURSE_UUID_HERE" }]
+						}
+					}
+				},
+				{
+					"name": "Create Course Section",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"order\": 1,\n  \"translations\": [\n    {\n      \"locale\": \"en\",\n      \"title\": \"Section 1: Introduction to Node.js\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/courses/:courseId/sections",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "courses", ":courseId", "sections"],
+							"variable": [{ "key": "courseId", "value": "COURSE_UUID_HERE" }]
+						}
+					}
+				},
+				{
+					"name": "Create Section Lesson",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"order\": 1,\n  \"durationMinutes\": 15,\n  \"type\": \"VIDEO\",\n  \"contentUrl\": \"https://example.com/videos/lesson1.mp4\",\n  \"isFreePreview\": true,\n  \"translations\": [\n    {\n      \"locale\": \"en\",\n      \"title\": \"Lesson 1: What is Node.js?\",\n      \"description\": \"An overview of Node.js runtime and architecture.\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/courses/sections/:sectionId/lessons",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "courses", "sections", ":sectionId", "lessons"],
+							"variable": [{ "key": "sectionId", "value": "SECTION_UUID_HERE" }]
+						}
+					}
+				},
+				{
+					"name": "Delete Course",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/courses/:courseId",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "courses", ":courseId"],
+							"variable": [{ "key": "courseId", "value": "COURSE_UUID_HERE" }]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "08. Admin Activity Logs",
+			"item": [
+				{
+					"name": "Get Activity Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/activityLogs/stats",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "activityLogs", "stats"]
+						}
+					}
+				},
+				{
+					"name": "Get All Activity Logs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/activityLogs?page=1&limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "activityLogs"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "20" }
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Activity Log By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{token}}" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/admin/activityLogs/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["admin", "activityLogs", ":id"],
+							"variable": [{ "key": "id", "value": "LOG_UUID_HERE" }]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "YOUR_ADMIN_ACCESS_TOKEN",
+			"type": "string"
+		},
+		{
+			"key": "refreshToken",
+			"value": "YOUR_REFRESH_TOKEN",
+			"type": "string"
+		}
+	]
+}

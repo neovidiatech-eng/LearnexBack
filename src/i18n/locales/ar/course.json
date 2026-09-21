@@ -1,1 +1,16 @@
-{}
+{
+  "COURSE_NOT_FOUND": "الكورس غير موجود.",
+  "SECTION_NOT_FOUND": "القسم غير موجود.",
+  "LESSON_NOT_FOUND": "الدرس غير موجود.",
+  "INSTRUCTOR_NOT_FOUND_OR_INVALID": "المدرس غير موجود أو لا يملك الصلاحية المناسبة.",
+  "COURSE_CREATED_SUCCESSFULLY": "تم إنشاء الكورس بنجاح.",
+  "COURSES_FETCHED_SUCCESSFULLY": "تم جلب الكورسات بنجاح.",
+  "COURSE_DETAILS_FETCHED_SUCCESSFULLY": "تم جلب تفاصيل الكورس بنجاح.",
+  "COURSE_UPDATED_SUCCESSFULLY": "تم تعديل الكورس بنجاح.",
+  "COURSE_STATUS_UPDATED_SUCCESSFULLY": "تم تعديل حالة الكورس بنجاح.",
+  "COURSE_DELETED_SUCCESSFULLY": "تم حذف الكورس بنجاح.",
+  "SECTION_CREATED_SUCCESSFULLY": "تم إنشاء القسم بنجاح.",
+  "SECTION_UPDATED_SUCCESSFULLY": "تم تعديل القسم بنجاح.",
+  "LESSON_CREATED_SUCCESSFULLY": "تم إنشاء الدرس بنجاح.",
+  "LESSON_UPDATED_SUCCESSFULLY": "تم تعديل الدرس بنجاح."
+}

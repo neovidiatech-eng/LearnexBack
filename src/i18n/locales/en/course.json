@@ -1,1 +1,16 @@
-{}
+{
+  "COURSE_NOT_FOUND": "Course not found.",
+  "SECTION_NOT_FOUND": "Section not found.",
+  "LESSON_NOT_FOUND": "Lesson not found.",
+  "INSTRUCTOR_NOT_FOUND_OR_INVALID": "Instructor not found or has invalid role.",
+  "COURSE_CREATED_SUCCESSFULLY": "Course created successfully.",
+  "COURSES_FETCHED_SUCCESSFULLY": "Courses fetched successfully.",
+  "COURSE_DETAILS_FETCHED_SUCCESSFULLY": "Course details fetched successfully.",
+  "COURSE_UPDATED_SUCCESSFULLY": "Course updated successfully.",
+  "COURSE_STATUS_UPDATED_SUCCESSFULLY": "Course status updated successfully.",
+  "COURSE_DELETED_SUCCESSFULLY": "Course deleted successfully.",
+  "SECTION_CREATED_SUCCESSFULLY": "Section created successfully.",
+  "SECTION_UPDATED_SUCCESSFULLY": "Section updated successfully.",
+  "LESSON_CREATED_SUCCESSFULLY": "Lesson created successfully.",
+  "LESSON_UPDATED_SUCCESSFULLY": "Lesson updated successfully."
+}

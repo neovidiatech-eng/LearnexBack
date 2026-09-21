@@ -8,3 +8,4 @@ model Admin {
 
   @@map("admins")
 }
+
