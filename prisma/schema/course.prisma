@@ -176,6 +176,7 @@ model Coupon {
   usageLimit     Int
   usedCount      Int                @default(0)
   maxUsesPerUser Int
+  isActive       Boolean            @default(true)
   redemptions    CoupunRedemption[]
 
   createdAt DateTime @default(now())
