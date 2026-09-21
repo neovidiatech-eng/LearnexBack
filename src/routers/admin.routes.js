@@ -1,4 +1,5 @@
 import { Router } from "express";
+
 import adminAuthRouter from "../modules/admin/auth/auth.routes.js";
 import adminStudentRouter from "../modules/admin/student/student.routes.js";
 import adminTeacherRouter from "../modules/admin/teacher/teacher.routes.js";
@@ -7,6 +8,8 @@ import adminCoursesRouter from "../modules/admin/courses/courses.routes.js";
 import activitylogsRouter from "../modules/admin/acitvitylogs/activitylogs.route.js";
 import adminRolesRouter from "../modules/admin/Roles/roles.routes.js";
 import adminStaffRouter from "../modules/admin/staff/staff.routes.js";
+import adminCouponRouter from "../modules/admin/coupons/coupon.route.js"
+import adminOfferRouter from "../modules/admin/offers/offers.routes.js";
 
 const router = Router();
 router.use("/auth", adminAuthRouter);
@@ -17,5 +20,10 @@ router.use("/courses", adminCoursesRouter);
 router.use("/activityLogs", activitylogsRouter);
 router.use("/roles", adminRolesRouter);
 router.use("/staff", adminStaffRouter);
+router.use("/offers",adminOfferRouter)
+router.use("/coupons",adminCouponRouter);
 
-export default router;
+
+
+
+export default router
