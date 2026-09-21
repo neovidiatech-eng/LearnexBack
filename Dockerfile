@@ -10,7 +10,7 @@ COPY prisma ./prisma/
 RUN npm install
 
 # Generate Prisma Client
-RUN ./node_modules/.bin/prisma generate
+RUN npm run prisma:generate
 
 # Copy the rest of the source code
 COPY . .
@@ -18,5 +18,5 @@ COPY . .
 # Expose port
 EXPOSE 3015
 
-# Run migrations and start app
-CMD ["sh", "-c", "./node_modules/.bin/prisma generate && ./node_modules/.bin/prisma migrate deploy && npm start"]
+# Run migrations, seed database, and start app
+CMD ["sh", "-c", "npm run prisma:generate && npx prisma migrate deploy --schema=./prisma && npm run seed && npm start"]

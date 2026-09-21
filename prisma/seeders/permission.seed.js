@@ -25,6 +25,11 @@ const permissionsData = [
   { code: "roles:update", name: "Update Roles", resource: "roles", action: "update" },
   { code: "roles:delete", name: "Delete Roles", resource: "roles", action: "delete" },
   { code: "permissions:assign", name: "Assign Permissions", resource: "permissions", action: "assign" },
+
+  { code: "staff:read", name: "Read Staff", resource: "staff", action: "read" },
+  { code: "staff:create", name: "Create Staff", resource: "staff", action: "create" },
+  { code: "staff:update", name: "Update Staff", resource: "staff", action: "update" },
+  { code: "staff:delete", name: "Delete Staff", resource: "staff", action: "delete" },
 ];
 
 const rolePermissionsMap = {

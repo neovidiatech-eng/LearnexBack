@@ -1,11 +1,12 @@
 import "dotenv/config";
 import express from "express";
-
+import morgan from "morgan";
+import helmet from "helmet";
+import path from "node:path";
 
 import { setupSwagger } from "./config/swagger.js";
 import router from "./routers/index.routes.js";
 import { globalErrorHandling } from "./utils/response.js";
-import path from "node:path";
 import { i18nMiddleware } from "./i18n/middleware.js";
 
 const bootstrap = async () => {
@@ -14,11 +15,16 @@ const bootstrap = async () => {
 
   app.set("trust proxy", true);
 
+  // Security HTTP headers
+  app.use(helmet());
 
+  // HTTP request logger middleware
+  app.use(morgan("dev"));
 
   app.use(express.json());
   app.use("/uploads", express.static(path.resolve("./uploads")));
   app.use(i18nMiddleware);
+
   // Setup Swagger UI Documentation
   setupSwagger(app);
 

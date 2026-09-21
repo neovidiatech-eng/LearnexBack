@@ -139,6 +139,26 @@ export async function seedCourses(prisma, teachers, categories) {
   for (const course of coursesData) {
     const { translations, sections, ...courseData } = course;
 
+    const existingTranslation = await prisma.courseTranslation.findFirst({
+      where: {
+        locale: "en",
+        title: translations[0].title,
+      },
+      include: {
+        course: {
+          include: {
+            translations: true,
+            sections: { include: { lessons: true } },
+          },
+        },
+      },
+    });
+
+    if (existingTranslation) {
+      courses.push(existingTranslation.course);
+      continue;
+    }
+
     const created = await prisma.course.create({
       data: {
         ...courseData,

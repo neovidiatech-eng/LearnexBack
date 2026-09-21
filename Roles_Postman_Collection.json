@@ -1,0 +1,238 @@
+{
+	"info": {
+		"_postman_id": "8f3b2c1d-7e9a-4f5b-b1a3-9c8d7e6f5a4b",
+		"name": "LearnX - Admin Roles API",
+		"description": "Postman collection for testing Admin Roles endpoints in LearnX LMS.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create Role (Multilingual & Permissions)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"color\": \"#3357FF\",\n  \"translations\": [\n    {\n      \"lang\": \"en\",\n      \"name\": \"Content Editor\",\n      \"slug\": \"content-editor\"\n    },\n    {\n      \"lang\": \"ar\",\n      \"name\": \"محرر محتوى\",\n      \"slug\": \"content-editor-ar\"\n    }\n  ],\n  \"permissions\": [\n    \"courses:read\",\n    \"courses:create\",\n    \"categories:read\"\n  ]\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/admin/roles",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"admin",
+						"roles"
+					]
+				},
+				"description": "Creates a new role with multilingual translations and initial assigned permissions."
+			},
+			"response": []
+		},
+		{
+			"name": "Create Role (Shorthand Single Name)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"Support Manager\",\n  \"lang\": \"en\",\n  \"color\": \"#FF5733\",\n  \"permissions\": [\n    \"students:read\",\n    \"teachers:read\"\n  ]\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/admin/roles",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"admin",
+						"roles"
+					]
+				},
+				"description": "Creates a role using flat/shorthand fields."
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Roles",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/admin/roles?page=1&limit=10&search=&lang=en",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"admin",
+						"roles"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "limit",
+							"value": "10"
+						},
+						{
+							"key": "search",
+							"value": ""
+						},
+						{
+							"key": "lang",
+							"value": "en"
+						}
+					]
+				},
+				"description": "Retrieves a paginated list of roles."
+			},
+			"response": []
+		},
+		{
+			"name": "Get Role By ID",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/admin/roles/:roleId?lang=en",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"admin",
+						"roles",
+						":roleId"
+					],
+					"query": [
+						{
+							"key": "lang",
+							"value": "en"
+						}
+					],
+					"variable": [
+						{
+							"key": "roleId",
+							"value": "ROLE_UUID_HERE",
+							"description": "The UUID of the role to fetch"
+						}
+					]
+				},
+				"description": "Fetches single role details by ID."
+			},
+			"response": []
+		},
+		{
+			"name": "Update Role",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"color\": \"#00FF88\",\n  \"translations\": [\n    {\n      \"lang\": \"en\",\n      \"name\": \"Senior Content Editor\"\n    }\n  ],\n  \"permissions\": [\n    \"courses:read\",\n    \"courses:create\",\n    \"courses:update\",\n    \"categories:read\"\n  ]\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/admin/roles/:roleId",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"admin",
+						"roles",
+						":roleId"
+					],
+					"variable": [
+						{
+							"key": "roleId",
+							"value": "ROLE_UUID_HERE",
+							"description": "The UUID of the role to update"
+						}
+					]
+				},
+				"description": "Updates color, translations, or permissions for an existing role."
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Role",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/admin/roles/:roleId",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"admin",
+						"roles",
+						":roleId"
+					],
+					"variable": [
+						{
+							"key": "roleId",
+							"value": "ROLE_UUID_HERE",
+							"description": "The UUID of the role to delete"
+						}
+					]
+				},
+				"description": "Deletes a role by ID."
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "YOUR_ADMIN_JWT_ACCESS_TOKEN",
+			"type": "string"
+		}
+	]
+}
