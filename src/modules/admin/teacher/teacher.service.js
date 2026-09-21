@@ -263,7 +263,7 @@ export const updateTeacherService = async (body, teacherId) => {
     bio,
     linkedinUrl,
     country,
-    profilePhoto,
+    
   } = body;
 
   const existingTeacher = await dbService.findFirst({
@@ -321,7 +321,6 @@ export const updateTeacherService = async (body, teacherId) => {
           ...(encPhone && { phone: encPhone }),
           ...(country && { country }),
           ...(status && { status }),
-          ...(profilePhoto !== undefined && { profilePhoto }),
         },
       },
     },
@@ -398,7 +397,7 @@ export const assignCoursesToTeacherService = async (
     throw error;
   }
 
-  if (courseIds.length > 0) {
+  if (courseIds.length) {
     const courses = await dbService.findMany({
       model: "course",
       where: { id: { in: courseIds } },
@@ -424,7 +423,7 @@ export const assignCoursesToTeacherService = async (
   };
 };
 
-export const updateTeacherCvService = async (teacherId, cvUrl) => {
+export const updateTeacherCvService = async (teacherId, file) => {
   const teacher = await dbService.findFirst({
     model: "teacher",
     where: {
@@ -441,7 +440,11 @@ export const updateTeacherCvService = async (teacherId, cvUrl) => {
   const updatedTeacher = await dbService.updateOne({
     model: "teacher",
     where: { id: teacher.id },
-    data: { cvUrl },
+    data: {
+      ...(file && {
+        cvUrl: file.relativeDestination,
+      }),
+    },
     select: {
       id: true,
       cvUrl: true,
@@ -458,22 +461,12 @@ export const deleteTeacherService = async (teacherId) => {
     where: {
       OR: [{ id: teacherId }, { userId: teacherId }],
     },
-    include: {
-      user: {
-        include: { courses: { select: { id: true } } },
-      },
-    },
+    select: { userId: true },
   });
 
   if (!teacher) {
     const error = new Error("TEACHER_NOT_FOUND");
     error.cause = 404;
-    throw error;
-  }
-
-  if (teacher.user?.courses && teacher.user.courses.length > 0) {
-    const error = new Error("TEACHER_HAS_ASSIGNED_COURSES");
-    error.cause = 400;
     throw error;
   }
 

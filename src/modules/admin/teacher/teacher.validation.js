@@ -43,7 +43,6 @@ export const createTeacher = {
       bio: joi.string().max(2000).trim().allow("", null).optional(),
       linkedinUrl: joi.string().uri().allow("", null).optional(),
       country: joi.string().min(2).max(100).trim().optional(),
-      profilePhoto: joi.string().uri().optional(),
       courseIds: joi.array().items(generalFields.id).optional().default([]),
     })
     .required()
@@ -69,7 +68,6 @@ export const updateTeacher = {
       bio: joi.string().max(2000).trim().allow("", null).optional(),
       linkedinUrl: joi.string().uri().allow("", null).optional(),
       country: joi.string().min(2).max(100).trim().optional(),
-      profilePhoto: joi.string().uri().optional(),
     })
     .required()
     .options({ allowUnknown: false }),
@@ -102,11 +100,6 @@ export const assignCourses = {
 
 export const updateCv = {
   params: getTeacherById.params,
-  body: joi
-    .object()
-    .keys({
-      cvUrl: joi.string().uri().required(),
-    })
-    .required()
-    .options({ allowUnknown: false }),
+  file: joi.object(generalFields.file).required(),
 };
+

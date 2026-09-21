@@ -6,6 +6,7 @@ import adminCategoriesRouter from "../modules/admin/categories/categories.routes
 import adminCoursesRouter from "../modules/admin/courses/courses.routes.js"
 import activitylogsRouter from "../modules/admin/acitvitylogs/activitylogs.route.js"
 import adminCouponRouter from "../modules/admin/coupons/coupon.route.js"
+import adminOfferRouter from "../modules/admin/offers/offers.routes.js";
 
 
 const router=Router();
@@ -16,6 +17,8 @@ const router=Router();
   router.use("/courses", adminCoursesRouter);
   router.use("/activityLogs",activitylogsRouter);
   router.use("/coupons",adminCouponRouter);
+  router.use("/activityLogs",activitylogsRouter)
+  router.use("/offers",adminOfferRouter)
 
 
 

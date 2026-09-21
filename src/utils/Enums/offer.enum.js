@@ -1,0 +1,14 @@
+export const offerStatusEnum = {
+  ACTIVE: "ACTIVE",
+  INACTIVE: "INACTIVE",
+  SCHEDULED: "SCHEDULED",
+  EXPIRED: "EXPIRED",
+};
+
+export const offerTypeEnum = {
+  PERCENTAGE: "PERCENTAGE",
+  FIXED_AMOUNT: "FIXED_AMOUNT",
+  BUY_ONE_GET_ONE: "BUY_ONE_GET_ONE",
+  FREE_SHIPPING: "FREE_SHIPPING",
+  CUSTOM: "CUSTOM",
+};

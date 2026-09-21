@@ -75,6 +75,19 @@ export const createCourse = {
       sections: jsonArray(sectionSchema).default([]),
     })
     .required(),
+  files: joi
+    .object({
+      thumbnail: joi
+        .array()
+        .items(joi.object(generalFields.file).unknown(true))
+        .optional(),
+      previewVideo: joi
+        .array()
+        .items(joi.object(generalFields.file).unknown(true))
+        .optional(),
+    })
+    .unknown(true)
+    .optional(),
 };
 
 export const updateCourse = {

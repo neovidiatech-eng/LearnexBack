@@ -49,7 +49,7 @@ model Course {
   categoryId         String
   category           Category            @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   instructorId       String
-  instructor         User                @relation("TutorCourses", fields: [instructorId], references: [id], onDelete: Restrict)
+  instructor         User                @relation("TutorCourses", fields: [instructorId], references: [id], onDelete: Cascade)
   sections           CourseSection[]
   enrollments        CourseEnrollment[]
   reviews            CourseReview[]
@@ -197,4 +197,35 @@ model CoupunRedemption {
   @@index([coupunId])
   @@index([studentId])
   @@map("coupun_redemptions")
+}
+
+model Offer {
+  id           String             @id @default(uuid())
+  target       String             @default("All Users")
+  offerType    String             @default("PERCENTAGE")
+  discount     Decimal?           @db.Decimal(10, 2)
+  startDate    DateTime
+  endDate      DateTime
+  status       String             @default("ACTIVE")
+  translations OfferTranslation[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@index([status])
+  @@index([offerType])
+  @@index([startDate])
+  @@index([endDate])
+  @@map("offers")
+}
+
+model OfferTranslation {
+  id        String @id @default(uuid())
+  offerId   String
+  offer     Offer  @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  locale    String
+  name      String
+  offerDesc String @db.Text
+
+  @@unique([offerId, locale])
+  @@map("offer_translations")
 }
