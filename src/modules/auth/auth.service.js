@@ -8,27 +8,16 @@ import { generateLoginCredentials } from "../../utils/security/token.security.js
 import { customAlphabet } from "nanoid";
 import { emailEvent } from "../../utils/events/email.event.js";
 import { userStatusEnum } from "../../utils/Enums/userStatus.enum.js";
-import { ROLES } from "../../utils/Permissions/permissions.js";
+import { baseRoleEnum } from "../../utils/Enums/role.enum.js";
+import { getCache, setCache } from "../../db/redis.service.js";
 
-export const signupService = async (userData) => {
-  const {
-    email,
-    fullName,
-    firstName,
-    lastName,
-    password,
-    phone,
-    subject,
-    experienceYears,
-    bio,
-    linkedinUrl,
-    roleName = ROLES.STUDENT,
-  } = userData;
+export const studentSignup = async (userData) => {
+  const { email, fullName, password, phone } = userData;
 
   const existingUser = await DBService.findFirst({
     model: "user",
     where: { email },
-  }); 
+  });
 
   if (existingUser) {
     const error = new Error("EMAIL_ALREADY_EXISTS");
@@ -37,59 +26,46 @@ export const signupService = async (userData) => {
   }
 
   const hashPassword = await generateHash({ plainText: password });
-  const encPhone = phone ? await generateEncryption({ plainText: phone }) : null;
+  const encPhone = phone
+    ? await generateEncryption({ plainText: phone })
+    : null;
   const otp = customAlphabet("0123456789", 6)();
   const confirmEmailOtp = await generateHash({ plainText: otp });
-
-  const nameParts = fullName ? fullName.trim().split(/\s+/) : [];
-  const userFirstName = firstName || nameParts[0] || "User";
-  const userLastName = lastName || nameParts.slice(1).join(" ") || "Account";
+  await setCache({
+    key: `email:${email}:otp`,
+    value: confirmEmailOtp,
+    ttlInSeconds: 60 * 5,
+  });
 
   const role = await DBService.findFirst({
     model: "role",
     where: {
-      roleTranslations: {
-        some: { name: roleName },
-      },
+      OR: [
+        { slug: baseRoleEnum.STUDENT },
+        { roleTranslations: { some: { name: baseRoleEnum.STUDENT } } },
+      ],
     },
     select: { id: true },
   });
-
-  const isTeacher = roleName === ROLES.TEACHER;
 
   const createdUser = await DBService.create({
     model: "user",
     data: {
       email,
-      firstName: userFirstName,
-      lastName: userLastName,
+      fullName,
       password: hashPassword,
       phone: encPhone,
-      roleId: role?.id || null,
+      role: role?.id ? { connect: { id: role.id } } : undefined,
       status: userStatusEnum.PENDING_VERIFICATION,
-      confirmEmailOtp,
-      ...(isTeacher
-        ? {
-            teacher: {
-              create: {
-                subject: subject || "General",
-                experienceYears: Number(experienceYears) || 0,
-                bio,
-                linkedinUrl,
-              },
-            },
-          }
-        : {
-            student: {
-              create: {},
-            },
-          }),
+      confirmEmail: false,
+      student: {
+        create: {},
+      },
     },
     select: {
       id: true,
       email: true,
-      firstName: true,
-      lastName: true,
+      fullName: true,
       phone: true,
       role: {
         select: {
@@ -99,25 +75,13 @@ export const signupService = async (userData) => {
           },
         },
       },
-      teacher: isTeacher
-        ? {
-            select: {
-              subject: true,
-              experienceYears: true,
-              bio: true,
-              linkedinUrl: true,
-            },
-          }
-        : false,
-      student: !isTeacher
-        ? {
-            select: {
-              id: true,
-              dateOfBirth: true,
-              notes: true,
-            },
-          }
-        : false,
+      student: {
+        select: {
+          id: true,
+          dateOfBirth: true,
+          notes: true,
+        },
+      },
       provider: true,
       status: true,
       createdAt: true,
@@ -180,10 +144,7 @@ export const confirmEmailService = async ({ email, otp }) => {
     model: "user",
     where: {
       email,
-      confirmEmail: null,
-      confirmEmailOtp: {
-        not: null,
-      },
+      confirmEmail: false,
     },
   });
 
@@ -193,9 +154,17 @@ export const confirmEmailService = async ({ email, otp }) => {
     throw error;
   }
 
+  const cachedOtp = await getCache({ key: `email:${email}:otp` });
+
+  if (!cachedOtp) {
+    const error = new Error("INVALID_OTP");
+    error.cause = 400;
+    throw error;
+  }
+
   const isOtpValid = await compareHash({
     plainText: otp,
-    hashValue: user.confirmEmailOtp,
+    hashValue: cachedOtp,
   });
 
   if (!isOtpValid) {
@@ -208,8 +177,7 @@ export const confirmEmailService = async ({ email, otp }) => {
     model: "user",
     where: { email },
     data: {
-      confirmEmail: new Date(),
-      confirmEmailOtp: null,
+      confirmEmail: true,
       status: userStatusEnum.ACTIVE,
     },
   });

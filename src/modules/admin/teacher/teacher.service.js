@@ -5,10 +5,12 @@ import { userStatusEnum } from "../../../utils/Enums/userStatus.enum.js";
 import { generateEncryption } from "../../../utils/security/encryption.security.js";
 import { generateHash } from "../../../utils/security/hash.security.js";
 import { ROLES } from "../../../utils/Permissions/permissions.js";
+import { baseRoleEnum } from "../../../utils/Enums/role.enum.js";
 import { emailEvent } from "../../../utils/events/email.event.js";
 
 export const createTeacherService = async (body) => {
   const {
+    fullName,
     firstName,
     lastName,
     email,
@@ -59,12 +61,15 @@ export const createTeacherService = async (body) => {
   const teacherRole = await dbService.findFirst({
     model: "role",
     where: {
-      roleTranslations: {
-        some: { name: ROLES.TEACHER },
-      },
+      OR: [
+        { slug: baseRoleEnum.TEACHER },
+        { roleTranslations: { some: { name: ROLES.TEACHER } } },
+      ],
     },
     select: { id: true },
   });
+
+  const resolvedFullName = fullName || (firstName && lastName ? `${firstName} ${lastName}`.trim() : firstName || lastName || "Teacher");
 
   const teacher = await dbService.create({
     model: "teacher",
@@ -75,8 +80,7 @@ export const createTeacherService = async (body) => {
       linkedinUrl,
       user: {
         create: {
-          firstName,
-          lastName,
+          fullName: resolvedFullName,
           email: email.toLowerCase(),
           password: hashPassword,
           phone: encPhone,
@@ -84,7 +88,7 @@ export const createTeacherService = async (body) => {
           roleId: teacherRole?.id || null,
           status: status || userStatusEnum.ACTIVE,
           provider: authProviderEnum.SYSTEM,
-          confirmEmail: new Date(),
+          confirmEmail: true,
         },
       },
     },
@@ -99,8 +103,7 @@ export const createTeacherService = async (body) => {
       user: {
         select: {
           id: true,
-          firstName: true,
-          lastName: true,
+          fullName: true,
           email: true,
           phone: true,
           country: true,
@@ -147,8 +150,7 @@ export const getAllTeachersService = async ({
             {
               user: {
                 OR: [
-                  { firstName: { contains: search, mode: "insensitive" } },
-                  { lastName: { contains: search, mode: "insensitive" } },
+                  { fullName: { contains: search, mode: "insensitive" } },
                   { email: { contains: search, mode: "insensitive" } },
                   { phone: { contains: search, mode: "insensitive" } },
                 ],
@@ -170,8 +172,7 @@ export const getAllTeachersService = async ({
     user: {
       select: {
         id: true,
-        firstName: true,
-        lastName: true,
+        fullName: true,
         email: true,
         phone: true,
         country: true,
@@ -221,8 +222,7 @@ export const getTeacherByIdService = async (teacherId) => {
       user: {
         select: {
           id: true,
-          firstName: true,
-          lastName: true,
+          fullName: true,
           email: true,
           phone: true,
           country: true,
@@ -259,6 +259,7 @@ export const getTeacherByIdService = async (teacherId) => {
 
 export const updateTeacherService = async (body, teacherId) => {
   const {
+    fullName,
     firstName,
     lastName,
     email,
@@ -307,6 +308,7 @@ export const updateTeacherService = async (body, teacherId) => {
   const encPhone = phone
     ? await generateEncryption({ plainText: phone })
     : undefined;
+  const resolvedFullName = fullName || (firstName && lastName ? `${firstName} ${lastName}`.trim() : firstName || lastName);
 
   const teacher = await dbService.updateOne({
     model: "teacher",
@@ -320,8 +322,7 @@ export const updateTeacherService = async (body, teacherId) => {
       ...(linkedinUrl !== undefined && { linkedinUrl }),
       user: {
         update: {
-          ...(firstName && { firstName }),
-          ...(lastName && { lastName }),
+          ...(resolvedFullName && { fullName: resolvedFullName }),
           ...(email && { email: email.toLowerCase() }),
           ...(hashPassword && { password: hashPassword }),
           ...(encPhone && { phone: encPhone }),
@@ -341,8 +342,7 @@ export const updateTeacherService = async (body, teacherId) => {
       user: {
         select: {
           id: true,
-          firstName: true,
-          lastName: true,
+          fullName: true,
           email: true,
           phone: true,
           country: true,
@@ -375,8 +375,7 @@ export const changeTeacherStatusService = async (teacherId, status) => {
     data: { status },
     select: {
       id: true,
-      firstName: true,
-      lastName: true,
+      fullName: true,
       email: true,
       status: true,
       updatedAt: true,
@@ -497,8 +496,7 @@ export const exportTeachersToExcelService = async ({
             {
               user: {
                 OR: [
-                  { firstName: { contains: search, mode: "insensitive" } },
-                  { lastName: { contains: search, mode: "insensitive" } },
+                  { fullName: { contains: search, mode: "insensitive" } },
                   { email: { contains: search, mode: "insensitive" } },
                   { phone: { contains: search, mode: "insensitive" } },
                 ],
@@ -519,8 +517,7 @@ export const exportTeachersToExcelService = async ({
       createdAt: true,
       user: {
         select: {
-          firstName: true,
-          lastName: true,
+          fullName: true,
           email: true,
           phone: true,
           country: true,
@@ -576,7 +573,7 @@ export const exportTeachersToExcelService = async ({
         : "0.0";
 
     worksheet.addRow({
-      name: `${user.firstName} ${user.lastName}`.trim(),
+      name: user.fullName || "N/A",
       email: user.email,
       phone: user.phone || "N/A",
       subject: item.subject || "General",
@@ -604,7 +601,7 @@ export const approveTeacherService = async (teacherId) => {
     },
     select: {
       id: true,
-      user: { select: { email: true, firstName: true } },
+      user: { select: { email: true, fullName: true } },
     },
   });
 
@@ -622,7 +619,7 @@ export const approveTeacherService = async (teacherId) => {
       user: {
         update: {
           status: userStatusEnum.ACTIVE,
-          confirmEmail: new Date(),
+          confirmEmail: true,
         },
       },
     },
@@ -630,7 +627,7 @@ export const approveTeacherService = async (teacherId) => {
 
   emailEvent.emit("teacherApproved", {
     to: teacher.user.email,
-    name: teacher.user.firstName,
+    name: teacher.user.fullName,
   });
   return { success: true };
 };
@@ -642,7 +639,7 @@ export const rejectTeacherService = async (teacherId, body) => {
     where: {
       OR: [{ id: teacherId }, { userId: teacherId }],
     },
-    select: { id: true, user: { select: { email: true, firstName: true } } },
+    select: { id: true, user: { select: { email: true, fullName: true } } },
   });
 
   if (!teacher) {
@@ -663,12 +660,12 @@ export const rejectTeacherService = async (teacherId, body) => {
       },
     },
   });
-emailEvent.emit("teacherRejected", {
-  to: teacher.user.email,
-  name: teacher.user.firstName,
-  reason: rejectionReason, 
-});
+
+  emailEvent.emit("teacherRejected", {
+    to: teacher.user.email,
+    name: teacher.user.fullName,
+    reason: rejectionReason,
+  });
 
   return { success: true };
 };
-

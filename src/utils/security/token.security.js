@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import * as DBService from "../../db/db.service.js";
-import { roleEnum } from "../Enums/role.enum.js";
+import { baseRoleEnum } from "../Enums/role.enum.js";
 import { tokenTypeEnum } from "../Enums/token.enum.js";
 
 
@@ -43,8 +43,8 @@ export const decodedToken = async ({
   }
 
   const isAdminModel =
-    decoded.role === roleEnum.ADMIN ||
-    decoded.role === roleEnum.SUPER_ADMIN ||
+    decoded.role === baseRoleEnum.ADMIN ||
+    decoded.role === baseRoleEnum.SUPER_ADMIN ||
     ["admin", "super_admin"].includes(String(decoded.role).toLowerCase());
 
   const model = isAdminModel ? "admin" : "user";

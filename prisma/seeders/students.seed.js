@@ -62,12 +62,11 @@ export async function seedStudents(prisma, roles) {
       create: {
         email: s.email,
         password: hashedPassword,
-        firstName: s.firstName,
-        lastName: s.lastName,
+        fullName: `${s.firstName} ${s.lastName}`,
         phone: s.phone,
         country: s.country,
         status: "ACTIVE",
-        confirmEmail: new Date(),
+        confirmEmail: true,
         roleId: studentRole?.id ?? null,
         student: {
           create: {

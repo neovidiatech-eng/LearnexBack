@@ -50,12 +50,11 @@ export async function seedTeachers(prisma, roles) {
       create: {
         email: t.email,
         password: hashedPassword,
-        firstName: t.firstName,
-        lastName: t.lastName,
+        fullName: `${t.firstName} ${t.lastName}`,
         phone: t.phone,
         country: t.country,
         status: "ACTIVE",
-        confirmEmail: new Date(),
+        confirmEmail: true,
         roleId: teacherRole?.id ?? null,
         teacher: {
           create: {

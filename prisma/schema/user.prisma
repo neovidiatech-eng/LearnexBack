@@ -1,16 +1,14 @@
 model User {
   id              String    @id @default(uuid())
+  fullName        String
   email           String    @unique
   password        String?
-  firstName       String
-  lastName        String
   phone           String?   @unique
   country         String?
   profilePhoto    String?
   provider        String    @default("SYSTEM")
   status          String    @default("ACTIVE")
-  confirmEmail    DateTime?
-  confirmEmailOtp String?
+  confirmEmail    Boolean   @default(false)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   roleId          String?

@@ -12,7 +12,7 @@ export async function seedRoles(prisma) {
     const existingTranslation = await prisma.roleTranslation.findFirst({
       where: {
         lang: "en",
-        OR: [{ name: roleData.name }, { slug: roleData.slug }],
+        OR: [{ name: roleData.name } ],
       },
       include: { role: true },
     });
@@ -23,11 +23,12 @@ export async function seedRoles(prisma) {
     } else {
       role = await prisma.role.create({
         data: {
+          slug: roleData.slug,
           roleTranslations: {
             create: [
               {
                 name: roleData.name,
-                slug: roleData.slug,
+
                 lang: "en",
               },
             ],

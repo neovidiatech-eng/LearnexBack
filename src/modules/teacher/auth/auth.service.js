@@ -6,13 +6,15 @@ import {
 import { generateEncryption } from "../../../utils/security/encryption.security.js";
 import { generateLoginCredentials } from "../../../utils/security/token.security.js";
 import { ROLES } from "../../../utils/Permissions/permissions.js";
+import { baseRoleEnum } from "../../../utils/Enums/role.enum.js";
 import { userStatusEnum } from "../../../utils/Enums/userStatus.enum.js";
 
 export const teacherSignupService = async (body, file) => {
   const {
-    email,
+    fullName,
     firstName,
     lastName,
+    email,
     password,
     phone,
     experienceYears,
@@ -46,12 +48,19 @@ export const teacherSignupService = async (body, file) => {
   const role = await DBService.findFirst({
     model: "role",
     where: {
-      roleTranslations: {
-        some: { name: ROLES.TEACHER },
-      },
+      OR: [
+        { slug: baseRoleEnum.TEACHER },
+        { roleTranslations: { some: { name: ROLES.TEACHER } } },
+      ],
     },
     select: { id: true },
   });
+
+  const resolvedFullName =
+    fullName?.trim() ||
+    (firstName && lastName
+      ? `${firstName} ${lastName}`.trim()
+      : firstName || lastName || "Teacher");
 
   const createdTeacher = await DBService.create({
     model: "teacher",
@@ -62,12 +71,12 @@ export const teacherSignupService = async (body, file) => {
       user: {
         create: {
           email: normalizedEmail,
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
+          fullName: resolvedFullName,
           password: hashPassword,
           phone: encPhone,
           roleId: role?.id || null,
           status: userStatusEnum.PENDING_REVIEW,
+          confirmEmail: false,
         },
       },
       translations: {
@@ -86,8 +95,7 @@ export const teacherSignupService = async (body, file) => {
         select: {
           id: true,
           email: true,
-          firstName: true,
-          lastName: true,
+          fullName: true,
           phone: true,
           status: true,
           role: {

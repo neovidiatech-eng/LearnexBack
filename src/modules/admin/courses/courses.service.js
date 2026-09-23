@@ -1,6 +1,6 @@
 import * as DBService from "../../../db/db.service.js";
 import {
-  roleEnum,
+  baseRoleEnum,
   courseLevelEnum,
   courseStatusEnum,
   enrollmentTypeEnum,

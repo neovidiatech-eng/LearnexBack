@@ -1,12 +1,9 @@
 import * as authService from "./auth.service.js";
 import { asyncHandler, successResponse } from "../../utils/response.js";
 
-import { ROLES } from "../../utils/Permissions/permissions.js";
-
-export const signup = asyncHandler(async (req, res) => {
-  const result = await authService.signupService({
+export const studentSignup = asyncHandler(async (req, res) => {
+  const result = await authService.studentSignup({
     ...req.body,
-    roleName: ROLES.STUDENT, 
   });
   return successResponse({
     res,
@@ -16,9 +13,6 @@ export const signup = asyncHandler(async (req, res) => {
   });
 });
 
-
-
-
 export const login = asyncHandler(async (req, res) => {
   const result = await authService.loginService(req.body);
   return successResponse({
@@ -27,7 +21,7 @@ export const login = asyncHandler(async (req, res) => {
     message: "LOGIN_SUCCESSFUL",
     data: result,
   });
-})
+});
 
 export const confirmEmail = asyncHandler(async (req, res) => {
   const result = await authService.confirmEmailService(req.body);
