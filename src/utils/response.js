@@ -1,3 +1,5 @@
+import { deleteUploadedFiles } from "./multer/file.utils.js";
+
 export const asyncHandler = (fn) => {
   return async (req, res, next) => {
     await fn(req, res, next).catch((error) => {
@@ -26,6 +28,9 @@ export const successResponse = ({
 
 // global error handling with i18n translation support
 export const globalErrorHandling = (error, req, res, next) => {
+  // Clean up any uploaded files if an error occurred during request processing
+  deleteUploadedFiles(req);
+
   const messageKey = error.message || "INTERNAL_SERVER_ERROR";
   const translatedMessage = req?.t ? req.t(messageKey, { defaultValue: messageKey }) : messageKey;
 

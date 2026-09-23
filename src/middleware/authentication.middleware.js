@@ -32,8 +32,10 @@ export const auth = ({
         tokenType,
       })) || {};
     req.user = user;
-    req.decoded = decoded;
-    const userRole = req.user?.role.name || req.decoded?.role;
+    const userRole =
+      req.user?.role?.roleTranslations?.[0]?.name ||
+      req.user?.role?.name ||
+      req.decoded?.role;
     if (!accessRoles.includes(userRole)) {
       return next(new Error("UNAUTHORIZED_ACCOUNT", { cause: 403 }));
     }

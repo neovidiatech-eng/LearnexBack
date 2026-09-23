@@ -29,15 +29,23 @@ export const studentSignup = async (userData) => {
   const encPhone = phone
     ? await generateEncryption({ plainText: phone })
     : null;
-  const otp =/*  customAlphabet("0123456789", 6)(); */"225588"
-  const confirmEmailOtp = await generateHash({ plainText: otp }); 
-  const cachedOtp=await setCache({key:`email:${email}:otp`,value:confirmEmailOtp,ttlInSeconds:60*5})
-  
+  const otp = customAlphabet("0123456789", 6)();
+  const confirmEmailOtp = await generateHash({ plainText: otp });
+  await setCache({
+    key: `email:${email}:otp`,
+    value: confirmEmailOtp,
+    ttlInSeconds: 60 * 5,
+  });
 
   const role = await DBService.findFirst({
     model: "role",
-    where: { slug: baseRoleEnum.STUDENT },
-    include: { roleTranslations: { where: { lang: "en" } } },
+    where: {
+      OR: [
+        { slug: baseRoleEnum.STUDENT },
+        { roleTranslations: { some: { name: baseRoleEnum.STUDENT } } },
+      ],
+    },
+    select: { id: true },
   });
 
   const createdUser = await DBService.create({
@@ -47,14 +55,43 @@ export const studentSignup = async (userData) => {
       fullName,
       password: hashPassword,
       phone: encPhone,
-      role: { connect: { id: role?.id } },
+      role: role?.id ? { connect: { id: role.id } } : undefined,
       status: userStatusEnum.PENDING_VERIFICATION,
+      confirmEmail: false,
+      student: {
+        create: {},
+      },
+    },
+    select: {
+      id: true,
+      email: true,
+      fullName: true,
+      phone: true,
+      role: {
+        select: {
+          id: true,
+          roleTranslations: {
+            select: { name: true },
+          },
+        },
+      },
+      student: {
+        select: {
+          id: true,
+          dateOfBirth: true,
+          notes: true,
+        },
+      },
+      provider: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
     },
   });
 
   emailEvent.emit("confirmEmail", { to: email, otp });
 
-  return true;
+  return createdUser;
 };
 
 export const loginService = async ({ email, password }) => {
@@ -65,7 +102,9 @@ export const loginService = async ({ email, password }) => {
       role: {
         select: {
           id: true,
-          name: true,
+          roleTranslations: {
+            select: { name: true },
+          },
         },
       },
       teacher: true,
@@ -115,9 +154,13 @@ export const confirmEmailService = async ({ email, otp }) => {
     throw error;
   }
 
-  const cachedOtp = await getCache({key: `email:${email}:otp`});
-  console.log(cachedOtp);
-  
+  const cachedOtp = await getCache({ key: `email:${email}:otp` });
+
+  if (!cachedOtp) {
+    const error = new Error("INVALID_OTP");
+    error.cause = 400;
+    throw error;
+  }
 
   const isOtpValid = await compareHash({
     plainText: otp,

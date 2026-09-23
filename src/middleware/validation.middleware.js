@@ -1,4 +1,5 @@
 import { asyncHandler } from "../utils/response.js";
+import { deleteUploadedFiles } from "../utils/multer/file.utils.js";
 
 export const validation = (schema) => {
   return asyncHandler(async (req, res, next) => {
@@ -28,6 +29,7 @@ export const validation = (schema) => {
       }
     }
     if (validationError.length) {
+      deleteUploadedFiles(req);
       return res
         .status(400)
         .json({ error_message: "VALIDATION_ERROR", validationError });

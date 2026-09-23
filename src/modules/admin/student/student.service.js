@@ -19,8 +19,7 @@ export const getAllStudentsService = async ({
       ? {
           user: {
             OR: [
-              { firstName: { contains: search, mode: "insensitive" } },
-              { lastName: { contains: search, mode: "insensitive" } },
+              { fullName: { contains: search, mode: "insensitive" } },
               { email: { contains: search, mode: "insensitive" } },
               { phone: { contains: search, mode: "insensitive" } },
             ],
@@ -38,8 +37,7 @@ export const getAllStudentsService = async ({
     user: {
       select: {
         id: true,
-        firstName: true,
-        lastName: true,
+        fullName: true,
         email: true,
         phone: true,
         country: true,
@@ -48,7 +46,9 @@ export const getAllStudentsService = async ({
         role: {
           select: {
             id: true,
-            name: true,
+            roleTranslations: {
+              select: { name: true },
+            },
           },
         },
         courseEnrollments: {
@@ -96,8 +96,7 @@ export const getStudentByIdService = async (studentId) => {
       user: {
         select: {
           id: true,
-          firstName: true,
-          lastName: true,
+          fullName: true,
           email: true,
           phone: true,
           country: true,
@@ -108,7 +107,9 @@ export const getStudentByIdService = async (studentId) => {
           role: {
             select: {
               id: true,
-              name: true,
+              roleTranslations: {
+                select: { name: true },
+              },
             },
           },
           courseEnrollments: {
@@ -138,6 +139,7 @@ export const getStudentByIdService = async (studentId) => {
 
 export const updateStudentService = async (body, studentId) => {
   const {
+    fullName,
     firstName,
     lastName,
     email,
@@ -196,6 +198,7 @@ export const updateStudentService = async (body, studentId) => {
 
   const hashPassword = password ? await generateHash({ plainText: password }) : undefined;
   const encPhone = phone ? await generateEncryption({ plainText: phone }) : undefined;
+  const resolvedFullName = fullName || (firstName && lastName ? `${firstName} ${lastName}`.trim() : firstName || lastName);
 
   const student = await DBService.updateOne({
     model: "student",
@@ -207,8 +210,7 @@ export const updateStudentService = async (body, studentId) => {
       ...(notes !== undefined && { notes }),
       user: {
         update: {
-          ...(firstName && { firstName }),
-          ...(lastName && { lastName }),
+          ...(resolvedFullName && { fullName: resolvedFullName }),
           ...(email && { email: email.toLowerCase() }),
           ...(hashPassword && { password: hashPassword }),
           ...(encPhone && { phone: encPhone }),
@@ -236,8 +238,7 @@ export const updateStudentService = async (body, studentId) => {
       user: {
         select: {
           id: true,
-          firstName: true,
-          lastName: true,
+          fullName: true,
           email: true,
           phone: true,
           country: true,
@@ -245,7 +246,9 @@ export const updateStudentService = async (body, studentId) => {
           role: {
             select: {
               id: true,
-              name: true,
+              roleTranslations: {
+                select: { name: true },
+              },
             },
           },
           courseEnrollments: {
@@ -283,8 +286,7 @@ export const changeStudentStatusService = async (studentId, status) => {
     data: { status },
     select: {
       id: true,
-      firstName: true,
-      lastName: true,
+      fullName: true,
       email: true,
       status: true,
       updatedAt: true,
@@ -318,6 +320,7 @@ export const deleteStudentService = async (studentId) => {
 
 export const createStudentsService = async (body) => {
   const {
+    fullName,
     firstName,
     lastName,
     email,
@@ -330,13 +333,15 @@ export const createStudentsService = async (body) => {
     courseIds = [],
   } = body;
 
-  const hashPassword = await generateHash({ plainText: password });
+  const defaultPassword = password || "Student@LearnX2026!";
+  const hashPassword = await generateHash({ plainText: defaultPassword });
   const encPhone = phone ? await generateEncryption({ plainText: phone }) : null;
 
   const emailExist = await DBService.findFirst({
     model: "user",
     where: { email: email.toLowerCase() },
   });
+
   if (emailExist) {
     const error = new Error("EMAIL_ALREADY_EXISTS");
     error.cause = 409;
@@ -360,9 +365,16 @@ export const createStudentsService = async (body) => {
 
   const studentRole = await DBService.findFirst({
     model: "role",
-    where: { name: baseRoleEnum.STUDENT },
+    where: {
+      OR: [
+        { slug: baseRoleEnum.STUDENT },
+        { roleTranslations: { some: { name: baseRoleEnum.STUDENT } } },
+      ],
+    },
     select: { id: true },
   });
+
+  const resolvedFullName = fullName || (firstName && lastName ? `${firstName} ${lastName}`.trim() : firstName || lastName || "Student");
 
   const student = await DBService.create({
     model: "student",
@@ -371,8 +383,7 @@ export const createStudentsService = async (body) => {
       notes,
       user: {
         create: {
-          firstName,
-          lastName,
+          fullName: resolvedFullName,
           email: email.toLowerCase(),
           password: hashPassword,
           phone: encPhone,
@@ -380,7 +391,7 @@ export const createStudentsService = async (body) => {
           roleId: studentRole?.id || null,
           status: status || userStatusEnum.ACTIVE,
           provider: authProviderEnum.SYSTEM,
-          confirmEmail: new Date(),
+          confirmEmail: true,
           ...(courseIds.length && {
             courseEnrollments: {
               create: courseIds.map((courseId) => ({
@@ -402,8 +413,7 @@ export const createStudentsService = async (body) => {
       user: {
         select: {
           id: true,
-          firstName: true,
-          lastName: true,
+          fullName: true,
           email: true,
           phone: true,
           country: true,
@@ -411,7 +421,9 @@ export const createStudentsService = async (body) => {
           role: {
             select: {
               id: true,
-              name: true,
+              roleTranslations: {
+                select: { name: true },
+              },
             },
           },
           courseEnrollments: {
@@ -439,8 +451,7 @@ export const exportStudentsToExcelService = async ({
       ? {
           user: {
             OR: [
-              { firstName: { contains: search, mode: "insensitive" } },
-              { lastName: { contains: search, mode: "insensitive" } },
+              { fullName: { contains: search, mode: "insensitive" } },
               { email: { contains: search, mode: "insensitive" } },
               { country: { contains: search, mode: "insensitive" } },
             ],
@@ -459,8 +470,7 @@ export const exportStudentsToExcelService = async ({
       createdAt: true,
       user: {
         select: {
-          firstName: true,
-          lastName: true,
+          fullName: true,
           email: true,
           country: true,
           status: true,
@@ -512,7 +522,7 @@ export const exportStudentsToExcelService = async ({
 
     worksheet.addRow({
       email: user.email,
-      name: `${user.firstName} ${user.lastName}`.trim(),
+      name: user.fullName || "N/A",
       country: user.country || "N/A",
       status: user.status,
       joined: new Date(item.createdAt).toLocaleDateString("en-US", {

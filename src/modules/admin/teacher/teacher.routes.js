@@ -80,4 +80,20 @@ router.delete(
   validation(teacherValidation.getTeacherById),
   teacherController.deleteTeacher,
 );
+//requests
+
+router.patch(
+  "/requests/:teacherId/approve",
+  authentication(),
+  authorizeResource("teachers"),
+  validation(teacherValidation.approveTeacherConfirm),
+  teacherController.approveTeacher,
+);
+router.patch(
+  "/requests/:teacherId/reject",
+  authentication(),
+  authorizeResource("teachers"),
+  validation(teacherValidation.rejectTeacherConfirm),
+  teacherController.rejectTeacher,
+);
 export default router;

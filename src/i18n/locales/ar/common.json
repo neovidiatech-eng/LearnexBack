@@ -51,6 +51,9 @@
   "STUDENT_STATUS_UPDATED_SUCCESSFULLY": "تم تعديل حالة الطالب بنجاح.",
   "STUDENT_DELETED_SUCCESSFULLY": "تم حذف الطالب بنجاح.",
 
+  "TEACHER_APPLICATION_SUBMITTED_SUCCESSFULLY": "تم إرسال طلب التقديم بنجاح وهو قيد مراجعة الإدارة.",
+  "ACCOUNT_UNDER_REVIEW": "حسابك قيد مراجعة الإدارة حالياً، سيتم إشعارك فور الاعتماد.",
+  "ACCOUNT_NOT_ACTIVE": "حسابك غير نشط أو معلق. يرجى التواصل مع الإدارة.",
   "TEACHER_NOT_FOUND": "المدرس غير موجود.",
   "SOME_COURSES_NOT_FOUND": "بعض الكورسات غير موجودة.",
   "TEACHER_CREATED_SUCCESSFULLY": "تم إنشاء حساب المدرس بنجاح.",

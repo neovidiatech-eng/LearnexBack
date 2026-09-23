@@ -1,7 +1,6 @@
 import * as authService from "./auth.service.js";
 import { asyncHandler, successResponse } from "../../utils/response.js";
 
-
 export const studentSignup = asyncHandler(async (req, res) => {
   const result = await authService.studentSignup({
     ...req.body,
@@ -14,19 +13,6 @@ export const studentSignup = asyncHandler(async (req, res) => {
   });
 });
 
-export const teacherSignup = asyncHandler(async (req, res) => {
-  const result = await authService.signupService({
-    ...req.body,
-  });
-  return successResponse({
-    res,
-    status: 201,
-    message: "TEACHER_REGISTERED_SUCCESSFULLY",
-    data: { user: result },
-  });
-});
-
-
 export const login = asyncHandler(async (req, res) => {
   const result = await authService.loginService(req.body);
   return successResponse({
@@ -35,7 +21,7 @@ export const login = asyncHandler(async (req, res) => {
     message: "LOGIN_SUCCESSFUL",
     data: result,
   });
-})
+});
 
 export const confirmEmail = asyncHandler(async (req, res) => {
   const result = await authService.confirmEmailService(req.body);

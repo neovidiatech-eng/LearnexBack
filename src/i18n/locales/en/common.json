@@ -50,6 +50,9 @@
   "STUDENT_STATUS_UPDATED_SUCCESSFULLY": "Student status updated successfully.",
   "STUDENT_DELETED_SUCCESSFULLY": "Student deleted successfully.",
 
+  "TEACHER_APPLICATION_SUBMITTED_SUCCESSFULLY": "Teacher application submitted successfully and is pending admin review.",
+  "ACCOUNT_UNDER_REVIEW": "Your account is currently under review by administration.",
+  "ACCOUNT_NOT_ACTIVE": "Your account is inactive or suspended. Please contact administration.",
   "TEACHER_NOT_FOUND": "Teacher not found.",
   "SOME_COURSES_NOT_FOUND": "Some courses were not found.",
   "TEACHER_CREATED_SUCCESSFULLY": "Teacher created successfully.",
