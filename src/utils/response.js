@@ -31,7 +31,8 @@ export const globalErrorHandling = (error, req, res, next) => {
 
   return res.status(error.cause || 400).json({
     message: translatedMessage,
-    error: process.env.MOOD === "DEV" ? error : undefined,
+    status:error.cause,
+    success:false,
     stack: process.env.MOOD === "DEV" ? error.stack : undefined,
   });
 };

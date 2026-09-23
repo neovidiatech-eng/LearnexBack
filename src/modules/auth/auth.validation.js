@@ -12,13 +12,14 @@ export const login = {
     .options({ allowUnknown: false }),
 };
 
-export const signup = {
+export const studentSignup = {
   body: joi
     .object()
     .keys({
       fullName: generalFields.fullName.required(),
       email: generalFields.email.required(),
       password: generalFields.password.required(),
+      confirmPassword:generalFields.confirmPassword.required(),
       phone: generalFields.phone.required(),
     })
     .required()

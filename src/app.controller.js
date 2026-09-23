@@ -5,6 +5,7 @@ import helmet from "helmet";
 import path from "node:path";
 
 import { setupSwagger } from "./config/swagger.js";
+import redis from "./config/redis.config.js";
 import router from "./routers/index.routes.js";
 import { globalErrorHandling } from "./utils/response.js";
 import { i18nMiddleware } from "./i18n/middleware.js";

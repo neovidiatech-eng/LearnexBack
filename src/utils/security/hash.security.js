@@ -11,6 +11,7 @@ export const compareHash = async ({
   plainText = "",
   hashValue = "",
 } = {}) => {
+  console.log(typeof plainText, typeof hashValue);
   if (!plainText || !hashValue) return false;
   return bcrypt.compareSync(plainText, hashValue);
 };
