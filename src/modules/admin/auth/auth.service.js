@@ -1,7 +1,7 @@
 import * as DBService from "../../../db/db.service.js";
 import { compareHash } from "../../../utils/security/hash.security.js";
 import { generateLoginCredentials } from "../../../utils/security/token.security.js";
-import { roleEnum } from "../../../utils/Enums/role.enum.js";
+import { baseRoleEnum } from "../../../utils/Enums/role.enum.js";
 import { logActivity } from "../../../utils/helpers/acitvitylogs.js";
 import { ACTIVITY_ACTIONS, ACTIVITY_STATUS } from "../../../utils/Enums/activity.enum.js";
 
@@ -15,7 +15,7 @@ export const loginService = async ({ email, password,ipAddress }) => {
     await logActivity({
       actorId:null,
       userName:email,
-      role:roleEnum.ADMIN,
+      role:baseRoleEnum.ADMIN,
       action:ACTIVITY_ACTIONS.LOGIN,
       status:ACTIVITY_STATUS.FAILED,
       ipAddress
@@ -34,7 +34,7 @@ export const loginService = async ({ email, password,ipAddress }) => {
     await logActivity({
       actorId:admin.id,
       userName:admin.fullName,
-      role:roleEnum.ADMIN,
+      role:baseRoleEnum.ADMIN,
       action:ACTIVITY_ACTIONS.LOGIN,
       status:ACTIVITY_STATUS.FAILED,
       ipAddress
@@ -46,13 +46,13 @@ export const loginService = async ({ email, password,ipAddress }) => {
 
   const credentials = await generateLoginCredentials({
     user: admin,
-    role: roleEnum.ADMIN,
+    role: baseRoleEnum.ADMIN,
   });
 
   await logActivity ({
     actorId:admin.id,
     userName:admin.fullName,
-    role:roleEnum.ADMIN,
+    role:baseRoleEnum.ADMIN,
     action:ACTIVITY_ACTIONS.LOGIN,
     status:ACTIVITY_STATUS.SUCCESS,
     ipAddress
@@ -64,7 +64,7 @@ export const logOutService = async ({user,ipAddress})=>{
   await logActivity({
     actorId:user.id,
     userName:user.fullName,
-    role:roleEnum.ADMIN,
+    role:baseRoleEnum.ADMIN,
     action:ACTIVITY_ACTIONS.LOGOUT,
     status:ACTIVITY_STATUS.SUCCESS,
     ipAddress
@@ -76,7 +76,7 @@ export const logOutService = async ({user,ipAddress})=>{
 export const getNewCredentialsService = async (user) => {
   const credentials = await generateLoginCredentials({
     user,
-    role: roleEnum.ADMIN,
+    role: baseRoleEnum.ADMIN,
   });
 
   return { credentials };

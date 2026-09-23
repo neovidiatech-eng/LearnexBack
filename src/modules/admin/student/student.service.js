@@ -4,7 +4,7 @@ import { userStatusEnum } from "../../../utils/Enums/userStatus.enum.js";
 import { enrollmentStatusEnum } from "../../../utils/Enums/enrollmentStatus.enum.js";
 import { generateHash } from "../../../utils/security/hash.security.js";
 import { generateEncryption } from "../../../utils/security/encryption.security.js";
-import { ROLES } from "../../../utils/Permissions/permissions.js";
+import { baseRoleEnum } from "../../../utils/Enums/role.enum.js";
 import ExcelJS from "exceljs";
 
 export const getAllStudentsService = async ({
@@ -360,7 +360,7 @@ export const createStudentsService = async (body) => {
 
   const studentRole = await DBService.findFirst({
     model: "role",
-    where: { name: ROLES.STUDENT },
+    where: { name: baseRoleEnum.STUDENT },
     select: { id: true },
   });
 

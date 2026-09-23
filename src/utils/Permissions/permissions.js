@@ -78,9 +78,3 @@ export const hasAllPermissions = (user, permissionCodes) => {
   return codes.every((code) => userPermissions.has(code));
 };
 
-export const ROLES = {
-  STUDENT: "student",
-  TEACHER: "teacher",
-  ADMIN: "admin",
-  SUPER_ADMIN: "super_admin",
-};

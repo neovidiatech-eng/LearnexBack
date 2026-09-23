@@ -1,6 +1,7 @@
-import { ROLES } from "../Permissions/permissions.js";
-/**
- * Unified Role Enum for LearnX
- * Synced with RBAC system
- */
-export const roleEnum = ROLES;
+
+export const baseRoleEnum = {
+  STUDENT: "student",
+  TEACHER: "teacher",
+  ADMIN: "admin",
+  SUPER_ADMIN: "super_admin",
+};

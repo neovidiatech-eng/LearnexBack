@@ -4,7 +4,7 @@ import { authProviderEnum } from "../../../utils/Enums/authProvider.enum.js";
 import { userStatusEnum } from "../../../utils/Enums/userStatus.enum.js";
 import { generateEncryption } from "../../../utils/security/encryption.security.js";
 import { generateHash } from "../../../utils/security/hash.security.js";
-import { ROLES } from "../../../utils/Permissions/permissions.js";
+import { baseRoleEnum } from "../../../utils/Enums/role.enum.js";
 
 export const createTeacherService = async (body) => {
   const {
@@ -57,7 +57,7 @@ export const createTeacherService = async (body) => {
 
   const teacherRole = await dbService.findFirst({
     model: "role",
-    where: { name: ROLES.TEACHER },
+    where: { name: baseRoleEnum.TEACHER },
     select: { id: true },
   });
 
