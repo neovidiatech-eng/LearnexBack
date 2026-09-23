@@ -4,7 +4,6 @@ import { authProviderEnum } from "../../../utils/Enums/authProvider.enum.js";
 import { userStatusEnum } from "../../../utils/Enums/userStatus.enum.js";
 import { generateEncryption } from "../../../utils/security/encryption.security.js";
 import { generateHash } from "../../../utils/security/hash.security.js";
-import { ROLES } from "../../../utils/Permissions/permissions.js";
 import { baseRoleEnum } from "../../../utils/Enums/role.enum.js";
 import { emailEvent } from "../../../utils/events/email.event.js";
 
@@ -63,7 +62,7 @@ export const createTeacherService = async (body) => {
     where: {
       OR: [
         { slug: baseRoleEnum.TEACHER },
-        { roleTranslations: { some: { name: ROLES.TEACHER } } },
+        { roleTranslations: { some: { name: baseRoleEnum.TEACHER } } },
       ],
     },
     select: { id: true },

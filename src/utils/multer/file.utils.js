@@ -30,3 +30,34 @@ export const deleteFiles = (filePaths = []) => {
     deleteFile(filePath);
   }
 };
+
+/**
+ * Delete all files uploaded in the current request (req.file or req.files)
+ * @param {object} req
+ */
+export const deleteUploadedFiles = (req) => {
+  if (!req) return;
+
+  // Single file (req.file)
+  if (req.file) {
+    deleteFile(req.file.path || req.file.relativeDestination);
+  }
+
+  // Multiple files (req.files: Array or Object of fields)
+  if (req.files) {
+    if (Array.isArray(req.files)) {
+      req.files.forEach((file) => {
+        deleteFile(file.path || file.relativeDestination);
+      });
+    } else if (typeof req.files === "object") {
+      Object.values(req.files).forEach((fileArray) => {
+        if (Array.isArray(fileArray)) {
+          fileArray.forEach((file) => {
+            deleteFile(file.path || file.relativeDestination);
+          });
+        }
+      });
+    }
+  }
+};
+

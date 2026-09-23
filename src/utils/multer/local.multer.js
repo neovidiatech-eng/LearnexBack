@@ -34,7 +34,9 @@ export const localFileUpload = ({
     if (validation.length === 0 || validation.includes(file.mimetype)) {
       return cb(null, true);
     }
-    return cb(new Error("INVALID_FILE_FORMAT"), false);
+    const error = new Error("INVALID_FILE_FORMAT");
+    error.cause = 400;
+    return cb(error, false);
   };
 
   return multer({
