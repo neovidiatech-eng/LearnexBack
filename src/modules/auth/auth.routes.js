@@ -51,11 +51,7 @@ router.post(
   validation(authValidation.signup),
   authController.signup,
 );
-router.post(
-  "/teacher/signup",
-  validation(authValidation.teacherSignup),
-  authController.teacherSignup,
-);
+
 
 /**
  * @openapi

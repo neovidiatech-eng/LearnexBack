@@ -81,8 +81,14 @@ export const decodedToken = async ({
 };
 
 export const generateLoginCredentials = async ({ user, role }) => {
-  const userId = user.id || user._id;
-  const userRole = role || user.role?.name || user.role || "student";
+  const userId = user.id || user._id; 
+
+  const userRole =
+    role ||
+    user.role?.roleTranslations?.[0]?.name ||
+    user.role?.name ||
+    user.role ||
+    "student";
   const access_token = await generateToken({
     payload: { id: userId, role: userRole },
     options: { expiresIn: 60 * 30 },

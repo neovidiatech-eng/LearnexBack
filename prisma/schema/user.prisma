@@ -44,17 +44,31 @@ model Student {
 }
 
 model Teacher {
-  id              String   @id @default(uuid())
-  userId          String   @unique
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subject         String
-  experienceYears Int      @default(0)
-  bio             String?  @db.Text
-  linkedinUrl     String?
+  id              String               @id @default(uuid())
+  userId          String               @unique
+  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  experienceYears Int                  @default(0)
   cvUrl           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  linkedinUrl     String?
+  rejectionReason String?              @db.Text
+  translations    TeacherTranslation[]
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
 
   @@index([userId])
   @@map("teachers")
 }
+
+model TeacherTranslation {
+  id        String  @id @default(uuid())
+  teacherId String
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  locale    String 
+  subject   String  
+  headline  String?
+  bio       String? @db.Text 
+
+  @@unique([teacherId, locale])
+  @@map("teacher_translations")
+}
+

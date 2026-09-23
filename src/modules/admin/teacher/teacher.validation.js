@@ -103,3 +103,52 @@ export const updateCv = {
   file: joi.object(generalFields.file).required(),
 };
 
+//
+export const getTeacherRequests = {
+  query: joi
+    .object({
+      page: joi.number().integer().min(1).default(1),
+      limit: joi.number().integer().min(1).max(100).default(10),
+      status: joi
+        .string()
+        .valid(...Object.values(userStatusEnum))
+        .optional(),
+      search: joi.string().trim().allow("").optional(),
+    })
+    .options({ allowUnknown: false }),
+};
+
+export const getTeacherRequestDetails = {
+  params: joi
+    .object({
+      teacherId: generalFields.id.required(),
+    })
+    .required()
+    .options({ allowUnknown: false }),
+};
+
+export const approveTeacherConfirm = {
+  params: joi
+    .object({
+      teacherId: generalFields.id.required(),
+    })
+    .required()
+    .options({ allowUnknown: false }),
+};
+
+
+export const rejectTeacherConfirm = {
+  params: joi
+    .object({
+      teacherId: generalFields.id.required(),
+    })
+    .required()
+    .options({ allowUnknown: false }),
+
+  body: joi
+    .object({
+      rejectionReason: joi.string().min(5).max(1000).trim().required(),
+    })
+    .required()
+    .options({ allowUnknown: false }),
+};

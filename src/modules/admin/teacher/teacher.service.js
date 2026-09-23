@@ -5,6 +5,7 @@ import { userStatusEnum } from "../../../utils/Enums/userStatus.enum.js";
 import { generateEncryption } from "../../../utils/security/encryption.security.js";
 import { generateHash } from "../../../utils/security/hash.security.js";
 import { ROLES } from "../../../utils/Permissions/permissions.js";
+import { emailEvent } from "../../../utils/events/email.event.js";
 
 export const createTeacherService = async (body) => {
   const {
@@ -57,7 +58,11 @@ export const createTeacherService = async (body) => {
 
   const teacherRole = await dbService.findFirst({
     model: "role",
-    where: { name: ROLES.TEACHER },
+    where: {
+      roleTranslations: {
+        some: { name: ROLES.TEACHER },
+      },
+    },
     select: { id: true },
   });
 
@@ -104,7 +109,9 @@ export const createTeacherService = async (body) => {
           role: {
             select: {
               id: true,
-              name: true,
+              roleTranslations: {
+                select: { name: true },
+              },
             },
           },
         },
@@ -221,21 +228,21 @@ export const getTeacherByIdService = async (teacherId) => {
           country: true,
           status: true,
           profilePhoto: true,
-        courses: {
-          select: {
-            id: true,
-            level: true,
-            status: true,
-            originalPrice: true,
-            totalStudentsCount: true,
-            avgRating: true,
-            reviewsCount: true,
-            translations: true,
-            category: {
-              select: { id: true, slug: true, translations: true },
+          courses: {
+            select: {
+              id: true,
+              level: true,
+              status: true,
+              originalPrice: true,
+              totalStudentsCount: true,
+              avgRating: true,
+              reviewsCount: true,
+              translations: true,
+              category: {
+                select: { id: true, slug: true, translations: true },
+              },
             },
           },
-        },
         },
       },
     },
@@ -263,7 +270,6 @@ export const updateTeacherService = async (body, teacherId) => {
     bio,
     linkedinUrl,
     country,
-    
   } = body;
 
   const existingTeacher = await dbService.findFirst({
@@ -589,3 +595,80 @@ export const exportTeachersToExcelService = async ({
 
   return workbook;
 };
+
+export const approveTeacherService = async (teacherId) => {
+  const teacher = await dbService.findFirst({
+    model: "teacher",
+    where: {
+      OR: [{ id: teacherId }, { userId: teacherId }],
+    },
+    select: {
+      id: true,
+      user: { select: { email: true, firstName: true } },
+    },
+  });
+
+  if (!teacher) {
+    const error = new Error("TEACHER_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+
+  await dbService.updateOne({
+    model: "teacher",
+    where: { id: teacher.id },
+    data: {
+      rejectionReason: null,
+      user: {
+        update: {
+          status: userStatusEnum.ACTIVE,
+          confirmEmail: new Date(),
+        },
+      },
+    },
+  });
+
+  emailEvent.emit("teacherApproved", {
+    to: teacher.user.email,
+    name: teacher.user.firstName,
+  });
+  return { success: true };
+};
+
+export const rejectTeacherService = async (teacherId, body) => {
+  const { rejectionReason } = body;
+  const teacher = await dbService.findFirst({
+    model: "teacher",
+    where: {
+      OR: [{ id: teacherId }, { userId: teacherId }],
+    },
+    select: { id: true, user: { select: { email: true, firstName: true } } },
+  });
+
+  if (!teacher) {
+    const error = new Error("TEACHER_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+
+  await dbService.updateOne({
+    model: "teacher",
+    where: { id: teacher.id },
+    data: {
+      rejectionReason,
+      user: {
+        update: {
+          status: userStatusEnum.SUSPENDED,
+        },
+      },
+    },
+  });
+emailEvent.emit("teacherRejected", {
+  to: teacher.user.email,
+  name: teacher.user.firstName,
+  reason: rejectionReason, 
+});
+
+  return { success: true };
+};
+

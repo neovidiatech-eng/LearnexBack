@@ -47,7 +47,11 @@ export const signupService = async (userData) => {
 
   const role = await DBService.findFirst({
     model: "role",
-    where: { name: roleName },
+    where: {
+      roleTranslations: {
+        some: { name: roleName },
+      },
+    },
     select: { id: true },
   });
 
@@ -90,7 +94,9 @@ export const signupService = async (userData) => {
       role: {
         select: {
           id: true,
-          name: true,
+          roleTranslations: {
+            select: { name: true },
+          },
         },
       },
       teacher: isTeacher
@@ -132,7 +138,9 @@ export const loginService = async ({ email, password }) => {
       role: {
         select: {
           id: true,
-          name: true,
+          roleTranslations: {
+            select: { name: true },
+          },
         },
       },
       teacher: true,

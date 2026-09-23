@@ -16,18 +16,7 @@ export const signup = asyncHandler(async (req, res) => {
   });
 });
 
-export const teacherSignup = asyncHandler(async (req, res) => {
-  const result = await authService.signupService({
-    ...req.body,
-    roleName: ROLES.TEACHER, 
-  });
-  return successResponse({
-    res,
-    status: 201,
-    message: "TEACHER_REGISTERED_SUCCESSFULLY",
-    data: { user: result },
-  });
-});
+
 
 
 export const login = asyncHandler(async (req, res) => {

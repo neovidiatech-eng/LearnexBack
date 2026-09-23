@@ -22,7 +22,7 @@ export const getAllTeacher = asyncHandler(async (req, res, next) => {
 
 export const getTeacherById = asyncHandler(async (req, res, next) => {
   const teacher = await teacherService.getTeacherByIdService(
-    req.params.teacherId
+    req.params.teacherId,
   );
   return successResponse({
     res,
@@ -34,7 +34,7 @@ export const getTeacherById = asyncHandler(async (req, res, next) => {
 export const updateTeacher = asyncHandler(async (req, res, next) => {
   const teacher = await teacherService.updateTeacherService(
     req.body,
-    req.params.teacherId
+    req.params.teacherId,
   );
   return successResponse({
     res,
@@ -46,7 +46,7 @@ export const updateTeacher = asyncHandler(async (req, res, next) => {
 export const changeTeacherStatus = asyncHandler(async (req, res, next) => {
   const teacher = await teacherService.changeTeacherStatusService(
     req.params.teacherId,
-    req.body.status
+    req.body.status,
   );
   return successResponse({
     res,
@@ -58,7 +58,7 @@ export const changeTeacherStatus = asyncHandler(async (req, res, next) => {
 export const assignCourses = asyncHandler(async (req, res, next) => {
   const result = await teacherService.assignCoursesToTeacherService(
     req.params.teacherId,
-    req.body.courseIds
+    req.body.courseIds,
   );
   return successResponse({
     res,
@@ -94,10 +94,33 @@ export const exportTeachers = asyncHandler(async (req, res, next) => {
 
   res.setHeader(
     "Content-Type",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   );
   res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
 
   await workbook.xlsx.write(res);
   res.end();
 });
+
+export const approveTeacher = asyncHandler(async (req, res, next) => {
+   await teacherService.approveTeacherService(
+    req.params.teacherId,
+  );
+  return successResponse({
+    res,
+    message: "APPROVED_SUCCESSFULLY",
+  });
+});
+
+export const rejectTeacher = asyncHandler(async (req, res, next) => {
+   await teacherService.rejectTeacherService(
+    req.params.teacherId,
+    req.body
+  );
+  return successResponse({
+    res,
+    message: "REJECTED",
+  });
+});
+
+

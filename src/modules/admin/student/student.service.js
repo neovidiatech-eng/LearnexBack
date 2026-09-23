@@ -48,7 +48,9 @@ export const getAllStudentsService = async ({
         role: {
           select: {
             id: true,
-            name: true,
+            roleTranslations: {
+              select: { name: true },
+            },
           },
         },
         courseEnrollments: {
@@ -108,7 +110,9 @@ export const getStudentByIdService = async (studentId) => {
           role: {
             select: {
               id: true,
-              name: true,
+              roleTranslations: {
+                select: { name: true },
+              },
             },
           },
           courseEnrollments: {
@@ -245,7 +249,9 @@ export const updateStudentService = async (body, studentId) => {
           role: {
             select: {
               id: true,
-              name: true,
+              roleTranslations: {
+                select: { name: true },
+              },
             },
           },
           courseEnrollments: {
@@ -360,7 +366,11 @@ export const createStudentsService = async (body) => {
 
   const studentRole = await DBService.findFirst({
     model: "role",
-    where: { name: ROLES.STUDENT },
+    where: {
+      roleTranslations: {
+        some: { name: ROLES.STUDENT },
+      },
+    },
     select: { id: true },
   });
 
@@ -411,7 +421,9 @@ export const createStudentsService = async (body) => {
           role: {
             select: {
               id: true,
-              name: true,
+              roleTranslations: {
+                select: { name: true },
+              },
             },
           },
           courseEnrollments: {
