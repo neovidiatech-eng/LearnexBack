@@ -65,6 +65,8 @@ model Teacher {
   certificates       TeacherCertificate[]
   reviews            TeacherReview[]
 
+  courses TeacherCourse[]
+
   @@index([userId])
   @@map("teachers")
 }

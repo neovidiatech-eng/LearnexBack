@@ -26,7 +26,7 @@ const router = Router();
 router.post(
   "/signup",
   localFileUpload({
-    customPath: "teachers/cv",
+    customPath: (req) =>`teacher/cv/${req.body.email}`,
     validation: [...fileValidation.document, ...fileValidation.image], 
     maxSizeInMB: 10,
   }).single("cv"),
