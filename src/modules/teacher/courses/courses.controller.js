@@ -1,36 +1,36 @@
-import dbService from "../../../../db/db.service";
-import { asyncHandler, successResponse } from "../../../../utils/response"
+import dbService from "../../../db/db.service.js";
+import { asyncHandler, successResponse } from "../../../utils/response.js"
 import * as teacherCourseService from "./courses.service.js"
-export const createTeacherCourse = asyncHandler(async(req,res,next)=>{
-    const {name,description,price,totalHours} = req.body;
-    const teacher = await dbService.findFirst({
-        model:"teacher",
-        where:{
-            userId:req.user.id
-        },
-        select:{
-            id:true
-        }
-    })
-    if(!teacher){
-        const error = new Error("TEACHER_NOT_FOUND")
-        error.cause = 404
-        throw error
+export const createTeacherCourse = asyncHandler(async (req, res, next) => {
+  const { name, description, price, totalHours } = req.body;
+  const teacher = await dbService.findFirst({
+    model: "teacher",
+    where: {
+      userId: req.user.id
+    },
+    select: {
+      id: true
     }
-    const course = await teacherCourseService.createTeacherCourse({
-        teacherId:teacher.id,
-        name,
-        description,
-        price,
-        totalHours,
-        wallPaper:req.file
-    });
-    return successResponse({
-        res,
-        status:201,
-        data:course,
-        message:"COURSE_CREATED_SUCCESS"
-    });
+  })
+  if (!teacher) {
+    const error = new Error("TEACHER_NOT_FOUND")
+    error.cause = 404
+    throw error
+  }
+  const course = await teacherCourseService.createTeacherCourse({
+    teacherId: teacher.id,
+    name,
+    description,
+    price,
+    totalHours,
+    wallPaper: req.file?.relativeDestination
+  });
+  return successResponse({
+    res,
+    status: 201,
+    data: course,
+    message: "COURSE_CREATED_SUCCESS"
+  });
 
 
 });
@@ -78,8 +78,24 @@ export const getCourses = asyncHandler(async (req, res, next) => {
 export const getCourseById = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
 
+  let teacherId;
+  if (req.user.role === "TEACHER") {
+    const teacher = await dbService.findFirst({
+      model: "teacher",
+      where: { userId: req.user.id },
+      select: { id: true },
+    });
+    if (!teacher) {
+      const error = new Error("TEACHER_NOT_FOUND");
+      error.cause = 404;
+      throw error;
+    }
+    teacherId = teacher.id;
+  }
+
   const course = await teacherCourseService.getCourseById({
     courseId: id,
+    teacherId,
   });
 
   return successResponse({
@@ -122,7 +138,7 @@ export const updateTeacherCourse = asyncHandler(async (req, res, next) => {
     description,
     price,
     totalHours,
-    wallPaper:req.file?.relativeDestination
+    wallPaper: req.file?.relativeDestination
   });
 
   return successResponse({
@@ -134,29 +150,29 @@ export const updateTeacherCourse = asyncHandler(async (req, res, next) => {
 });
 
 export const deleteCourse = asyncHandler(async (req, res, next) => {
-    const {id} = req.params;
-    const teacher = await dbService.findFirst({
-        model: "teacher",
-        where: {
-            userId: req.user.id,
-        },
-        select: {
-            id: true,
-        },
-    });
-    if(!teacher){
-        const error = new Error("TEACHER_NOT_FOUND")
-        error.cause = 404
-        throw error
-    }
-    const course = await teacherCourseService.deleteCourse({
-        courseId:id,
-        teacherId:teacher.id
-    });
-    return successResponse({
-        res,
-        status:200,
-        message:"COURSE_DELETED_SUCCESS"
-    });
-  
+  const { id } = req.params;
+  const teacher = await dbService.findFirst({
+    model: "teacher",
+    where: {
+      userId: req.user.id,
+    },
+    select: {
+      id: true,
+    },
+  });
+  if (!teacher) {
+    const error = new Error("TEACHER_NOT_FOUND")
+    error.cause = 404
+    throw error
+  }
+  const course = await teacherCourseService.deleteCourse({
+    courseId: id,
+    teacherId: teacher.id
+  });
+  return successResponse({
+    res,
+    status: 200,
+    message: "COURSE_DELETED_SUCCESS"
+  });
+
 });
