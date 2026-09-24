@@ -8,34 +8,58 @@ export const localFileUpload = ({
   validation = [],
   maxSizeInMB = 5,
 } = {}) => {
-  const uploadPath = path.resolve(`uploads/${customPath}`);
-
-  if (!fs.existsSync(uploadPath)) {
-    fs.mkdirSync(uploadPath, { recursive: true });
-  }
-
   const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-      cb(null, uploadPath);
+      try {
+        const resolvedPath =
+          typeof customPath === "function"
+            ? customPath(req)
+            : customPath;
+
+        const uploadPath = path.resolve(`uploads/${resolvedPath}`);
+
+        if (!fs.existsSync(uploadPath)) {
+          fs.mkdirSync(uploadPath, { recursive: true });
+        }
+
+        cb(null, uploadPath);
+      } catch (error) {
+        cb(error);
+      }
     },
+
     filename: (req, file, cb) => {
-      const ext = path.extname(file.originalname);
+      try {
+        const ext = path.extname(file.originalname);
 
-      const uniqueFileName = `${Date.now()}-${nanoid(6)}${ext}`;
+        const uniqueFileName = `${Date.now()}-${nanoid(6)}${ext}`;
 
-      file.relativeDestination =
-        `uploads/${customPath}/${uniqueFileName}`.replace(/\\/g, "/");
+        const resolvedPath =
+          typeof customPath === "function"
+            ? customPath(req)
+            : customPath;
 
-      cb(null, uniqueFileName);
+        file.relativeDestination =
+          `uploads/${resolvedPath}/${uniqueFileName}`.replace(/\\/g, "/");
+
+        cb(null, uniqueFileName);
+      } catch (error) {
+        cb(error);
+      }
     },
   });
 
   const fileFilter = (req, file, cb) => {
-    if (validation.length === 0 || validation.includes(file.mimetype)) {
+    if (
+      validation.length === 0 ||
+      validation.includes(file.mimetype)
+    ) {
       return cb(null, true);
     }
+
     const error = new Error("INVALID_FILE_FORMAT");
     error.cause = 400;
+
     return cb(error, false);
   };
 
