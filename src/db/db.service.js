@@ -288,4 +288,5 @@ export default {
   deleteOne,
   count,
   groupBy,
+  queryRaw
 };
