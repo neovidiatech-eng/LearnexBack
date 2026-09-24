@@ -1,4 +1,8 @@
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
+import "dotenv/config";
+
 import { seedRoles } from "./seeders/roles.seed.js";
 import { seedPermissions } from "./seeders/permission.seed.js";
 import { seedAdmin } from "./seeders/admin.seed.js";
@@ -8,8 +12,14 @@ import { seedStudents } from "./seeders/students.seed.js";
 import { seedCourses } from "./seeders/courses.seed.js";
 import { seedEnrollments } from "./seeders/enrollments.seed.js";
 import { seedActivityLogs } from "./seeders/activityLogs.seed.js";
+import { seedNotifications } from "./seeders/notifications.seed.js";
 
-const prisma = new PrismaClient();
+const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
+
 
 async function main() {
   console.log("🚀 Starting database seeding...\n");
@@ -21,7 +31,7 @@ async function main() {
   await seedPermissions(prisma, roles);
 
   // 3. Admin (independent)
-  await seedAdmin(prisma);
+  const admin = await seedAdmin(prisma);
 
   // 4. Categories (independent)
   const categories = await seedCategories(prisma);
@@ -40,6 +50,9 @@ async function main() {
 
   // 9. Activity Logs (independent)
   await seedActivityLogs(prisma);
+
+  // 10. Notifications (depends on students + teachers + admin)
+  await seedNotifications(prisma, students, teachers, admin);
 
   console.log("\n✅ Database seeding completed successfully!");
 }

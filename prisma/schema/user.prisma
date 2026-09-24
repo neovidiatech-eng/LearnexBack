@@ -1,18 +1,19 @@
 model User {
-  id              String    @id @default(uuid())
-  fullName        String
-  email           String    @unique
-  password        String?
-  phone           String?   @unique
-  country         String?
-  profilePhoto    String?
-  provider        String    @default("SYSTEM")
-  status          String    @default("ACTIVE")
-  confirmEmail    Boolean   @default(false)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  roleId          String?
-  role            Role?     @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  id           String   @id @default(uuid())
+  fullName     String
+  email        String   @unique
+  password     String?
+  phone        String?  @unique
+  country      String?
+  profilePhoto String?
+  fcmToken     String?
+  provider     String   @default("SYSTEM")
+  status       String   @default("ACTIVE")
+  confirmEmail Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  roleId       String?
+  role         Role?    @relation(fields: [roleId], references: [id], onDelete: SetNull)
 
   student Student?
   teacher Teacher?
@@ -63,12 +64,11 @@ model TeacherTranslation {
   id        String  @id @default(uuid())
   teacherId String
   teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  locale    String 
-  subject   String  
+  locale    String
+  subject   String
   headline  String?
-  bio       String? @db.Text 
+  bio       String? @db.Text
 
   @@unique([teacherId, locale])
   @@map("teacher_translations")
 }
-

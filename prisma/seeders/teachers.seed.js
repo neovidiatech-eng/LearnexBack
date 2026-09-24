@@ -58,10 +58,22 @@ export async function seedTeachers(prisma, roles) {
         roleId: teacherRole?.id ?? null,
         teacher: {
           create: {
-            subject: t.subject,
             experienceYears: t.experienceYears,
-            bio: t.bio,
             linkedinUrl: t.linkedinUrl,
+            translations: {
+              create: [
+                {
+                  locale: "en",
+                  subject: t.subject,
+                  bio: t.bio,
+                },
+                {
+                  locale: "ar",
+                  subject: t.subject,
+                  bio: t.bio,
+                },
+              ],
+            },
           },
         },
       },

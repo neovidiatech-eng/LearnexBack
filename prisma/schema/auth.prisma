@@ -1,11 +1,12 @@
 model Admin {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  fullName  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String         @id @default(uuid())
+  fcmToken      String?
+  email         String         @unique
+  password      String
+  fullName      String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
 
   @@map("admins")
 }
-
