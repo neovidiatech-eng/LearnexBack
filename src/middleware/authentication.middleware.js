@@ -21,7 +21,7 @@ export const authentication = ({
 };
 
 export const auth = ({
-  tokenType = tokenTypeEnum.access,
+  tokenType = tokenTypeEnum.ACCESS,
   accessRoles = [],
 } = {}) => {
   return asyncHandler(async (req, res, next) => {
