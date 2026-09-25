@@ -55,11 +55,12 @@ model TeacherCourseSectionItem {
 
   materialType  String   // VIDEO | PDF
   materialLink  String
-  order         Int      @default(1)
+  order         Int      
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   @@index([sectionId])
+  @@unique([sectionId,order])
   @@map("teacher_course_section_items")
 }

@@ -7,6 +7,7 @@ model User {
   country      String?
   profilePhoto String?
   coverPhoto   String?
+  fcmToken     String?
   provider     String   @default("SYSTEM")
   status       String   @default("ACTIVE")
   confirmEmail Boolean  @default(false)
@@ -77,6 +78,10 @@ model TeacherCertificate {
   id        String  @id @default(uuid())
   teacherId String
   teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  locale    String
+  subject   String
+  headline  String?
+  bio       String? @db.Text
 
   title     String
   issuer    String?
