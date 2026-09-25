@@ -50,6 +50,9 @@ model Teacher {
   experienceYears    Int                  @default(0)
   cvUrl              String?
   referralCode       String?
+  subject            String
+  headline           String?
+  bio                String?              @db.Text
   linkedinUrl        String?
   isAvailable        Boolean              @default(true)
   sessionPrice50Min  Decimal?             @default(0.0) @db.Decimal(10, 2)
@@ -61,7 +64,6 @@ model Teacher {
   rejectionReason    String?              @db.Text
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
-  translations       TeacherTranslation[]
   certificates       TeacherCertificate[]
   reviews            TeacherReview[]
 
@@ -69,19 +71,6 @@ model Teacher {
 
   @@index([userId])
   @@map("teachers")
-}
-
-model TeacherTranslation {
-  id        String  @id @default(uuid())
-  teacherId String
-  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  locale    String
-  subject   String
-  headline  String?
-  bio       String? @db.Text
-
-  @@unique([teacherId, locale])
-  @@map("teacher_translations")
 }
 
 model TeacherCertificate {

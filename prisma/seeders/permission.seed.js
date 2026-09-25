@@ -30,11 +30,20 @@ const permissionsData = [
   { code: "staff:create", name: "Create Staff", resource: "staff", action: "create" },
   { code: "staff:update", name: "Update Staff", resource: "staff", action: "update" },
   { code: "staff:delete", name: "Delete Staff", resource: "staff", action: "delete" },
+
+  { code: "teachers:read", name: "Read Teachers", resource: "teachers", action: "read" },
+  { code: "teachers:create", name: "Create Teachers", resource: "teachers", action: "create" },
+  { code: "teachers:update", name: "Update Teachers", resource: "teachers", action: "update" },
+  { code: "teachers:delete", name: "Delete Teachers", resource: "teachers", action: "delete" },
 ];
 
 const rolePermissionsMap = {
   ADMIN: permissionsData.map((p) => p.code),
   TEACHER: [
+    "teachers:read",
+    "teachers:update",
+    "teachers:create",
+    "teachers:delete",
     "courses:read",
     "courses:create",
     "courses:update",

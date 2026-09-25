@@ -59,8 +59,9 @@ export async function seedTeachers(prisma, roles) {
         teacher: {
           create: {
             subject: t.subject,
-            experienceYears: t.experienceYears,
+            headline: `${t.subject} Instructor`,
             bio: t.bio,
+            experienceYears: t.experienceYears,
             linkedinUrl: t.linkedinUrl,
           },
         },
