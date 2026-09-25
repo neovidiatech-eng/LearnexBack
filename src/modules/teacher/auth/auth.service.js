@@ -64,6 +64,9 @@ export const teacherSignupService = async (body, file) => {
   const createdTeacher = await DBService.create({
     model: "teacher",
     data: {
+      subject: subject.trim(),
+      headline: headline ? headline.trim() : null,
+      bio: bio ? bio.trim() : null,
       experienceYears: Number(experienceYears) || 0,
       cvUrl,
       linkedinUrl: linkedinUrl || null,
@@ -77,16 +80,6 @@ export const teacherSignupService = async (body, file) => {
           status: userStatusEnum.PENDING_REVIEW,
           confirmEmail: false,
         },
-      },
-      translations: {
-        create: [
-          {
-            locale: locale || "ar",
-            subject: subject.trim(),
-            headline: headline ? headline.trim() : null,
-            bio: bio ? bio.trim() : null,
-          },
-        ],
       },
     },
     include: {
@@ -106,14 +99,6 @@ export const teacherSignupService = async (body, file) => {
             },
           },
           createdAt: true,
-        },
-      },
-      translations: {
-        select: {
-          locale: true,
-          subject: true,
-          headline: true,
-          bio: true,
         },
       },
     },
@@ -137,11 +122,7 @@ export const teacherLoginService = async ({ email, password }) => {
           },
         },
       },
-      teacher: {
-        include: {
-          translations: true,
-        },
-      },
+      teacher: true,
     },
   });
 
