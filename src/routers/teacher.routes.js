@@ -9,7 +9,7 @@ const router = Router();
 router.use("/auth", teacherAuthRouter);
 router.use("/courses", teacherCoursesRouter);
 router.use("/sections", teacherSectionRouter);
-router.use("/sections", teacherItemsRouter);
+router.use("/items", teacherItemsRouter);
 router.use("/me", teacherProfileRouter);
 
 export default router;

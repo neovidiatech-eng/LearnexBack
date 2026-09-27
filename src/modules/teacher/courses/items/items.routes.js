@@ -17,4 +17,34 @@ router.post("/:sectionId/items",
     itemsController.createItem
 )
 
+router.get("/:sectionId/items", 
+    authentication(),
+    validation(itemsValidation.getItemsSchema),
+    itemsController.getItems
+)
+
+
+router.get("/:sectionId/items/:itemId",
+    authentication(),
+    validation(itemsValidation.getItemByIdSchema),
+    itemsController.getItemById
+)
+
+router.patch("/:sectionId/items/:itemId",
+    authentication(),
+    localFileUpload({
+        customPath:(req)=>`teacherCourse/items/${req.params.sectionId}`
+    }).single("materialLink"),
+    validation(itemsValidation.updateItemSchema),
+    itemsController.updateItem
+)
+
+router.delete("/:sectionId/items/:itemId",
+    authentication(),
+    validation(itemsValidation.getItemByIdSchema),
+    itemsController.deletedItem
+)
+
+
+
 export default router;
