@@ -138,7 +138,7 @@ export const updateTeacherCourse = asyncHandler(async (req, res, next) => {
     description,
     price,
     totalHours,
-    wallPaper: req.file?.relativeDestination
+    wallPaper: req.file?.path || req.file?.relativeDestination
   });
 
   return successResponse({

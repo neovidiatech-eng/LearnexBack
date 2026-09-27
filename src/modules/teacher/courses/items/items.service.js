@@ -79,3 +79,128 @@ export const createItem = async({
     })
 
 }
+
+export const getItems = async({sectionId,teacherId})=>{
+  await verifySectionOwnership({sectionId,teacherId});
+
+  return await dbService.findMany({
+    model:"teacherCourseSectionItem",
+    where:{
+      sectionId,
+    },
+    orderBy:{
+      order:"asc"
+    }
+  })
+
+}
+
+export const getItemById = async({sectionId,itemId,teacherId})=>{
+  await verifySectionOwnership({sectionId,teacherId});
+
+  const item = await dbService.findFirst({
+    model:"teacherCourseSectionItem",
+    where:{
+        id:itemId,
+        sectionId
+    }
+
+  });
+  if(!item){
+    const error = new Error("ITEM_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+  return item;
+  
+}
+
+export const updateItem = async({
+  sectionId,
+  itemId,
+  teacherId,
+  title,
+  description,
+  materialType,
+  materialLink,
+  order,
+
+})=>{
+  await verifySectionOwnership({sectionId,teacherId});
+
+  const item = await dbService.findFirst({
+    model:"teacherCourseSectionItem",
+    where:{
+      id:itemId,
+      sectionId
+    }
+  });
+  if(!item){
+    const error = new Error("ITEM_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+  
+  if(order !== undefined && order !== item.order){
+    const orderExists = await dbService.findFirst({
+      model:"teacherCourseSectionItem",
+      where:{
+        sectionId,
+        order,
+        id:{ not: itemId }
+      },
+      select:{
+        id:true
+      }
+    });
+    if(orderExists){
+      const error = new Error("ITEM_ORDER_ALREADY_EXISTS");
+      error.cause = 400;
+      throw error;
+    }
+  }
+
+  const updatedItem = await dbService.updateOne({
+    model:"teacherCourseSectionItem",
+    where:{
+      id:itemId,
+    },
+    ...(title !== undefined && {title}),
+    ...(description !== undefined && {description}),
+    ...(materialType !== undefined && {materialType}),
+    ...(materialLink !== undefined && {materialLink}),
+    ...(order !== undefined && {order}),
+  });
+  return {updatedItem, oldMaterialLink:item.materialLink}
+  
+  
+
+}
+
+export const deleteItem = async ({ sectionId, itemId, teacherId }) => {
+  await verifySectionOwnership({ sectionId, teacherId });
+
+  const item = await dbService.findFirst({
+    model: "teacherCourseSectionItem",
+    where: {
+      id: itemId,
+      sectionId,
+    },
+  });
+
+  if (!item) {
+    const error = new Error("ITEM_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+
+  await dbService.delete({
+    model: "teacherCourseSectionItem",
+    where: {
+      id: itemId,
+    },
+  });
+
+  return item;
+};
+
