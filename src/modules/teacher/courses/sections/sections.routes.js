@@ -12,7 +12,7 @@ router.post("/:courseId",
     sectionsController.createSection
 )
 router.patch(
-  "/:courseId/reorder",   
+  "/:courseId/reorder",
   authentication(),
   validation(sectionsValidation.reorderSectionsSchema),
   sectionsController.reorderSections
