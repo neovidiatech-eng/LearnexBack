@@ -25,14 +25,17 @@ router.patch(
 );
 
 router.patch(
-  "/cover-image",
+  "/profile-image",
   authentication(),
   authorizeResource("teachers"),
   localFileUpload({
     customPath: (req) => `teacher/cover/${req.user.email}`,
-    validation: fileValidation.image,
-  }).single("coverImage"),
-  profileController.updateCoverImage,
+    validation: [...fileValidation.image],
+  }).fields([
+    { name: "profilePhoto", maxCount: 1 },
+    { name: "coverPhoto", maxCount: 1 },
+  ]),
+  profileController.updateImageProfile,
 );
 
 
@@ -44,4 +47,11 @@ router.patch(
   profileController.toggleVisibility,
 );
 
+
+router.delete(
+  "/profile",
+  authentication(),
+  authorizeResource("teachers"),
+  profileController.deleteProfile,
+);
 export default router;

@@ -75,24 +75,31 @@ model Teacher {
 }
 
 model TeacherCertificate {
-  id        String  @id @default(uuid())
-  teacherId String
-  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  locale    String
-  subject   String
-  headline  String?
-  bio       String? @db.Text
+  id              String   @id @default(uuid())
+  teacherId       String
+  teacher         Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
 
-  title     String
-  issuer    String?
-  issueDate DateTime?
-  fileUrl   String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  type            String   @default("ACADEMIC") 
+  title           String   
+  issuer          String   
+  issueYear       Int     
+  
+  fileUrl         String   
+  fileType        String   
+  fileSize        String?  
+  
+  status          String   @default("PENDING") 
+  rejectionReason String?  @db.Text
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([teacherId])
+  @@index([type])
+  @@index([status])
   @@map("teacher_certificates")
 }
+
 
 model TeacherReview {
   id      String  @id @default(uuid())

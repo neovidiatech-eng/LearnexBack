@@ -28,10 +28,10 @@ export const updateProfile = asyncHandler(async (req, res) => {
   });
 });
 
-export const updateCoverImage = asyncHandler(async (req, res) => {
-  const teacher = await profileService.updateCoverImageService(
+export const updateImageProfile = asyncHandler(async (req, res) => {
+  const teacher = await profileService.updateImageProfileService(
     req.user.id,
-    req.file,
+    req.files,
   );
   return successResponse({
     res,
@@ -39,13 +39,11 @@ export const updateCoverImage = asyncHandler(async (req, res) => {
   });
 });
 
-export const updateProfileImage = asyncHandler(async (req, res) => {
-  const teacher = await profileService.updateProfileImageService(
-    req.user.id,
-    req.file,
-  );
-  return successResponse({
-    res,
-    data: teacher,
+  
+  export const deleteProfile = asyncHandler(async (req, res) => {
+     await profileService.deleteProfileService(req.user.id);
+    return successResponse({
+      res,
+      status:204
+    });
   });
-});

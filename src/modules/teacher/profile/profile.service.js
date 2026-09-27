@@ -1,4 +1,5 @@
 import * as db from "../../../db/db.service.js";
+import { deleteFile, deleteFiles } from "../../../utils/multer/file.utils.js";
 import {
   decryptEncription,
   generateEncryption,
@@ -177,31 +178,114 @@ export const updateProfileService = async (userId, body) => {
 
   return updatedData;
 };
-export const updateCoverImageService = async (userId, file) => {
+
+export const updateImageProfileService = async (userId, reqFiles) => {
   const user = await db.findFirst({
     model: "user",
     where: { id: userId },
-    select: { id: true, coverPhoto: true },
+    select: { id: true, profilePhoto: true, coverPhoto: true },
   });
   if (!user) {
     const error = new Error("USER_NOT_FOUND");
     error.cause = 404;
     throw error;
   }
-  const oldCoverPhoto = user.coverPhoto;
+  const newCoverPhoto = reqFiles.coverPhoto?.[0].relativeDestination;
+  const newProfilePhoto = reqFiles.profilePhoto?.[0].relativeDestination;
   const updatedUser = await db.updateOne({
     model: "user",
     where: { id: userId },
     data: {
-      coverPhoto: file.relativeDestination,
+      ...(newCoverPhoto && { coverPhoto: newCoverPhoto }),
+      ...(newProfilePhoto && { profilePhoto: newProfilePhoto }),
     },
     select: {
       id: true,
+      profilePhoto: true,
       coverPhoto: true,
     },
   });
-  if (oldCoverPhoto) {
-    deleteFile(oldCoverPhoto);
+  if (newCoverPhoto&& user.coverPhoto) {
+    deleteFile(user.coverPhoto);
+  }
+  if (newProfilePhoto&& user.profilePhoto) {
+    deleteFile(user.profilePhoto);
   }
   return updatedUser;
+};
+
+
+export const deleteProfileService = async (userId) => {
+  const teacher = await db.findFirst({
+    model: "teacher",
+    where: { userId }, 
+    include: {
+      user: {
+        select: {
+          id: true,
+          profilePhoto: true,
+          coverPhoto: true,
+        },
+      },
+      certificates: {
+        select: {
+          fileUrl: true,
+        },
+      },
+      courses: {
+        select: {
+          wallPaper: true,
+          sections: {
+            select: {
+              items: {
+                select: {
+                  materialLink: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!teacher) {
+    const error = new Error("TEACHER_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+
+  const filesToDelete = [];
+
+  if (teacher.user?.profilePhoto) filesToDelete.push(teacher.user.profilePhoto);
+  if (teacher.user?.coverPhoto) filesToDelete.push(teacher.user.coverPhoto);
+
+  if (teacher.cvUrl) filesToDelete.push(teacher.cvUrl);
+
+  if (teacher.certificates?.length > 0) {
+    teacher.certificates.forEach((cert) => {
+      if (cert.fileUrl) filesToDelete.push(cert.fileUrl);
+    });
+  }
+
+  if (teacher.courses?.length > 0) {
+    teacher.courses.forEach((course) => {
+      if (course.wallPaper) filesToDelete.push(course.wallPaper);
+      
+      course.sections?.forEach((section) => {
+        section.items?.forEach((item) => {
+          if (item.materialLink) filesToDelete.push(item.materialLink);
+        });
+      });
+    });
+  }
+
+  deleteFiles(filesToDelete);
+
+  await db.deleteOne({
+    model: "user",
+    where: { id: teacher.userId },
+  });
+
+  return { success: true };
 };
