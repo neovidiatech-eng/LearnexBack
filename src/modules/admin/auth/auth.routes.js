@@ -57,7 +57,7 @@ router.post("/login", validation(validators.login), authController.login);
  */
 router.get(
   "/refresh-token",
-  authentication({ tokenType: tokenTypeEnum.refresh }),
+  authentication({ tokenType: tokenTypeEnum.REFRESH }),
   authController.getNewCredentials
 );
 router.post("/logout",authentication(),authController.logout)
