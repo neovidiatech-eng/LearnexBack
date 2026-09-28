@@ -89,11 +89,26 @@ router.patch(
   validation(teacherValidation.approveTeacherConfirm),
   teacherController.approveTeacher,
 );
+
 router.patch(
   "/requests/:teacherId/reject",
   authentication(),
   authorizeResource("teachers"),
   validation(teacherValidation.rejectTeacherConfirm),
   teacherController.rejectTeacher,
+);
+
+router.patch(
+  "/certificate/:certificateId/verify",
+  authentication(),
+  authorizeResource("teachers"),
+  teacherController.verifyCertificate,
+);
+
+router.patch(
+  "/certificate/:certificateId/reject",
+  authentication(),
+  authorizeResource("teachers"),
+  teacherController.rejectCertificate,
 );
 export default router;

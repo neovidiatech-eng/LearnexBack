@@ -179,6 +179,40 @@ export const updateProfileService = async (userId, body) => {
   return updatedData;
 };
 
+export const updateSessionPriceService = async (userId, body) => {
+  const { sessionPrice50Min } = body;
+
+  const teacher = await db.findFirst({
+    model: "teacher",
+    where: { userId },
+    include: { user: true },
+  });
+
+  if (!teacher) {
+    const error = new Error("TEACHER_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+
+
+
+  const updatedData = await db.updateOne({
+    model: "teacher",
+    where: { id: teacher.id },
+    data: {
+      ...(sessionPrice50Min !== undefined && { sessionPrice50Min }),
+    },
+    select: {
+      id: true,
+      userId: true,
+      sessionPrice50Min: true,
+      currency:true,
+    },
+  });
+
+  return updatedData;
+};
+
 export const updateImageProfileService = async (userId, reqFiles) => {
   const user = await db.findFirst({
     model: "user",

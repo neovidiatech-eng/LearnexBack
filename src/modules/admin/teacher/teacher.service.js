@@ -6,6 +6,7 @@ import { generateEncryption } from "../../../utils/security/encryption.security.
 import { generateHash } from "../../../utils/security/hash.security.js";
 import { baseRoleEnum } from "../../../utils/Enums/role.enum.js";
 import { emailEvent } from "../../../utils/events/email.event.js";
+import { CertificateStatus } from "../../../utils/Enums/teacherCertificate.enum.js";
 
 export const createTeacherService = async (body) => {
   const {
@@ -669,3 +670,77 @@ export const rejectTeacherService = async (teacherId, body) => {
   return { success: true };
 };
 
+export const verifyCertificateService = async (certificateId) => {
+  const certificate = await dbService.findFirst({
+    model: "teacherCertificate",
+    where: { id: certificateId },
+    include: {
+      teacher: {
+        include: {
+          user: {
+            select: { email: true, fullName: true },
+          },
+        },
+      },
+    },
+  });
+  if (!certificate) {
+    const error = new Error("CERTIFICATE_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+  const updatedCertificate = await dbService.updateOne({
+    model: "teacherCertificate",
+    where: { id: certificateId },
+    data: {
+      status: CertificateStatus.VERIFIED,
+    },
+  });
+  emailEvent.emit("certificateApproved", {
+    to: certificate.teacher.user.email,
+    name: certificate.teacher.user.fullName,
+    certificateTitle: certificate.title,
+  });
+
+  return updatedCertificate;
+};
+
+export const rejectCertificateService = async (certificateId, body) => {
+  const { rejectionReason } = body;
+  const certificate = await dbService.findFirst({
+    model: "teacherCertificate",
+    where: { id: certificateId },
+    include: {
+      teacher: {
+        include: {
+          user: {
+            select: { email: true, fullName: true },
+          },
+        },
+      },
+    },
+  });
+  if (!certificate) {
+    const error = new Error("CERTIFICATE_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+  const updatedCertificate = await dbService.updateOne({
+    model: "teacherCertificate",
+    where: { id: certificateId },
+    data: {
+      status: CertificateStatus.REJECTED,
+      rejectionReason
+    }
+  });
+    if (certificate.teacher?.user?.email) {
+      emailEvent.emit("certificateRejected", {
+        to: certificate.teacher.user.email,
+        name: certificate.teacher.user.fullName,
+        certificateTitle: certificate.title,
+        reason: rejectionReason,
+      });
+    }
+
+  return updatedCertificate
+};
