@@ -15,6 +15,10 @@ const verifySectionOwnership = async ({ sectionId, teacherId }) => {
   });
 
   if (!section) {
+    console.log({
+        sectionId,
+        teacherId,
+    });
     const error = new Error("SECTION_NOT_FOUND");
     error.cause = 404;
     throw error;
@@ -33,6 +37,11 @@ export const createItem = async({
     order
     })=>{
     await verifySectionOwnership({sectionId,teacherId});
+    if(!materialLink){
+      const error = new Error("INVALID_MATERIAL_LINK");
+      error.cause = 400;
+      throw error;
+    }
     let itemOrder = order;
     if(itemOrder == undefined){
         const lastItem = await dbService.findFirst({
@@ -165,11 +174,13 @@ export const updateItem = async({
     where:{
       id:itemId,
     },
-    ...(title !== undefined && {title}),
-    ...(description !== undefined && {description}),
-    ...(materialType !== undefined && {materialType}),
-    ...(materialLink !== undefined && {materialLink}),
-    ...(order !== undefined && {order}),
+    data:{
+      ...(title !== undefined && {title}),
+      ...(description !== undefined && {description}),
+      ...(materialType !== undefined && {materialType}),
+      ...(materialLink !== undefined && {materialLink}),
+      ...(order !== undefined && {order}),
+    }
   });
   return {updatedItem, oldMaterialLink:item.materialLink}
   

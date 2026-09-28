@@ -733,14 +733,42 @@ export const rejectCertificateService = async (certificateId, body) => {
       rejectionReason
     }
   });
-    if (certificate.teacher?.user?.email) {
-      emailEvent.emit("certificateRejected", {
-        to: certificate.teacher.user.email,
-        name: certificate.teacher.user.fullName,
-        certificateTitle: certificate.title,
-        reason: rejectionReason,
-      });
-    }
+  if (certificate.teacher?.user?.email) {
+    emailEvent.emit("certificateRejected", {
+      to: certificate.teacher.user.email,
+      name: certificate.teacher.user.fullName,
+      certificateTitle: certificate.title,
+      reason: rejectionReason,
+    });
+  }
 
-  return updatedCertificate
+  return updatedCertificate;
 };
+
+export const changeTeacherCourseStatus = async ({ courseId, status, rejectionReason }) => {
+  const teacherCourse = await dbService.findFirst({
+    model: "teacherCourse",
+    where: {
+      id: courseId
+    },
+    select: { id: true }
+  });
+  if (!teacherCourse) {
+    const error = new Error("COURSE_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+
+  await dbService.updateOne({
+    model: "teacherCourse",
+    where: {
+      id: courseId
+    },
+    data: {
+      status,
+      rejectionReason: status === "REJECTED" ? rejectionReason : null
+    }
+  });
+  return { success: true };
+};
+

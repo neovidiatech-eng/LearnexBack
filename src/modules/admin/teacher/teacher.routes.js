@@ -111,4 +111,12 @@ router.patch(
   authorizeResource("teachers"),
   teacherController.rejectCertificate,
 );
+
+router.patch("/:courseId/change-status",
+  authentication(),
+  authorizeResource("teachers"),
+  validation(teacherValidation.changeTeacherCourseStatusSchema),
+  teacherController.changeTeacherCourseStatus,
+);
 export default router;
+

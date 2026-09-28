@@ -152,3 +152,31 @@ export const rejectTeacherConfirm = {
     .required()
     .options({ allowUnknown: false }),
 };
+
+export const changeTeacherCourseStatusSchema = {
+  params: joi.object({
+    courseId: generalFields.id.required().messages({
+      "string.empty": "COURSE_ID_EMPTY",
+      "string.guid": "COURSE_ID_INVALID",
+      "any.required": "COURSE_ID_REQUIRED",
+    }),
+  }),
+
+  body: joi.object({
+    status: joi.string().valid("APPROVED", "REJECTED").required().messages({
+      "any.only": "STATUS_INVALID",
+      "any.required": "STATUS_REQUIRED",
+    }),
+
+    rejectionReason: joi.when("status", {
+      is: "REJECTED",
+      then: joi.string().trim().min(1).required().messages({
+        "string.empty": "REJECTION_REASON_EMPTY",
+        "any.required": "REJECTION_REASON_REQUIRED",
+      }),
+      otherwise: joi.forbidden().messages({
+        "any.unknown": "REJECTION_REASON_NOT_ALLOWED",
+      }),
+    }),
+  }),
+};
