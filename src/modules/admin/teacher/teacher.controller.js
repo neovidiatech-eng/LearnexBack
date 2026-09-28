@@ -123,7 +123,7 @@ export const rejectTeacher = asyncHandler(async (req, res, next) => {
   });
 });
 
-  
+
 export const verifyCertificate = asyncHandler(async (req, res, next) => {
   const result = await teacherService.verifyCertificateService(
     req.params.certificateId,
@@ -134,9 +134,9 @@ export const verifyCertificate = asyncHandler(async (req, res, next) => {
     data: result,
   });
 });
-  
+
 export const rejectCertificate = asyncHandler(async (req, res, next) => {
-   await teacherService.rejectCertificateService(
+  await teacherService.rejectCertificateService(
     req.params.certificateId,
     req.body
   );
@@ -145,3 +145,22 @@ export const rejectCertificate = asyncHandler(async (req, res, next) => {
     message: "REJECTED",
   });
 });
+
+export const changeTeacherCourseStatus = asyncHandler(async (req, res, next) => {
+  const { courseId } = req.params;
+  const { status, rejectionReason } = req.body;
+
+  const result = await teacherService.changeTeacherCourseStatus({
+    courseId,
+    status,
+    rejectionReason,
+  });
+
+  return successResponse({
+    res,
+    status: 200,
+    data: result,
+    message: "COURSE_STATUS_UPDATED_SUCCESSFULLY",
+  });
+});
+

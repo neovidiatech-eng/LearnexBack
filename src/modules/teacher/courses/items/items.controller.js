@@ -10,6 +10,7 @@ export const createItem = asyncHandler(async(req , res , next)=>{
         title,
         description,
         materialType,
+        materialLink:videoLink,
         order
     } = req.body;
     const teacher = await dbService.findFirst({
@@ -26,6 +27,10 @@ export const createItem = asyncHandler(async(req , res , next)=>{
         error.cause = 404;
         throw error;
     }
+    const materialLink =
+        materialType === "PDF"
+            ? req.file?.path || req.file?.relativeDestination
+            : req.body.materialLink;
 
     const item = await itemService.createItem({
         sectionId,
@@ -33,7 +38,7 @@ export const createItem = asyncHandler(async(req , res , next)=>{
         title,
         description,
         materialType,
-        materialLink:req.file?.path || req.file?.relativeDestination,
+        materialLink,
         order
     })
     return successResponse({
@@ -110,7 +115,8 @@ export const updateItem = asyncHandler(async(req,res,next)=>{
         title,
         description,
         materialType,
-        order
+        order,
+        materialLink:videoLink
     } = req.body;
 
     const teacher = await dbService.findFirst({
@@ -127,6 +133,11 @@ export const updateItem = asyncHandler(async(req,res,next)=>{
         error.cause = 404;
         throw error;
     }
+    const materialLink =
+        materialType === "PDF"
+            ? req.file?.path || req.file?.relativeDestination
+            : req.body.materialLink;
+
     const updatedItem = await itemService.updateItem({
         sectionId,
         itemId,
@@ -134,7 +145,7 @@ export const updateItem = asyncHandler(async(req,res,next)=>{
         title,
         description,
         materialType,
-        materialLink:req.file?.path || req.file?.relativeDestination,
+        materialLink,
         order
     })
     if(

@@ -3,11 +3,16 @@ import dbService from "../../../../db/db.service.js";
 import * as sectionService from "./sections.service.js";
 
 const getTeacherId = async (userId) => {
+  
   const teacher = await dbService.findFirst({
-    model: "teacher",
-    where: { userId },
-    select: { id: true },
-  });
+          model:"teacher",
+          where:{
+              userId:userId
+          },
+          select:{
+              id:true
+          }
+  })
   if (!teacher) {
     const error = new Error("TEACHER_NOT_FOUND");
     error.cause = 404;

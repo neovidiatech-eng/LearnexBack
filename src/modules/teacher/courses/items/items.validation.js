@@ -20,6 +20,13 @@ export const createItemSchema = {
       "string.empty": "MATERIAL_TYPE_EMPTY",
       "any.required": "MATERIAL_TYPE_REQUIRED",
     }),
+    materialLink: Joi.string()
+      .uri()
+      .optional()
+      .messages({
+        "string.uri": "MATERIAL_LINK_INVALID",
+      }),
+
     order: Joi.number()
       .integer()
       .min(1)

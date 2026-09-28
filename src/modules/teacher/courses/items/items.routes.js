@@ -8,7 +8,7 @@ import { fileValidation } from "../../../../utils/multer/fileValidation.js";
 
 const router = Router();
 
-router.post("/:sectionId/items",
+router.post("/:sectionId",
     authentication(),
     localFileUpload({
         customPath: (req) => `teacherCourse/items/${req.params.sectionId}`,
@@ -24,13 +24,13 @@ router.get("/:sectionId/items",
 )
 
 
-router.get("/:sectionId/items/:itemId",
+router.get("/:sectionId/:itemId",
     authentication(),
     validation(itemsValidation.getItemByIdSchema),
     itemsController.getItemById
 )
 
-router.patch("/:sectionId/items/:itemId",
+router.patch("/:sectionId/:itemId",
     authentication(),
     localFileUpload({
         customPath:(req)=>`teacherCourse/items/${req.params.sectionId}`
@@ -39,7 +39,7 @@ router.patch("/:sectionId/items/:itemId",
     itemsController.updateItem
 )
 
-router.delete("/:sectionId/items/:itemId",
+router.delete("/:sectionId/:itemId",
     authentication(),
     validation(itemsValidation.getItemByIdSchema),
     itemsController.deletedItem
