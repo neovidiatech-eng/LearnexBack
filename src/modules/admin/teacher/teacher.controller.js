@@ -123,4 +123,25 @@ export const rejectTeacher = asyncHandler(async (req, res, next) => {
   });
 });
 
-
+  
+export const verifyCertificate = asyncHandler(async (req, res, next) => {
+  const result = await teacherService.verifyCertificateService(
+    req.params.certificateId,
+  );
+  return successResponse({
+    res,
+    message: "VERIFIED_SUCCESSFULLY",
+    data: result,
+  });
+});
+  
+export const rejectCertificate = asyncHandler(async (req, res, next) => {
+   await teacherService.rejectCertificateService(
+    req.params.certificateId,
+    req.body
+  );
+  return successResponse({
+    res,
+    message: "REJECTED",
+  });
+});

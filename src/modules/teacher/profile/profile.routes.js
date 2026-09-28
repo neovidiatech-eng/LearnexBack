@@ -23,6 +23,12 @@ router.patch(
   validation(profileValidation.updateProfile),
   profileController.updateProfile,
 );
+router.patch(
+  "/session-pricing",
+  authentication(),
+  authorizeResource("teachers"),
+  profileController.updateSessionPrice,
+);
 
 router.patch(
   "/profile-image",

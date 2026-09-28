@@ -27,6 +27,16 @@ export const updateProfile = asyncHandler(async (req, res) => {
     data: teacher,
   });
 });
+export const updateSessionPrice = asyncHandler(async (req, res) => {
+  const teacher = await profileService.updateSessionPriceService(
+    req.user.id,
+    req.body,
+  );
+  return successResponse({
+    res,
+    data: teacher,
+  });
+});
 
 export const updateImageProfile = asyncHandler(async (req, res) => {
   const teacher = await profileService.updateImageProfileService(
