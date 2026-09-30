@@ -1,9 +1,6 @@
 import * as db from "../../../db/db.service.js";
 import { deleteFile, deleteFiles } from "../../../utils/multer/file.utils.js";
-import {
-  decryptEncription,
-  generateEncryption,
-} from "../../../utils/security/encryption.security.js";
+import { decryptEncription } from "../../../utils/security/encryption.security.js";
 
 export const toggleVisibilityService = async (userId, isAvailable) => {
   const teacher = await db.findFirst({
@@ -69,7 +66,7 @@ export const getProfileService = async (userId) => {
           id: true,
           title: true,
           issuer: true,
-          issueDate: true,
+          issueYear: true,
           fileUrl: true,
         },
       },
@@ -194,8 +191,6 @@ export const updateSessionPriceService = async (userId, body) => {
     throw error;
   }
 
-
-
   const updatedData = await db.updateOne({
     model: "teacher",
     where: { id: teacher.id },
@@ -206,7 +201,7 @@ export const updateSessionPriceService = async (userId, body) => {
       id: true,
       userId: true,
       sessionPrice50Min: true,
-      currency:true,
+      currency: true,
     },
   });
 
@@ -239,20 +234,19 @@ export const updateImageProfileService = async (userId, reqFiles) => {
       coverPhoto: true,
     },
   });
-  if (newCoverPhoto&& user.coverPhoto) {
+  if (newCoverPhoto && user.coverPhoto) {
     deleteFile(user.coverPhoto);
   }
-  if (newProfilePhoto&& user.profilePhoto) {
+  if (newProfilePhoto && user.profilePhoto) {
     deleteFile(user.profilePhoto);
   }
   return updatedUser;
 };
 
-
 export const deleteProfileService = async (userId) => {
   const teacher = await db.findFirst({
     model: "teacher",
-    where: { userId }, 
+    where: { userId },
     include: {
       user: {
         select: {
@@ -305,7 +299,7 @@ export const deleteProfileService = async (userId) => {
   if (teacher.courses?.length > 0) {
     teacher.courses.forEach((course) => {
       if (course.wallPaper) filesToDelete.push(course.wallPaper);
-      
+
       course.sections?.forEach((section) => {
         section.items?.forEach((item) => {
           if (item.materialLink) filesToDelete.push(item.materialLink);
@@ -323,3 +317,4 @@ export const deleteProfileService = async (userId) => {
 
   return { success: true };
 };
+

@@ -1,15 +1,15 @@
-import * as DBService from "../../db/db.service.js";
+import * as DBService from "../../../db/db.service.js";
 import {
   compareHash,
   generateHash,
-} from "../../utils/security/hash.security.js";
-import { generateEncryption } from "../../utils/security/encryption.security.js";
-import { generateLoginCredentials } from "../../utils/security/token.security.js";
+} from "../../../utils/security/hash.security.js";
+import { generateEncryption } from "../../../utils/security/encryption.security.js";
+import { generateLoginCredentials } from "../../../utils/security/token.security.js";
 import { customAlphabet } from "nanoid";
-import { emailEvent } from "../../utils/events/email.event.js";
-import { userStatusEnum } from "../../utils/Enums/userStatus.enum.js";
-import { baseRoleEnum } from "../../utils/Enums/role.enum.js";
-import { getCache, setCache } from "../../db/redis.service.js";
+import { emailEvent } from "../../../utils/events/email.event.js";
+import { userStatusEnum } from "../../../utils/Enums/userStatus.enum.js";
+import { baseRoleEnum } from "../../../utils/Enums/role.enum.js";
+import { getCache, setCache } from "../../../db/redis.service.js";
 
 export const studentSignup = async (userData) => {
   const { email, fullName, password, phone } = userData;

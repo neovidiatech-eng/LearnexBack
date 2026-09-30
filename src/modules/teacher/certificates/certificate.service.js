@@ -1,6 +1,7 @@
 import * as db from "../../../db/db.service.js";
 import { deleteFile } from "../../../utils/multer/file.utils.js";
 import { emailEvent } from "../../../utils/events/email.event.js";
+import { CertificateStatus } from "../../../utils/Enums/teacherCertificate.enum.js";
 
 const formatFileSize = (bytes) => {
   if (!bytes) return "0 MB";
@@ -46,7 +47,7 @@ export const createCertificateService = async (userId, body, file) => {
       fileUrl: file.relativeDestination,
       fileType,
       fileSize,
-      status: "PENDING",
+      status: CertificateStatus.PENDING,
     },
   });
 
