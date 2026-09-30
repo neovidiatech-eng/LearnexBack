@@ -10,6 +10,7 @@ import adminRolesRouter from "../modules/admin/Roles/roles.routes.js";
 import adminStaffRouter from "../modules/admin/staff/staff.routes.js";
 import adminCouponRouter from "../modules/admin/coupons/coupon.route.js"
 import adminOfferRouter from "../modules/admin/offers/offers.routes.js";
+import adminSettingsRouter from "../modules/admin/settings/settings.routes.js";
 
 const router = Router();
 router.use("/auth", adminAuthRouter);
@@ -22,6 +23,7 @@ router.use("/roles", adminRolesRouter);
 router.use("/staff", adminStaffRouter);
 router.use("/offers",adminOfferRouter)
 router.use("/coupons",adminCouponRouter);
+router.use("/settings",adminSettingsRouter);
 
 
 

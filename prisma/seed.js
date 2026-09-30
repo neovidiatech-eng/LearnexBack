@@ -13,6 +13,7 @@ import { seedCourses } from "./seeders/courses.seed.js";
 import { seedEnrollments } from "./seeders/enrollments.seed.js";
 import { seedActivityLogs } from "./seeders/activityLogs.seed.js";
 import { seedNotifications } from "./seeders/notifications.seed.js";
+import { seedCms } from "./seeders/cms.seed.js";
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -53,6 +54,9 @@ async function main() {
 
   // 10. Notifications (depends on students + teachers + admin)
   await seedNotifications(prisma, students, teachers, admin);
+
+  // 11. CMS & App Settings (independent)
+  await seedCms(prisma);
 
   console.log("\n✅ Database seeding completed successfully!");
 }

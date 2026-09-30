@@ -1,0 +1,77 @@
+model AppSetting {
+  id          String   @id @default(uuid())
+  appVersion  String   @default("1.0.0")
+  logoUrl     String?
+  facebookUrl String?
+  instaUrl    String?
+  websiteUrl  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  translations AppSettingTranslation[]
+
+  @@map("app_settings")
+}
+
+model AppSettingTranslation {
+  id          String     @id @default(uuid())
+  settingId   String
+  setting     AppSetting @relation(fields: [settingId], references: [id], onDelete: Cascade)
+  locale      String     
+  appName     String    
+  aboutUs     String     @db.Text
+  copyright   String     @default("جميع الحقوق محفوظة © 2024")
+
+  @@unique([settingId, locale])
+  @@map("app_setting_translations")
+}
+
+model StaticPage {
+  id        String   @id @default(uuid())
+  slug      String   @unique 
+  type      String   @default("GENERAL") 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  translations StaticPageTranslation[]
+
+  @@map("static_pages")
+}
+
+model StaticPageTranslation {
+  id      String     @id @default(uuid())
+  pageId  String
+  page    StaticPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  locale  String    
+  title   String
+  content String     @db.Text
+
+  @@unique([pageId, locale])
+  @@map("static_page_translations")
+}
+
+model TeacherAcademyItem {
+  id        String   @id @default(uuid())
+  type      String  
+  link      String?
+  duration  String?  
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  translations TeacherAcademyTranslation[]
+
+  @@map("teacher_academy_items")
+}
+
+model TeacherAcademyTranslation {
+  id          String             @id @default(uuid())
+  itemId      String
+  item        TeacherAcademyItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  locale      String           
+  title       String             
+  description String?            @db.Text
+
+  @@unique([itemId, locale])
+  @@map("teacher_academy_translations")
+}

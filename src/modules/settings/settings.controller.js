@@ -18,3 +18,25 @@ export const changeLanguage = asyncHandler(async (req, res) => {
     data,
   });
 });
+
+export const getAppInfo = asyncHandler(async (req, res) => {
+  const data = await settingsService.getAppInfoService();
+  return successResponse({
+    res,
+    data,
+  });
+});
+export const getPageBySlug = asyncHandler(async (req, res) => {
+  const data = await settingsService.getPageBySlugService(req.params.slug);
+  return successResponse({
+    res,
+    data,
+  });
+});
+
+export const getAllPages = asyncHandler(async (req, res) => {
+  const result = await settingsService.getAllPagesService(
+    req.query,
+  );
+  return successResponse({ res, data: result });
+});
