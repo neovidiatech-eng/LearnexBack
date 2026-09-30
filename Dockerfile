@@ -19,4 +19,4 @@ COPY . .
 EXPOSE 3015
 
 # Run migrations, seed database, and start app
-CMD ["sh", "-c", "npm run prisma:generate && npx prisma migrate deploy --schema=./prisma && npm run seed && npm start"]
+CMD ["npm", "start"]

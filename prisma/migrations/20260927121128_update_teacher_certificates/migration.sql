@@ -26,6 +26,3 @@ CREATE INDEX "teacher_certificates_type_idx" ON "teacher_certificates"("type");
 
 -- CreateIndex
 CREATE INDEX "teacher_certificates_status_idx" ON "teacher_certificates"("status");
-
--- CreateIndex
-CREATE UNIQUE INDEX "teacher_course_section_items_sectionId_order_key" ON "teacher_course_section_items"("sectionId", "order");
