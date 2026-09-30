@@ -766,7 +766,7 @@ export const changeTeacherCourseStatus = async ({ courseId, status, rejectionRea
     },
     data: {
       status,
-      rejectionReason: status === "REJECTED" ? rejectionReason : null
+      rejectionReason: status === CertificateStatus.REJECTED ? rejectionReason : null
     }
   });
   return { success: true };

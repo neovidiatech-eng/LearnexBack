@@ -63,7 +63,6 @@ export async function seedTeachers(prisma, roles) {
             bio: t.bio,
             experienceYears: t.experienceYears,
             linkedinUrl: t.linkedinUrl,
-            
           },
         },
       },

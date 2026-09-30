@@ -1,5 +1,5 @@
 import joi from "joi";
-import { generalFields } from "../../utils/validation/generalField.js";
+import { generalFields } from "../../../utils/validation/generalField.js";
 
 export const login = {
   body: joi
@@ -19,13 +19,12 @@ export const studentSignup = {
       fullName: generalFields.fullName.required(),
       email: generalFields.email.required(),
       password: generalFields.password.required(),
-      confirmPassword:generalFields.confirmPassword.required(),
+      confirmPassword: generalFields.confirmPassword.required(),
       phone: generalFields.phone.required(),
     })
     .required()
     .options({ allowUnknown: false }),
 };
-
 
 export const confirmEmail = {
   body: joi

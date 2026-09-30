@@ -35,6 +35,12 @@ const permissionsData = [
   { code: "teachers:create", name: "Create Teachers", resource: "teachers", action: "create" },
   { code: "teachers:update", name: "Update Teachers", resource: "teachers", action: "update" },
   { code: "teachers:delete", name: "Delete Teachers", resource: "teachers", action: "delete" },
+
+  { code: "students:read", name: "Read Students", resource: "students", action: "read" },
+  { code: "students:create", name: "Create Students", resource: "students", action: "create" },
+  { code: "students:update", name: "Update Students", resource: "students", action: "update" },
+  { code: "students:delete", name: "Delete Students", resource: "students", action: "delete" },
+
 ];
 
 const rolePermissionsMap = {
@@ -53,6 +59,10 @@ const rolePermissionsMap = {
     "categories:read",
   ],
   STUDENT: [
+    "students:read",
+    "students:update",
+    "students:create",
+    "students:delete",
     "courses:read",
     "enrollments:read",
     "enrollments:create",

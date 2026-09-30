@@ -1,5 +1,5 @@
 import * as authService from "./auth.service.js";
-import { asyncHandler, successResponse } from "../../utils/response.js";
+import { asyncHandler, successResponse } from "../../../utils/response.js";
 
 export const studentSignup = asyncHandler(async (req, res) => {
   const result = await authService.studentSignup({
