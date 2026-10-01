@@ -8,3 +8,9 @@ export const teacherCourseMaterialTypeEnum = {
   VIDEO: "VIDEO",
   PDF: "PDF",
 };
+
+export const quizTypeEnum = {
+  MCQ: "MCQ",
+  TRUE_FALSE: "TRUE_FALSE",
+  WRITTEN: "WRITTEN",
+};
