@@ -7,5 +7,6 @@ import { localFileUpload } from "../../../utils/multer/local.multer.js";
 import { fileValidation } from "../../../utils/multer/fileValidation.js";
 const router = Router();
 router.use(authentication(), authorizeResource("students"));
-router.get("/teachers",teachersController.getAllTeachers)
+router.get("/",teachersController.getAllTeachers)
+router.get("/:teacherId", teachersController.getTeacherById);
 export default router;

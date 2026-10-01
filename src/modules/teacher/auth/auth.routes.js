@@ -34,7 +34,7 @@ router.post(
     ],
     maxSizeInMB: 100,
   }).fields([
-    { name: "cv", maxCount: 1 },
+    { name: "cvUrl", maxCount: 1 },
     { name: "introVideoUrl", maxCount: 1 },
   ]),
   validation(authValidation.teacherSignup),

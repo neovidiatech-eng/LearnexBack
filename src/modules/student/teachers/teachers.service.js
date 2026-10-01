@@ -30,6 +30,41 @@ export const getAllTeachersService = async ({
   const select = {
     id: true,
     subject: true,
+    bio: true,
+    avgRating: true,
+    reviewsCount: true,
+    totalCoursesCount: true,
+    experienceYears: true,
+    user: {
+      select: {
+        id: true,
+        fullName: true,
+        profilePhoto: true,
+      },
+    },
+  };
+
+  const result = await db.findManyWithPaginationAndCount({
+    model: "teacher",
+    where,
+    page,
+    limit,
+    orderBy: { createdAt: "desc" },
+    select,
+  });
+
+  return {
+    teachers: result.items,
+    pagination: result.pagination,
+  };
+};
+export const getTeacherByIdService = async (teacherId) => {
+  const select = {
+    id: true,
+    subject: true,
+    avgRating: true,
+    totalStudentsCount: true,
+    totalCoursesCount: true,
     experienceYears: true,
     bio: true,
     linkedinUrl: true,
@@ -48,26 +83,16 @@ export const getAllTeachersService = async ({
         courses: {
           select: {
             id: true,
-            totalStudentsCount: true,
-            avgRating: true,
             translations: true,
           },
         },
       },
     },
   };
-
-  const result = await dbService.findManyWithPaginationAndCount({
+  const teacher = await db.findFirst({
     model: "teacher",
-    where,
-    page,
-    limit,
-    orderBy: { createdAt: "desc" },
+    where: { id: teacherId },
     select,
   });
-
-  return {
-    teachers: result.items,
-    pagination: result.pagination,
-  };
+  return teacher
 };
