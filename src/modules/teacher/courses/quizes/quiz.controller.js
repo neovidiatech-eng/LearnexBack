@@ -31,7 +31,7 @@ export const createQuizController = asyncHandler(async (req, res, next) => {
 export const updateQuiz = asyncHandler(async(req,res,next)=>{
     const {sectionId} = req.params;
 
-    const {title, description, duration, passingScore, questions} = req.body;
+    const {title, description, duration, passingScore} = req.body;
 
     const quiz = await quizService.updateQuiz({
         userId: req.user.id,
@@ -40,7 +40,6 @@ export const updateQuiz = asyncHandler(async(req,res,next)=>{
         description,
         duration,
         passingScore,
-        questions
     });
     return successResponse({
         res,
@@ -52,6 +51,7 @@ export const updateQuiz = asyncHandler(async(req,res,next)=>{
 
 export  const updateQuestion = asyncHandler(async(req,res,next)=>{
     const {sectionId,questionId} = req.params;
+    const {text,correctOptionId} = req.body;
 
     const question = await quizService.updateQuestion({
         userId: req.user.id,
@@ -67,4 +67,35 @@ export  const updateQuestion = asyncHandler(async(req,res,next)=>{
         message: "QUESTION_UPDATED_SUCCESSFULLY",
         data: question
     })
+});
+
+export const getQuiz = asyncHandler(async(req,res,next)=>{
+    const{sectionId} = req.params;
+    const quiz = await quizService.getQuiz({
+        userId: req.user.id,
+        sectionId,
+    });
+    return successResponse({
+        res,
+        status: 200,
+        message: "QUIZ_FETCHED_SUCCESSFULLY",
+        data: quiz
+    })
 })
+
+
+
+export const deleteQuiz = asyncHandler(async (req, res, next) => {
+    const { sectionId } = req.params;
+
+    await quizService.deleteQuiz({
+        userId: req.user.id,
+        sectionId,
+    });
+
+    return successResponse({
+        res,
+        status: 200,
+        message: "QUIZ_DELETED_SUCCESSFULLY",
+    });
+});

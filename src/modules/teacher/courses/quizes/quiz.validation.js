@@ -51,12 +51,10 @@ const quizQuestionSchema = Joi.object({
         }),
 
     options: Joi.array()
-        .min(2)
         .items(quizOptionSchema)
         .optional()
         .messages({
             "array.base": "QUESTION_OPTIONS_ARRAY",
-            "array.min": "QUESTION_OPTIONS_MIN",
         }),
 
 });
@@ -106,12 +104,18 @@ export const createQuizSchema = {
 
 };
 
-export const updateQuizSchema = Joi.object({
-    title: Joi.string().trim().min(1),
-    description: Joi.string().trim().allow("", null),
-    duration: Joi.number().integer().positive(),
-    passingScore: Joi.number().integer().min(1).max(100),
-}).min(1);
+export const updateQuizSchema = {
+    body: Joi.object({
+        title: Joi.string().trim().min(1),
+        description: Joi.string().trim().allow("", null),
+        duration: Joi.number().integer().positive(),
+        passingScore: Joi.number().integer().min(0).max(100),
+    }).min(1),
+
+    params: Joi.object({
+        sectionId: generalFields.id.required(),
+    }),
+};
 
 export const updateQuestionSchema = {
 
@@ -142,4 +146,10 @@ export const updateQuestionSchema = {
 
     }),
 
+};
+
+export const quizParamsSchema = {
+    params: Joi.object({
+        sectionId: generalFields.id.required(),
+    }),
 };

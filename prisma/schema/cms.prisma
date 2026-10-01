@@ -14,13 +14,13 @@ model AppSetting {
 }
 
 model AppSettingTranslation {
-  id          String     @id @default(uuid())
-  settingId   String
-  setting     AppSetting @relation(fields: [settingId], references: [id], onDelete: Cascade)
-  locale      String     
-  appName     String    
-  aboutUs     String     @db.Text
-  copyright   String     @default("جميع الحقوق محفوظة © 2024")
+  id        String     @id @default(uuid())
+  settingId String
+  setting   AppSetting @relation(fields: [settingId], references: [id], onDelete: Cascade)
+  locale    String
+  appName   String
+  aboutUs   String     @db.Text
+  copyright String     @default("جميع الحقوق محفوظة © 2024")
 
   @@unique([settingId, locale])
   @@map("app_setting_translations")
@@ -28,8 +28,8 @@ model AppSettingTranslation {
 
 model StaticPage {
   id        String   @id @default(uuid())
-  slug      String   @unique 
-  type      String   @default("GENERAL") 
+  slug      String   @unique
+  type      String   @default("GENERAL")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -42,7 +42,7 @@ model StaticPageTranslation {
   id      String     @id @default(uuid())
   pageId  String
   page    StaticPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
-  locale  String    
+  locale  String
   title   String
   content String     @db.Text
 
@@ -52,9 +52,9 @@ model StaticPageTranslation {
 
 model TeacherAcademyItem {
   id        String   @id @default(uuid())
-  type      String  
+  type      String
   link      String?
-  duration  String?  
+  duration  String?
   order     Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -68,8 +68,8 @@ model TeacherAcademyTranslation {
   id          String             @id @default(uuid())
   itemId      String
   item        TeacherAcademyItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  locale      String           
-  title       String             
+  locale      String
+  title       String
   description String?            @db.Text
 
   @@unique([itemId, locale])
