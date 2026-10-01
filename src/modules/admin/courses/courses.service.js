@@ -202,8 +202,7 @@ export const getAllCoursesService = async ({
       instructor: {
         select: {
           id: true,
-          firstName: true,
-          lastName: true,
+          fullName: true,
           email: true,
           profilePhoto: true,
         },
@@ -250,8 +249,7 @@ export const getCourseByIdService = async ({ courseId }) => {
       instructor: {
         select: {
           id: true,
-          firstName: true,
-          lastName: true,
+          fullName: true,
           email: true,
           phone: true,
           profilePhoto: true,
@@ -431,8 +429,7 @@ export const updateCourseService = async (body, params, reqFiles) => {
       instructor: {
         select: {
           id: true,
-          firstName: true,
-          lastName: true,
+          fullName: true,
           email: true,
           phone: true,
           profilePhoto: true,

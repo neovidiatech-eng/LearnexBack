@@ -1,6 +1,9 @@
 import * as db from "../../../db/db.service.js";
 import { deleteFile, deleteFiles } from "../../../utils/multer/file.utils.js";
-import { decryptEncription } from "../../../utils/security/encryption.security.js";
+import {
+  decryptEncription,
+  generateEncryption,
+} from "../../../utils/security/encryption.security.js";
 
 export const toggleVisibilityService = async (userId, isAvailable) => {
   const teacher = await db.findFirst({
@@ -52,6 +55,7 @@ export const getProfileService = async (userId) => {
       bio: true,
       experienceYears: true,
       cvUrl: true,
+      introVideoUrl: true,
       linkedinUrl: true,
       isAvailable: true,
       sessionPrice50Min: true,
@@ -110,6 +114,8 @@ export const updateProfileService = async (userId, body) => {
     bio,
     experienceYears,
     linkedinUrl,
+    introVideoUrl,
+    cvUrl,
   } = body;
 
   const teacher = await db.findFirst({
@@ -140,19 +146,29 @@ export const updateProfileService = async (userId, body) => {
     }
   }
 
-  const updatedData = await db.updateOne({
+  const updatedTeacher = await db.updateOne({
     model: "teacher",
     where: { id: teacher.id },
     data: {
-      ...(fullName !== undefined && { fullName: fullName.trim() }),
-      ...(email !== undefined && { email: email.trim() }),
-      ...(phone !== undefined && { phone }),
-      ...(country !== undefined && { country }),
-      ...(subject !== undefined && { subject }),
-      ...(headline !== undefined && { headline }),
-      ...(bio !== undefined && { bio }),
-      ...(experienceYears !== undefined && { experienceYears }),
-      ...(linkedinUrl !== undefined && { linkedinUrl }),
+      ...(subject && { subject }),
+      ...(headline && { headline }),
+      ...(bio && { bio }),
+      ...(experienceYears !== undefined && {
+        experienceYears: Number(experienceYears),
+      }),
+      ...(linkedinUrl && { linkedinUrl }),
+      ...(introVideoUrl && { introVideoUrl }),
+      ...(cvUrl && { cvUrl }),
+      user: {
+        update: {
+          ...(fullName && { fullName: fullName.trim() }),
+          ...(email && { email: email.toLowerCase().trim() }),
+          ...(phone && {
+            phone: await generateEncryption({ plainText: phone }),
+          }),
+          ...(country && { country }),
+        },
+      },
     },
     select: {
       id: true,
@@ -160,6 +176,9 @@ export const updateProfileService = async (userId, body) => {
       headline: true,
       bio: true,
       experienceYears: true,
+      introVideoUrl: true,
+      cvUrl: true,
+      linkedinUrl: true,
       isAvailable: true,
       user: {
         select: {
@@ -173,7 +192,13 @@ export const updateProfileService = async (userId, body) => {
     },
   });
 
-  return updatedData;
+  if (updatedTeacher.user?.phone) {
+    updatedTeacher.user.phone = await decryptEncription({
+      cipherText: updatedTeacher.user.phone,
+    });
+  }
+
+  return updatedTeacher;
 };
 
 export const updateSessionPriceService = async (userId, body) => {
@@ -317,4 +342,3 @@ export const deleteProfileService = async (userId) => {
 
   return { success: true };
 };
-

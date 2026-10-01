@@ -11,7 +11,7 @@ import { customAlphabet } from "nanoid";
 import { emailEvent } from "../../../utils/events/email.event.js";
 import { deleteCache, getCache, setCache } from "../../../db/redis.service.js";
 
-export const teacherSignupService = async (body, file) => {
+export const teacherSignupService = async (body, reqFiles) => {
   const {
     fullName,
     firstName,
@@ -40,7 +40,9 @@ export const teacherSignupService = async (body, file) => {
     throw error;
   }
 
-  const cvUrl = file ? file.relativeDestination : null;
+  const cvUrl = reqFiles?.cvUrl?.[0]?.relativeDestination || null;
+  const introVideoUrl =
+    reqFiles?.introVideoUrl?.[0]?.relativeDestination || null;
 
   const hashPassword = await generateHash({ plainText: password });
   const encPhone = phone
@@ -72,6 +74,7 @@ export const teacherSignupService = async (body, file) => {
       bio: bio ? bio.trim() : null,
       experienceYears: Number(experienceYears) || 0,
       cvUrl,
+      introVideoUrl,
       linkedinUrl: linkedinUrl || null,
       user: {
         create: {

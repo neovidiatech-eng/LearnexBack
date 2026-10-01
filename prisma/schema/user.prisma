@@ -33,13 +33,14 @@ model User {
 }
 
 model Student {
-  id          String    @id @default(uuid())
-  userId      String    @unique
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  dateOfBirth DateTime?
-  notes       String?   @db.Text
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id              String           @id @default(uuid())
+  userId          String           @unique
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dateOfBirth     DateTime?
+  notes           String?          @db.Text
+  courseFavorites CourseFavorite[] @relation("StudentFavorites")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
   @@index([userId])
   @@map("students")
@@ -51,6 +52,7 @@ model Teacher {
   user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   experienceYears    Int                  @default(0)
   cvUrl              String?
+  introVideoUrl      String?   
   referralCode       String?
   subject            String
   headline           String?
