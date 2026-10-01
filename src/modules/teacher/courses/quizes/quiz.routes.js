@@ -20,13 +20,25 @@ router.patch(
     quizController.updateQuiz
 )
 
-router.patch("/:sectionId/quize/:questionId",authentication(),
+router.patch("/:sectionId/quiz/questions/:questionId",authentication(),
     validation(quizValidation.updateQuestionSchema),
     quizController.updateQuestion
 )
 
+router.get(
+    "/:sectionId/quiz",
+    authentication(),
+    validation(quizValidation.quizParamsSchema),
+    quizController.getQuiz
+);
 
 
+router.delete(
+    "/:sectionId/quiz",
+    authentication(),
+    validation(quizValidation.quizParamsSchema),
+    quizController.deleteQuiz
+)
 
 
 export default router;

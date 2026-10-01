@@ -12,7 +12,9 @@ const getTeacherByUserId = async (userId) => {
     });
 
     if (!teacher) {
-        throw new Error("TEACHER_NOT_FOUND");
+        const error = new Error("TEACHER_NOT_FOUND");
+        error.cause = 404;
+        throw error;
     }
 
     return teacher;
@@ -33,7 +35,9 @@ const getOwnedSection = async (sectionId, teacherId) => {
     });
 
     if (!section) {
-        throw new Error("SECTION_NOT_FOUND");
+        const error = new Error("SECTION_NOT_FOUND");
+        error.cause = 404;
+        throw error;
     }
 
     return section;
@@ -46,26 +50,36 @@ const validateQuestions = (questions) => {
 
     questions.forEach((question) => {
         if (!Object.values(quizTypeEnum).includes(question.type)) {
-            throw new Error("INVALID_QUESTION_TYPE");
+           const error = new Error("INVALID_QUESTION_TYPE");
+           error.cause = 400;
+           throw error;
         }
 
         if (!question.text?.trim()) {
-            throw new Error("QUESTION_TEXT_REQUIRED");
+            const error = new Error("QUESTION_TEXT_REQUIRED");
+            error.cause = 400;
+            throw error;
         }
 
         if (question.type === quizTypeEnum.WRITTEN) {
             if (question.options?.length) {
-                throw new Error("WRITTEN_MUST_NOT_HAVE_OPTIONS");
+                const error = new Error("WRITTEN_MUST_NOT_HAVE_OPTIONS");
+                error.cause = 400;
+                throw error;
             }
             return; // يكمل على السؤال اللي بعده
         }
 
         if (!Array.isArray(question.options) || question.options.length === 0) {
-            throw new Error("QUESTION_OPTIONS_REQUIRED");
+            const error = new Error("QUESTION_OPTIONS_REQUIRED");
+            error.cause = 400;
+            throw error;
         }
 
         if (question.options.some((option) => !option.text?.trim())) {
-            throw new Error("OPTION_TEXT_REQUIRED");
+            const error = new Error("OPTION_TEXT_REQUIRED");
+            error.cause = 400;
+            throw error;
         }
 
         const correctOptions = question.options.filter(
@@ -74,19 +88,27 @@ const validateQuestions = (questions) => {
 
         if (question.type === quizTypeEnum.MCQ) {
             if (question.options.length < 2) {
-                throw new Error("MCQ_REQUIRES_AT_LEAST_TWO_OPTIONS");
+                const error = new Error("MCQ_REQUIRES_AT_LEAST_TWO_OPTIONS");
+                error.cause = 400;
+                throw error;
             }
             if (correctOptions.length !== 1) {
-                throw new Error("MCQ_MUST_HAVE_ONE_CORRECT_OPTION");
+                const error = new Error("MCQ_MUST_HAVE_ONE_CORRECT_OPTION");
+                error.cause = 400;
+                throw error;
             }
         }
 
         if (question.type === quizTypeEnum.TRUE_FALSE) {
             if (question.options.length !== 2) {
-                throw new Error("TRUE_FALSE_REQUIRES_TWO_OPTIONS");
+                const error = new Error("TRUE_FALSE_REQUIRES_TWO_OPTIONS");
+                error.cause = 400;
+                throw error;
             }
             if (correctOptions.length !== 1) {
-                throw new Error("TRUE_FALSE_MUST_HAVE_ONE_CORRECT_OPTION");
+                const error = new Error("TRUE_FALSE_MUST_HAVE_ONE_CORRECT_OPTION");
+                error.cause = 400;
+                throw error;
             }
         }
     });
@@ -101,7 +123,9 @@ export const createQuiz = async ({
     const section = await getOwnedSection(sectionId, teacher.id);
 
     if (section.quiz) {
-        throw new Error("QUIZ_ALREADY_EXISTS");
+        const error = new Error("QUIZ_ALREADY_EXISTS");
+        error.cause = 409;
+        throw error;
     }
 
     try {
@@ -139,7 +163,9 @@ export const createQuiz = async ({
         });
     } catch (error) {
         if (error.code === "P2002") {
-            throw new Error("QUIZ_ALREADY_EXISTS");
+            const error = new Error("QUIZ_ALREADY_EXISTS");
+            error.cause = 409;
+            throw error;
         }
         throw error;
     }
@@ -179,7 +205,9 @@ export const getQuiz = async ({
     });
 
     if (!quiz) {
-        throw new Error("QUIZ_NOT_FOUND");
+        const error = new Error("QUIZ_NOT_FOUND");
+        error.cause = 404;
+        throw error;
     }
 
     return quiz;
@@ -199,7 +227,9 @@ export const updateQuiz = async ({
     const section = await getOwnedSection(sectionId,teacher.id)
 
     if (!section.quiz) {
-        throw new Error("QUIZ_NOT_FOUND");
+        const error = new Error("QUIZ_NOT_FOUND");
+        error.cause = 404;
+        throw error;
     }
 
     const updatedQuiz = await dbService.updateOne({
@@ -229,7 +259,9 @@ export const updateQuestion = async ({
     const section = await getOwnedSection(sectionId, teacher.id);
 
     if (!section.quiz) {
-        throw new Error("QUIZ_NOT_FOUND");
+        const error = new Error("QUIZ_NOT_FOUND");
+        error.cause = 404;
+        throw error;
     }
 
     const question = await dbService.findOne({
@@ -239,7 +271,9 @@ export const updateQuestion = async ({
     });
 
     if (!question) {
-        throw new Error("QUESTION_NOT_FOUND");
+       const error = new Error("QUESTION_NOT_FOUND");
+       error.cause = 404;
+       throw error;
     }
 
     const data = {};
@@ -250,7 +284,9 @@ export const updateQuestion = async ({
 
     if (correctOptionId !== undefined) {
         if (question.type === quizTypeEnum.WRITTEN) {
-            throw new Error("WRITTEN_QUESTION_HAS_NO_OPTIONS");
+           const error = new Error("WRITTEN_QUESTION_HAS_NO_OPTIONS");
+           error.cause = 400;
+           throw error;
         }
 
         const optionExists = question.options.some(
@@ -258,7 +294,9 @@ export const updateQuestion = async ({
         );
 
         if (!optionExists) {
-            throw new Error("OPTION_NOT_FOUND");
+            const error = new Error("OPTION_NOT_FOUND");
+            error.cause = 404;
+            throw error;
         }
 
         data.options = {
@@ -289,31 +327,19 @@ export const deleteQuiz = async ({
 }) => {
 
     const teacher = await getTeacherByUserId(userId);
+    const section = await getOwnedSection(sectionId,teacher.id);
 
-    await getOwnedSection(
-        sectionId,
-        teacher.id
-    );
-
-    const quiz = await dbService.findOne({
-        model: "teacherCourseQuiz",
-        where: {
-            sectionId,
-        },
-    });
-
-    if (!quiz) {
-        throw new Error("QUIZ_NOT_FOUND");
+    if(!section.quiz){
+        const error = new Error("QUIZ_NOT_FOUND");
+        error.cause = 404;
+        throw error;
     }
 
-    await dbService.delete({
+    await dbService.deleteOne({
         model: "teacherCourseQuiz",
         where: {
-            id: quiz.id,
+            id: section.quiz.id,
         },
     });
-
-    return {
-        message: "QUIZ_DELETED_SUCCESS",
-    };
 };
+
