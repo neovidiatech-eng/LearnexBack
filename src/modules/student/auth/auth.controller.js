@@ -42,3 +42,23 @@ export const getNewCredentials = asyncHandler(async (req, res) => {
     data: result,
   });
 });
+
+export const forgotPassword = asyncHandler(async (req, res) => {
+  const result = await authService.forgotPasswordService(req.body);
+  return successResponse({
+    res,
+    status: 200,
+    message: "OTP_SENT_SUCCESSFULLY",
+    data: result,
+  });
+});
+
+export const resetPassword = asyncHandler(async (req, res) => {
+  const result = await authService.resetPasswordService(req.body);
+  return successResponse({
+    res,
+    status: 200,
+    message: "PASSWORD_RESET_SUCCESSFULLY",
+    data: result,
+  });
+});

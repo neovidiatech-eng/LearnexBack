@@ -64,6 +64,18 @@ router.post(
  *       200:
  *         description: Token refreshed successfully
  */
+router.post(
+  "/forgot-password",
+  validation(authValidation.forgotPassword),
+  authController.forgotPassword,
+);
+
+router.patch(
+  "/reset-password",
+  validation(authValidation.resetPassword),
+  authController.resetPassword,
+);
+
 router.get(
   "/refresh-token",
   authentication({ tokenType: tokenTypeEnum.refresh }),

@@ -36,3 +36,26 @@ export const confirmEmail = {
     .required()
     .options({ allowUnknown: false }),
 };
+
+export const forgotPassword = {
+  body: joi
+    .object()
+    .keys({
+      email: generalFields.email.required(),
+    })
+    .required()
+    .options({ allowUnknown: false }),
+};
+
+export const resetPassword = {
+  body: joi
+    .object()
+    .keys({
+      email: generalFields.email.required(),
+      otp: generalFields.otp.required(),
+      password: generalFields.password.required(),
+      confirmPassword: generalFields.confirmPassword.required(),
+    })
+    .required()
+    .options({ allowUnknown: false }),
+};
