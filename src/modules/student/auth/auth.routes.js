@@ -21,6 +21,18 @@ router.patch(
   authController.confirmEmail,
 );
 
+router.post(
+  "/forgot-password",
+  validation(authValidation.forgotPassword),
+  authController.forgotPassword,
+);
+
+router.patch(
+  "/reset-password",
+  validation(authValidation.resetPassword),
+  authController.resetPassword,
+);
+
 router.get(
   "/refresh-token",
   authentication({ tokenType: tokenTypeEnum.REFRESH }),

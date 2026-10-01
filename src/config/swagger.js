@@ -88,6 +88,7 @@ const swaggerSpec = {
     { name: "Teacher Courses", description: "Teacher course management" },
     { name: "Teacher Sections", description: "Teacher section management" },
     { name: "Teacher Items", description: "Teacher course item management" },
+    { name: "Teacher Quizzes", description: "Teacher quiz & question management" },
     { name: "Admin Auth", description: "Admin authentication" },
     { name: "Admin Students", description: "Admin student management" },
     { name: "Admin Teachers", description: "Admin teacher management" },
@@ -567,9 +568,9 @@ const swaggerSpec = {
     },
 
     // ───────────────────────────────────────────────────────────
-    // TEACHER ITEMS  (/api/v1/teacher/sections/:sectionId/items)
+    // TEACHER ITEMS  (/api/v1/teacher/items)
     // ───────────────────────────────────────────────────────────
-    "/api/v1/teacher/sections/{sectionId}/items": {
+    "/api/v1/teacher/items/{sectionId}": {
       post: {
         summary: "Create a new item in a section",
         tags: ["Teacher Items"],
@@ -585,7 +586,7 @@ const swaggerSpec = {
                 properties: {
                   title: { type: "string", example: "Introduction Video" },
                   description: { type: "string", example: "Course overview" },
-                  materialType: { type: "string", example: "video", description: "e.g. video, pdf, quiz" },
+                  materialType: { type: "string", enum: ["VIDEO", "PDF"], example: "VIDEO", description: "Material type" },
                   materialLink: { type: "string", format: "binary", description: "Upload material file" },
                   order: { type: "integer", minimum: 1, example: 1 },
                 },
@@ -596,6 +597,180 @@ const swaggerSpec = {
         responses: {
           ...json201(dataResponse("Item created successfully")),
           404: { description: "Section or teacher not found" },
+        },
+      },
+    },
+    "/api/v1/teacher/items/{sectionId}/items": {
+      get: {
+        summary: "Get all items in a section",
+        tags: ["Teacher Items"],
+        security: bearerSecurity,
+        parameters: [uuidParam("sectionId", "Section ID")],
+        responses: {
+          ...json200(listResponse()),
+          404: { description: "Section or teacher not found" },
+        },
+      },
+    },
+    "/api/v1/teacher/items/{sectionId}/{itemId}": {
+      get: {
+        summary: "Get an item by ID",
+        tags: ["Teacher Items"],
+        security: bearerSecurity,
+        parameters: [uuidParam("sectionId", "Section ID"), uuidParam("itemId", "Item ID")],
+        responses: {
+          ...json200(dataResponse("Item retrieved")),
+          404: { description: "Item or section not found" },
+        },
+      },
+      patch: {
+        summary: "Update an item",
+        tags: ["Teacher Items"],
+        security: bearerSecurity,
+        parameters: [uuidParam("sectionId", "Section ID"), uuidParam("itemId", "Item ID")],
+        requestBody: {
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                properties: {
+                  title: { type: "string", example: "Updated Video Title" },
+                  description: { type: "string" },
+                  materialType: { type: "string", enum: ["VIDEO", "PDF"] },
+                  materialLink: { type: "string", format: "binary", description: "Replace material file" },
+                  order: { type: "integer", minimum: 1 },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...json200(dataResponse("Item updated")),
+          404: { description: "Item or section not found" },
+        },
+      },
+      delete: {
+        summary: "Delete an item",
+        tags: ["Teacher Items"],
+        security: bearerSecurity,
+        parameters: [uuidParam("sectionId", "Section ID"), uuidParam("itemId", "Item ID")],
+        responses: {
+          ...json200(msgResponse("Item deleted")),
+          404: { description: "Item or section not found" },
+        },
+      },
+    },
+
+    // ───────────────────────────────────────────────────────────
+    // TEACHER QUIZZES  (/api/v1/teacher/quizes)
+    // ───────────────────────────────────────────────────────────
+    "/api/v1/teacher/quizes/{sectionId}/quiz": {
+      post: {
+        summary: "Create a quiz for a section",
+        tags: ["Teacher Quizzes"],
+        security: bearerSecurity,
+        parameters: [uuidParam("sectionId", "Section ID")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["title", "duration", "passingScore", "questions"],
+                properties: {
+                  title: { type: "string", example: "JavaScript Basics Quiz" },
+                  description: { type: "string", example: "Test your JS knowledge" },
+                  duration: { type: "integer", minimum: 1, example: 30, description: "Duration in minutes" },
+                  passingScore: { type: "integer", minimum: 0, maximum: 100, example: 70, description: "Minimum score to pass (0-100)" },
+                  questions: {
+                    type: "array",
+                    minItems: 1,
+                    items: {
+                      type: "object",
+                      required: ["type", "text"],
+                      properties: {
+                        type: { type: "string", enum: ["MCQ", "TRUE_FALSE", "WRITTEN"], example: "MCQ" },
+                        text: { type: "string", example: "What is JavaScript?" },
+                        options: {
+                          type: "array",
+                          minItems: 2,
+                          items: {
+                            type: "object",
+                            required: ["text", "isCorrect"],
+                            properties: {
+                              text: { type: "string", example: "A programming language" },
+                              isCorrect: { type: "boolean", example: true },
+                            },
+                          },
+                          description: "Required for MCQ and TRUE_FALSE types",
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...json201(dataResponse("Quiz created successfully")),
+          404: { description: "Section or teacher not found" },
+        },
+      },
+      patch: {
+        summary: "Update a quiz",
+        tags: ["Teacher Quizzes"],
+        security: bearerSecurity,
+        parameters: [uuidParam("sectionId", "Section ID")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                minProperties: 1,
+                properties: {
+                  title: { type: "string", example: "Updated Quiz Title" },
+                  description: { type: "string", example: "Updated description" },
+                  duration: { type: "integer", minimum: 1, example: 45 },
+                  passingScore: { type: "integer", minimum: 1, maximum: 100, example: 75 },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...json200(dataResponse("Quiz updated")),
+          400: { description: "At least one field is required" },
+          404: { description: "Quiz or section not found" },
+        },
+      },
+    },
+    "/api/v1/teacher/quizes/{sectionId}/quize/{questionId}": {
+      patch: {
+        summary: "Update a question in a quiz",
+        tags: ["Teacher Quizzes"],
+        security: bearerSecurity,
+        parameters: [
+          uuidParam("sectionId", "Section ID"),
+          uuidParam("questionId", "Question ID"),
+        ],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  text: { type: "string", example: "Updated question text?", description: "New question text" },
+                  correctOptionId: { type: "string", format: "uuid", description: "ID of the correct option" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...json200(dataResponse("Question updated")),
+          404: { description: "Question or section not found" },
         },
       },
     },

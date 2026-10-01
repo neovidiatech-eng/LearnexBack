@@ -9,7 +9,7 @@ import { customAlphabet } from "nanoid";
 import { emailEvent } from "../../../utils/events/email.event.js";
 import { userStatusEnum } from "../../../utils/Enums/userStatus.enum.js";
 import { baseRoleEnum } from "../../../utils/Enums/role.enum.js";
-import { getCache, setCache } from "../../../db/redis.service.js";
+import { deleteCache, getCache, setCache } from "../../../db/redis.service.js";
 
 export const studentSignup = async (userData) => {
   const { email, fullName, password, phone } = userData;
@@ -188,4 +188,70 @@ export const confirmEmailService = async ({ email, otp }) => {
 export const getNewCredentialsService = async (user) => {
   const credentials = await generateLoginCredentials({ user });
   return { credentials };
+};
+
+export const forgotPasswordService = async ({ email }) => {
+  const normalizedEmail = email.toLowerCase().trim();
+  const user = await DBService.findFirst({
+    model: "user",
+    where: { email: normalizedEmail },
+  });
+  if (!user) {
+    const error = new Error("ACCOUNT_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+  const otp = customAlphabet("0123456789", 6)();
+  const hashOtp = await generateHash({ plainText: otp });
+  await setCache({
+    key: `forgotPassword:${normalizedEmail}:otp`,
+    value: hashOtp,
+    ttlInSeconds: 60 * 10,
+  });
+  emailEvent.emit("sendForgotPassword", {
+    to: normalizedEmail,
+    otp,
+    title: "Forgot-Password",
+  });
+  return { email: normalizedEmail };
+};
+
+export const resetPasswordService = async ({ email, otp, password }) => {
+  const normalizedEmail = email.toLowerCase().trim();
+  const user = await DBService.findFirst({
+    model: "user",
+    where: { email: normalizedEmail },
+  });
+  if (!user) {
+    const error = new Error("ACCOUNT_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+  const cachedOtp = await getCache({
+    key: `forgotPassword:${normalizedEmail}:otp`,
+  });
+  if (!cachedOtp) {
+    const error = new Error("INVALID_OTP");
+    error.cause = 400;
+    throw error;
+  }
+  const isOtpValid = await compareHash({
+    plainText: otp,
+    hashValue: cachedOtp,
+  });
+  if (!isOtpValid) {
+    const error = new Error("INVALID_OTP");
+    error.cause = 400;
+    throw error;
+  }
+  const hashPassword = await generateHash({ plainText: password });
+  await DBService.updateOne({
+    model: "user",
+    where: { id: user.id },
+    data: {
+      password: hashPassword,
+    },
+  });
+  await deleteCache(`forgotPassword:${normalizedEmail}:otp`);
+  return { success: true };
 };

@@ -1,66 +1,114 @@
-model TeacherCourse{
-    id String @id @default(uuid())
+model TeacherCourse {
+  id String @id @default(uuid())
 
-    teacherId  String
-    teacher  Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacherId String
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
 
-    wallPaper String? 
-    name      String
-    description  String  @db.Text 
-    price     Decimal    @db.Decimal(10,2)
-    totalHours Int       @default(0)
+  wallPaper   String?
+  name        String
+  description String  @db.Text
+  price       Decimal @db.Decimal(10, 2)
+  totalHours  Int     @default(0)
 
-    status    String     @default("PENDING")  //PENDING,APPROVED,REJECTED
-    rejectionReason String?
+  status          String  @default("PENDING") //PENDING,APPROVED,REJECTED
+  rejectionReason String?
 
-
-    sections  TeacherCourseSection[]
-
-    createdAt  DateTime  @default(now())
-    updatedAt  DateTime  @updatedAt
-
-    @@index([teacherId])
-    @@index([status])
-    @@map("teacherCourses")
-    
-
-}
-model TeacherCourseSection {
-  id        String   @id @default(uuid())
-
-  courseId  String
-  course    TeacherCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
-
-  name      String
-  order     Int      
-
-  items     TeacherCourseSectionItem[]
+  sections TeacherCourseSection[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([teacherId])
+  @@index([status])
+  @@map("teacherCourses")
+}
+
+model TeacherCourseSection {
+  id String @id @default(uuid())
+
+  courseId String
+  course   TeacherCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  name  String
+  order Int
+
+  items TeacherCourseSectionItem[]
+  quiz  TeacherCourseQuiz?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([courseId, order])
   @@index([courseId])
-  @@unique([courseId,order])
   @@map("teacher_courses_sections")
 }
 
 model TeacherCourseSectionItem {
-  id            String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  sectionId     String
-  section       TeacherCourseSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  sectionId String
+  section   TeacherCourseSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 
-  title         String
-  description   String?  @db.Text
+  title       String
+  description String? @db.Text
 
-  materialType  String   // VIDEO | PDF
-  materialLink  String
-  order         Int      
+  materialType String // VIDEO | PDF
+  materialLink String
+  order        Int
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
+  @@unique([sectionId, order])
   @@index([sectionId])
-  @@unique([sectionId,order])
   @@map("teacher_course_section_items")
+}
+
+model TeacherCourseQuiz {
+  id String @id @default(uuid())
+
+  sectionId String               @unique
+  section   TeacherCourseSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  title        String
+  description  String? @db.Text
+  duration     Int
+  passingScore Int
+
+  questions TeacherCourseQuizQuestion[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("teacher_course_quizzes")
+}
+
+model TeacherCourseQuizQuestion {
+  id String @id @default(uuid())
+
+  quizId String
+  quiz   TeacherCourseQuiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  type  String // MCQ  | TRUE_FALSE
+  text  String @db.Text
+  order Int
+
+  options TeacherCourseQuizOption[]
+
+  @@unique([quizId, order])
+  @@map("teacher_course_quiz_questions")
+}
+
+model TeacherCourseQuizOption {
+  id String @id @default(uuid())
+
+  questionId String
+  question   TeacherCourseQuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  text      String
+  isCorrect Boolean @default(false)
+  order     Int
+
+  @@unique([questionId, order])
+  @@map("teacher_course_quiz_options")
 }
