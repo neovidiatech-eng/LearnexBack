@@ -26,12 +26,19 @@ const router = Router();
 router.post(
   "/signup",
   localFileUpload({
-    customPath: (req) =>`teacher/cv/${req.body.email}`,
-    validation: [...fileValidation.document, ...fileValidation.image], 
-    maxSizeInMB: 10,
-  }).single("cv"),
+    customPath: (req) => `teacher/cv/${req.body?.email || "temp"}`,
+    validation: [
+      ...fileValidation.document,
+      ...fileValidation.image,
+      ...fileValidation.video,
+    ],
+    maxSizeInMB: 100,
+  }).fields([
+    { name: "cv", maxCount: 1 },
+    { name: "introVideoUrl", maxCount: 1 },
+  ]),
   validation(authValidation.teacherSignup),
-  authController.signup
+  authController.signup,
 );
 
 /**
@@ -47,11 +54,7 @@ router.post(
  *       403:
  *         description: Account under review or not active
  */
-router.post(
-  "/login",
-  validation(authValidation.login),
-  authController.login
-);
+router.post("/login", validation(authValidation.login), authController.login);
 
 /**
  * @openapi
@@ -67,7 +70,7 @@ router.post(
 router.get(
   "/refresh-token",
   authentication({ tokenType: tokenTypeEnum.refresh }),
-  authController.getNewCredentials
+  authController.getNewCredentials,
 );
 
 export default router;

@@ -51,6 +51,7 @@ model Course {
   instructorId       String
   instructor         User                @relation("TutorCourses", fields: [instructorId], references: [id], onDelete: Cascade)
   sections           CourseSection[]
+  favorites          CourseFavorite[]
   enrollments        CourseEnrollment[]
   reviews            CourseReview[]
   translations       CourseTranslation[]
@@ -228,4 +229,20 @@ model OfferTranslation {
 
   @@unique([offerId, locale])
   @@map("offer_translations")
+}
+
+model CourseFavorite {
+  id          String   @id @default(uuid())
+  studentId   String
+  student     Student  @relation("StudentFavorites", fields: [studentId], references: [id], onDelete: Cascade)
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  isFavourite Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([studentId, courseId])
+  @@index([studentId, isFavourite])
+  @@index([courseId])
+  @@map("course_favorites")
 }

@@ -2,7 +2,7 @@ import * as authService from "./auth.service.js";
 import { asyncHandler, successResponse } from "../../../utils/response.js";
 
 export const signup = asyncHandler(async (req, res) => {
-  const result = await authService.teacherSignupService(req.body, req.file);
+  const result = await authService.teacherSignupService(req.body, req.files);
   return successResponse({
     res,
     status: 201,

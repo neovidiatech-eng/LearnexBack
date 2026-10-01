@@ -8,7 +8,7 @@ import { generateLoginCredentials } from "../../../utils/security/token.security
 import { baseRoleEnum } from "../../../utils/Enums/role.enum.js";
 import { userStatusEnum } from "../../../utils/Enums/userStatus.enum.js";
 
-export const teacherSignupService = async (body, file) => {
+export const teacherSignupService = async (body, reqFiles) => {
   const {
     fullName,
     firstName,
@@ -37,7 +37,9 @@ export const teacherSignupService = async (body, file) => {
     throw error;
   }
 
-  const cvUrl = file ? file.relativeDestination : null;
+  const cvUrl = reqFiles?.cvUrl?.[0]?.relativeDestination || null;
+  const introVideoUrl =
+    reqFiles?.introVideoUrl?.[0]?.relativeDestination || null;
 
   const hashPassword = await generateHash({ plainText: password });
   const encPhone = phone
@@ -69,6 +71,7 @@ export const teacherSignupService = async (body, file) => {
       bio: bio ? bio.trim() : null,
       experienceYears: Number(experienceYears) || 0,
       cvUrl,
+      introVideoUrl,
       linkedinUrl: linkedinUrl || null,
       user: {
         create: {

@@ -26,6 +26,7 @@ export const getAppInfo = asyncHandler(async (req, res) => {
     data,
   });
 });
+
 export const getPageBySlug = asyncHandler(async (req, res) => {
   const data = await settingsService.getPageBySlugService(req.params.slug);
   return successResponse({
