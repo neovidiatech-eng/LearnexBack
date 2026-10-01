@@ -1,23 +1,3 @@
-/*
-  Warnings:
-
-  - You are about to drop the column `bio` on the `teacher_certificates` table. All the data in the column will be lost.
-  - You are about to drop the column `headline` on the `teacher_certificates` table. All the data in the column will be lost.
-  - You are about to drop the column `locale` on the `teacher_certificates` table. All the data in the column will be lost.
-  - You are about to drop the column `subject` on the `teacher_certificates` table. All the data in the column will be lost.
-
-*/
--- AlterTable
-ALTER TABLE "admins" ADD COLUMN     "preferredLanguage" TEXT NOT NULL DEFAULT 'ar';
-
--- AlterTable
-ALTER TABLE "teacher_certificates" DROP COLUMN "bio",
-DROP COLUMN "headline",
-DROP COLUMN "locale",
-DROP COLUMN "subject";
-
--- AlterTable
-ALTER TABLE "users" ADD COLUMN     "preferredLanguage" TEXT NOT NULL DEFAULT 'ar';
 
 -- CreateTable
 CREATE TABLE "teacher_course_quizzes" (
