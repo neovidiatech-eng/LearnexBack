@@ -7,6 +7,7 @@ export const updateProfile = {
       fullName: joi.string().min(2).max(100).trim().optional(),
       email: generalFields.email.optional(),
       phone: joi.string().trim().optional(),
+      dateOfBirth: joi.date().iso().optional().allow(null),
     })
     .options({ allowUnknown: false }),
 };

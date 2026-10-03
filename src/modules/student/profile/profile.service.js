@@ -38,7 +38,7 @@ export const getProfileService = async (userId) => {
 };
 
 export const updateProfileService = async (userId, body) => {
-  const { fullName, email, phone } = body;
+  const { fullName, email, phone, dateOfBirth } = body;
   const student = await db.findFirst({
     model: "student",
     where: { userId },
@@ -64,6 +64,9 @@ export const updateProfileService = async (userId, body) => {
     model: "student",
     where: { id: student.id },
     data: {
+      ...(dateOfBirth !== undefined && {
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+      }),
       user: {
         update: {
           ...(fullName !== undefined && { fullName: fullName.trim() }),
@@ -75,16 +78,25 @@ export const updateProfileService = async (userId, body) => {
       },
     },
     select: {
+      dateOfBirth: true,
       user: {
         select: {
           id: true,
           fullName: true,
           email: true,
           phone: true,
+          profilePhoto: true,
+          coverPhoto: true,
+          status: true,
         },
       },
     },
   });
+  if (updatedStudent.user?.phone) {
+    updatedStudent.user.phone = await decryptEncription({
+      cipherText: updatedStudent.user.phone,
+    });
+  }
   return updatedStudent;
 };
 
