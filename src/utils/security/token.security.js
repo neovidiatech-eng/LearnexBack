@@ -72,6 +72,7 @@ export const decodedToken = async ({
                     permission: true,
                   },
                 },
+                roleTranslations: true,
               },
             },
           }
@@ -91,12 +92,15 @@ export const decodedToken = async ({
 export const generateLoginCredentials = async ({ user, role }) => {
   const userId = user.id || user._id; 
 
-  const userRole =
-    role ||
+  const rawRole =
+    (typeof role === "string" ? role : null) ||
+    user.role?.slug ||
     user.role?.roleTranslations?.[0]?.name ||
     user.role?.name ||
-    user.role ||
+    (typeof user.role === "string" ? user.role : null) ||
     "student";
+  const userRole = typeof rawRole === "string" ? rawRole : "student";
+
   const access_token = await generateToken({
     payload: { id: userId, role: userRole },
     options: { expiresIn: 60 * 30 },

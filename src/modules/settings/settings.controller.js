@@ -2,8 +2,12 @@ import * as settingsService from "./settings.service.js";
 import { asyncHandler, successResponse } from "../../utils/response.js";
 
 export const changeLanguage = asyncHandler(async (req, res) => {
-  const { language } = req.body;
-  const userRole = req.decoded?.role || req.user?.role?.name || "student";
+  const rawRole =
+    req.user?.role?.slug ||
+    (typeof req.decoded?.role === "string" ? req.decoded?.role : null) ||
+    req.user?.role?.name ||
+    "student";
+  const userRole = String(rawRole || "student");
 
   const data = await settingsService.changeLanguageService(
     req.user.id,

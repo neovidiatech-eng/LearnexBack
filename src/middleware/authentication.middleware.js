@@ -33,9 +33,10 @@ export const auth = ({
       })) || {};
     req.user = user;
     const userRole =
+      req.user?.role?.slug ||
       req.user?.role?.roleTranslations?.[0]?.name ||
       req.user?.role?.name ||
-      req.decoded?.role;
+      (typeof req.decoded?.role === "string" ? req.decoded?.role : req.decoded?.role?.slug);
     if (!accessRoles.includes(userRole)) {
       return next(new Error("UNAUTHORIZED_ACCOUNT", { cause: 403 }));
     }

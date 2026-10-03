@@ -4,12 +4,18 @@ import { baseRoleEnum } from "../../../utils/Enums/role.enum.js";
 
 export const getAllNotifications = async (req) => {
   const userId = req.user?.id;
-  const userRole = (
-    req.user?.role?.roleTranslations?.find((t) => t.locale === req.locale)
-      ?.name ||
-    req.decoded?.role ||
-    ""
-  ).toLowerCase();
+  const rawRole =
+    req.user?.role?.slug ||
+    req.user?.role?.roleTranslations?.find(
+      (t) => t.lang === req.locale || t.locale === req.locale
+    )?.name ||
+    req.user?.role?.roleTranslations?.[0]?.name ||
+    (typeof req.decoded?.role === "string"
+      ? req.decoded?.role
+      : req.decoded?.role?.slug || req.decoded?.role?.name) ||
+    "";
+
+  const userRole = String(rawRole || "").toLowerCase();
 
   const isAdmin =
     userRole === baseRoleEnum.ADMIN || userRole === baseRoleEnum.SUPER_ADMIN;
@@ -46,9 +52,7 @@ export const getAllNotifications = async (req) => {
       limit,
       orderBy: { createdAt: "desc" },
       include: {
-        notificationTranslations: {
-          where: { locale },
-        },
+        notificationTranslations: true,
       },
     }),
     dbService.count({
@@ -62,7 +66,10 @@ export const getAllNotifications = async (req) => {
 
   // Format notifications to surface current locale translation at top-level
   const formattedNotifications = notifications?.items?.map((item) => {
-    const translation = item.notificationTranslations?.[0] || {};
+    const translation =
+      item.notificationTranslations?.find((t) => t.locale === locale) ||
+      item.notificationTranslations?.[0] ||
+      {};
     return {
       id: item.id,
       receiverId: item.receiverId,
@@ -117,12 +124,18 @@ export const markAsRead = async (req) => {
 
 export const markAllAsRead = async (req) => {
   const userId = req.user?.id;
-  const userRole = (
-    req.user?.role?.name ||
-    req.decoded?.role ||
-    ""
-  ).toLowerCase();
-  console.log(userRole);
+  const rawRole =
+    req.user?.role?.slug ||
+    req.user?.role?.roleTranslations?.find(
+      (t) => t.lang === req.locale || t.locale === req.locale
+    )?.name ||
+    req.user?.role?.roleTranslations?.[0]?.name ||
+    (typeof req.decoded?.role === "string"
+      ? req.decoded?.role
+      : req.decoded?.role?.slug || req.decoded?.role?.name) ||
+    "";
+  const userRole = String(rawRole || "").toLowerCase();
+
   const isAdmin =
     userRole === baseRoleEnum.ADMIN || userRole === baseRoleEnum.SUPER_ADMIN;
 
