@@ -153,3 +153,67 @@ export const quizParamsSchema = {
         sectionId: generalFields.id.required(),
     }),
 };
+
+// ─── Submission Schemas ───────────────────────────────────────────────────────
+
+export const quizSubmissionsParamsSchema = {
+    params: Joi.object({
+        quizId: generalFields.id.required(),
+    }),
+};
+
+export const submissionDetailsParamsSchema = {
+    params: Joi.object({
+        quizId: generalFields.id.required(),
+        submissionId: generalFields.id.required(),
+    }),
+};
+
+const gradeItemSchema = Joi.object({
+
+    answerId: generalFields.id
+        .required()
+        .messages({
+            "string.guid": "ANSWER_ID_INVALID",
+            "any.required": "ANSWER_ID_REQUIRED",
+        }),
+
+    isCorrect: Joi.boolean()
+        .required()
+        .messages({
+            "boolean.base": "IS_CORRECT_BOOLEAN",
+            "any.required": "IS_CORRECT_REQUIRED",
+        }),
+
+    feedback: Joi.string()
+        .trim()
+        .max(1000)
+        .optional()
+        .allow("")
+        .messages({
+            "string.base": "FEEDBACK_STRING",
+            "string.max": "FEEDBACK_MAX",
+        }),
+
+});
+
+export const gradeSubmissionSchema = {
+
+    params: Joi.object({
+        quizId: generalFields.id.required(),
+        submissionId: generalFields.id.required(),
+    }),
+
+    body: Joi.object({
+        grades: Joi.array()
+            .items(gradeItemSchema)
+            .min(1)
+            .required()
+            .messages({
+                "array.base": "GRADES_ARRAY",
+                "array.min": "GRADES_MIN",
+                "any.required": "GRADES_REQUIRED",
+            }),
+    }),
+
+};

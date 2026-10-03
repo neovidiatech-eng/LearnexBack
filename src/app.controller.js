@@ -3,6 +3,7 @@ import express from "express";
 import morgan from "morgan";
 import helmet from "helmet";
 import path from "node:path";
+import cors from "cors";
 
 import { setupSwagger } from "./config/swagger.js";
 import redis from "./config/redis.config.js";
@@ -19,6 +20,30 @@ const bootstrap = async () => {
 
   // Security HTTP headers
   app.use(helmet());
+
+  //CORS
+  const allowedOrigins = process.env.CORS_ORIGINS
+    ?process.env.CORS_ORIGINS
+        .split(",")
+        .map((origin) => origin.trim().replace(/\/+$/, ""))
+        .filter(Boolean)
+    : [];
+
+
+  app.use(cors({
+    origin:(origin,callback)=>{
+      if(!origin){
+        return callback(null,true)
+      }
+      const normalizedOrigin = origin.replace(/\/+$/,'')
+      if(allowedOrigins.includes(normalizedOrigin)){
+        return callback(null,true)
+      }
+      return callback(null, false);
+    },
+    credentials:true,
+    optionsSuccessStatus:200
+  }))
 
   //
   getAdmin()

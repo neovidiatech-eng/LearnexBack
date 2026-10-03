@@ -99,3 +99,57 @@ export const deleteQuiz = asyncHandler(async (req, res, next) => {
         message: "QUIZ_DELETED_SUCCESSFULLY",
     });
 });
+
+// ─── Submission Controllers ───────────────────────────────────────────────────
+
+export const getQuizSubmissionsController = asyncHandler(async (req, res, next) => {
+    const { quizId } = req.params;
+
+    const submissions = await quizService.getQuizSubmissions({
+        userId: req.user.id,
+        quizId,
+    });
+
+    return successResponse({
+        res,
+        status: 200,
+        message: "SUBMISSIONS_FETCHED_SUCCESSFULLY",
+        data: submissions,
+    });
+});
+
+export const getSubmissionDetailsController = asyncHandler(async (req, res, next) => {
+    const { quizId, submissionId } = req.params;
+
+    const submission = await quizService.getSubmissionDetails({
+        userId: req.user.id,
+        quizId,
+        submissionId,
+    });
+
+    return successResponse({
+        res,
+        status: 200,
+        message: "SUBMISSION_DETAILS_FETCHED_SUCCESSFULLY",
+        data: submission,
+    });
+});
+
+export const gradeSubmissionController = asyncHandler(async (req, res, next) => {
+    const { quizId, submissionId } = req.params;
+    const { grades } = req.body;
+
+    const submission = await quizService.gradeSubmission({
+        userId: req.user.id,
+        quizId,
+        submissionId,
+        grades,
+    });
+
+    return successResponse({
+        res,
+        status: 200,
+        message: "SUBMISSION_GRADED_SUCCESSFULLY",
+        data: submission,
+    });
+});
