@@ -343,3 +343,169 @@ export const deleteQuiz = async ({
     });
 };
 
+// ─── helpers ─────────────────────────────────────────────────────────────────
+
+/**
+ * يتأكد إن الـ quiz ملكه الـ teacher المطلوب
+ * بيرجع الـ quiz object
+ */
+const getOwnedQuiz = async (quizId, teacherId) => {
+    const quiz = await dbService.findFirst({
+        model: "teacherCourseQuiz",
+        where: {
+            id: quizId,
+            section: {
+                course: { teacherId },
+            },
+        },
+    });
+
+    if (!quiz) {
+        const error = new Error("QUIZ_NOT_FOUND");
+        error.cause = 404;
+        throw error;
+    }
+
+    return quiz;
+};
+
+// ─── GET /quizzes/:quizId/submissions ────────────────────────────────────────
+
+export const getQuizSubmissions = async ({ userId, quizId }) => {
+    const teacher = await getTeacherByUserId(userId);
+    await getOwnedQuiz(quizId, teacher.id);
+
+    const submissions = await dbService.findMany({
+        model: "teacherCourseQuizSubmission",
+        where: { quizId },
+        orderBy: { submittedAt: "desc" },
+    });
+
+    return submissions;
+};
+
+// ─── GET /quizzes/:quizId/submissions/:submissionId ──────────────────────────
+
+export const getSubmissionDetails = async ({ userId, quizId, submissionId }) => {
+    const teacher = await getTeacherByUserId(userId);
+    await getOwnedQuiz(quizId, teacher.id);
+
+    const submission = await dbService.findFirst({
+        model: "teacherCourseQuizSubmission",
+        where: { id: submissionId, quizId },
+        include: {
+            answers: {
+                include: {
+                    question: {
+                        include: {
+                            options: { orderBy: { order: "asc" } },
+                        },
+                    },
+                    selectedOption: true,
+                },
+                orderBy: {
+                    question: { order: "asc" },
+                },
+            },
+        },
+    });
+
+    if (!submission) {
+        const error = new Error("SUBMISSION_NOT_FOUND");
+        error.cause = 404;
+        throw error;
+    }
+
+    return submission;
+};
+
+// ─── PATCH /quizzes/:quizId/submissions/:submissionId/grade ──────────────────
+
+export const gradeSubmission = async ({ userId, quizId, submissionId, grades }) => {
+    const teacher = await getTeacherByUserId(userId);
+    const quiz = await getOwnedQuiz(quizId, teacher.id);
+
+    // جيب الـ submission مع الـ answers كلها
+    const submission = await dbService.findFirst({
+        model: "teacherCourseQuizSubmission",
+        where: { id: submissionId, quizId },
+        include: {
+            answers: {
+                include: { question: true },
+            },
+        },
+    });
+
+    if (!submission) {
+        const error = new Error("SUBMISSION_NOT_FOUND");
+        error.cause = 404;
+        throw error;
+    }
+
+    if (submission.status === "GRADED") {
+        const error = new Error("SUBMISSION_ALREADY_GRADED");
+        error.cause = 409;
+        throw error;
+    }
+
+    // grades = [{ answerId, isCorrect, feedback? }]
+    // تحقق إن كل answerId ينتمي للـ submission دي
+    const answerIds = submission.answers.map((a) => a.id);
+    for (const grade of grades) {
+        if (!answerIds.includes(grade.answerId)) {
+            const error = new Error("ANSWER_NOT_IN_SUBMISSION");
+            error.cause = 400;
+            throw error;
+        }
+
+        const answer = submission.answers.find((a) => a.id === grade.answerId);
+        if (answer.question.type !== quizTypeEnum.WRITTEN) {
+            const error = new Error("ONLY_WRITTEN_ANSWERS_CAN_BE_GRADED");
+            error.cause = 400;
+            throw error;
+        }
+    }
+
+    // اعمل update لكل written answer
+    await Promise.all(
+        grades.map((grade) =>
+            dbService.updateOne({
+                model: "teacherCourseQuizAnswer",
+                where: { id: grade.answerId },
+                data: {
+                    isCorrect: grade.isCorrect,
+                    ...(grade.feedback !== undefined && { feedback: grade.feedback }),
+                },
+            })
+        )
+    );
+
+    // احسب الـ correctCount بعد التصحيح
+    // كل الـ answers (MCQ/TRUE_FALSE اتصححوا automatically لما الطالب حل)
+    // والـ WRITTEN اتصححوا دلوقتي
+    const allAnswers = await dbService.findMany({
+        model: "teacherCourseQuizAnswer",
+        where: { submissionId },
+    });
+
+    const correctCount = allAnswers.filter((a) => a.isCorrect === true).length;
+    const totalQuestions = submission.totalQuestions;
+    const percentage = totalQuestions > 0
+        ? parseFloat(((correctCount / totalQuestions) * 100).toFixed(2))
+        : 0;
+    const passed = percentage >= quiz.passingScore;
+
+    const updatedSubmission = await dbService.updateOne({
+        model: "teacherCourseQuizSubmission",
+        where: { id: submissionId },
+        data: {
+            correctCount,
+            percentage,
+            passed,
+            gradedAt: new Date(),
+            status: "GRADED",
+        },
+    });
+
+    return updatedSubmission;
+};

@@ -40,5 +40,27 @@ router.delete(
     quizController.deleteQuiz
 )
 
+// ─── Submission Routes ────────────────────────────────────────────────────────
+
+router.get(
+    "/quiz/:quizId/submissions",
+    authentication(),
+    validation(quizValidation.quizSubmissionsParamsSchema),
+    quizController.getQuizSubmissionsController
+);
+
+router.get(
+    "/quiz/:quizId/submissions/:submissionId",
+    authentication(),
+    validation(quizValidation.submissionDetailsParamsSchema),
+    quizController.getSubmissionDetailsController
+);
+
+router.patch(
+    "/quiz/:quizId/submissions/:submissionId/grade",
+    authentication(),
+    validation(quizValidation.gradeSubmissionSchema),
+    quizController.gradeSubmissionController
+);
 
 export default router;
