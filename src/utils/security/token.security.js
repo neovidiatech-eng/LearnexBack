@@ -29,13 +29,21 @@ export const decodedToken = async ({
     return next(new Error("INVALID_TOKEN_FORMAT", { cause: 401 }));
   }
 
-  const decoded = await verifyToken({
-    token,
-    signature:
-      tokenType === tokenTypeEnum.ACCESS
-        ? process.env.ACCESS_TOKEN_SIGNATURE
-        : process.env.REFRESH_TOKEN_SIGNATURE,
-  });
+  let decoded;
+  try {
+    decoded = await verifyToken({
+      token,
+      signature:
+        tokenType === tokenTypeEnum.ACCESS
+          ? process.env.ACCESS_TOKEN_SIGNATURE
+          : process.env.REFRESH_TOKEN_SIGNATURE,
+    });
+  } catch (err) {
+    if (err.name === "TokenExpiredError") {
+      return next(new Error("TOKEN_EXPIRED", { cause: 401 }));
+    }
+    return next(new Error("INVALID_TOKEN", { cause: 401 }));
+  }
 
   const userId = decoded?.id || decoded?._id;
   if (!userId) {
