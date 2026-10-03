@@ -164,4 +164,36 @@ export const updateImageProfileService = async (userId, reqFiles) => {
   return updatedUser;
 };
 
-export const deleteProfileService = async () => {};
+export const deleteProfileService = async (userId) => {
+  const student = await db.findFirst({
+    model: "student",
+    where: { userId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          profilePhoto: true,
+          coverPhoto: true,
+        },
+      },
+    },
+  });
+
+  if (!student) {
+    const error = new Error("STUDENT_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+
+  const filesToDelete = [];
+  if (student.user?.profilePhoto) filesToDelete.push(student.user.profilePhoto);
+  if (student.user?.coverPhoto) filesToDelete.push(student.user.coverPhoto);
+  deleteFiles(filesToDelete);
+
+  await db.deleteOne({
+    model: "user",
+    where: { id: userId },
+  });
+
+  return { success: true };
+};
