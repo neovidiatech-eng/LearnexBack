@@ -78,6 +78,14 @@ export const getAllStudentsService = async ({
     select,
   });
 
+  for (const student of result.items) {
+    if (student.user?.phone) {
+      student.user.phone = await decryptEncription({
+        cipherText: student.user.phone,
+      });
+    }
+  }
+
   return {
     students: result.items,
     pagination: result.pagination,
