@@ -16,6 +16,13 @@ router.get(
   profileController.getProfile,
 );
 
+router.get(
+  "/:teacherId",
+  authentication(),
+  authorizeResource("teachers"),
+  profileController.shareProfile,
+);
+
 router.patch(
   "/profile",
   authentication(),

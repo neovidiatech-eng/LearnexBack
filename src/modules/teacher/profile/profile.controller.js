@@ -20,6 +20,16 @@ export const getProfile = asyncHandler(async (req, res) => {
   });
 });
 
+export const shareProfile = asyncHandler(async (req, res) => {
+  const teacher = await profileService.getSharedProfileService(
+    req.params.teacherId,
+  );
+  return successResponse({
+    res,
+    data: teacher,
+  });
+});
+
 export const updateProfile = asyncHandler(async (req, res) => {
   const teacher = await profileService.updateProfileService(req.user.id,req.body);
   return successResponse({
