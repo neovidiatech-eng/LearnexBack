@@ -1,6 +1,7 @@
 import dbService from "../../../db/db.service.js";
 import { asyncHandler, successResponse } from "../../../utils/response.js"
 import * as teacherCourseService from "./courses.service.js"
+
 export const createTeacherCourse = asyncHandler(async (req, res, next) => {
   const { name, description, price, totalHours } = req.body;
   const teacher = await dbService.findFirst({
@@ -40,7 +41,7 @@ export const getCourses = asyncHandler(async (req, res, next) => {
 
   let teacherId;
 
-  if (req.user.role === "TEACHER") {
+  if (req.user.role.slug.toLowerCase() === "teacher") {
     const teacher = await dbService.findFirst({
       model: "teacher",
       where: {
@@ -79,7 +80,7 @@ export const getCourseById = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
 
   let teacherId;
-  if (req.user.role === "TEACHER") {
+  if (req.user.role.slug.toLowerCase() === "teacher") {
     const teacher = await dbService.findFirst({
       model: "teacher",
       where: { userId: req.user.id },

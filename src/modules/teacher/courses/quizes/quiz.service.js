@@ -424,7 +424,7 @@ export const getSubmissionDetails = async ({ userId, quizId, submissionId }) => 
 export const gradeSubmission = async ({ userId, quizId, submissionId, grades }) => {
     const teacher = await getTeacherByUserId(userId);
     const quiz = await getOwnedQuiz(quizId, teacher.id);
-
+ 
     // جيب الـ submission مع الـ answers كلها
     const submission = await dbService.findFirst({
         model: "teacherCourseQuizSubmission",
@@ -435,77 +435,111 @@ export const gradeSubmission = async ({ userId, quizId, submissionId, grades }) 
             },
         },
     });
-
+ 
     if (!submission) {
         const error = new Error("SUBMISSION_NOT_FOUND");
         error.cause = 404;
         throw error;
     }
-
+ 
     if (submission.status === "GRADED") {
         const error = new Error("SUBMISSION_ALREADY_GRADED");
         error.cause = 409;
         throw error;
     }
-
-    // grades = [{ answerId, isCorrect, feedback? }]
-    // تحقق إن كل answerId ينتمي للـ submission دي
-    const answerIds = submission.answers.map((a) => a.id);
+ 
+    // ─── رقم 1: Validation للـ grades ────────────────────────────────────
+ 
+    // 1) منع تكرار نفس الـ answerId
+    const gradedIds = new Set(grades.map((g) => g.answerId));
+    if (gradedIds.size !== grades.length) {
+        const error = new Error("DUPLICATE_ANSWER_IDS");
+        error.cause = 400;
+        throw error;
+    }
+ 
+    // 2) كل answerId لازم ينتمي للـ submission ويكون WRITTEN
+    const answersById = new Map(submission.answers.map((a) => [a.id, a]));
+ 
     for (const grade of grades) {
-        if (!answerIds.includes(grade.answerId)) {
+        const answer = answersById.get(grade.answerId);
+ 
+        if (!answer) {
             const error = new Error("ANSWER_NOT_IN_SUBMISSION");
             error.cause = 400;
             throw error;
         }
-
-        const answer = submission.answers.find((a) => a.id === grade.answerId);
+ 
         if (answer.question.type !== quizTypeEnum.WRITTEN) {
             const error = new Error("ONLY_WRITTEN_ANSWERS_CAN_BE_GRADED");
             error.cause = 400;
             throw error;
         }
     }
-
-    // اعمل update لكل written answer
-    await Promise.all(
-        grades.map((grade) =>
-            dbService.updateOne({
-                model: "teacherCourseQuizAnswer",
+ 
+    // 3) لازم كل الـ WRITTEN answers تتصحح في نفس الطلب
+    const missingWritten = submission.answers.filter(
+        (a) => a.question.type === quizTypeEnum.WRITTEN && !gradedIds.has(a.id)
+    );
+ 
+    if (missingWritten.length > 0) {
+        const error = new Error("ALL_WRITTEN_ANSWERS_MUST_BE_GRADED");
+        error.cause = 400;
+        throw error;
+    }
+ 
+    // ─── رقم 2: Transaction + حماية من الـ race condition ────────────────
+ 
+    const totalQuestions = submission.totalQuestions;
+ 
+    return prisma.$transaction(async (tx) => {
+        // 1) تصحيح الـ written answers (واحدة واحدة جوه الـ transaction)
+        for (const grade of grades) {
+            await tx.teacherCourseQuizAnswer.update({
                 where: { id: grade.answerId },
                 data: {
                     isCorrect: grade.isCorrect,
                     ...(grade.feedback !== undefined && { feedback: grade.feedback }),
                 },
-            })
-        )
-    );
-
-    // احسب الـ correctCount بعد التصحيح
-    // كل الـ answers (MCQ/TRUE_FALSE اتصححوا automatically لما الطالب حل)
-    // والـ WRITTEN اتصححوا دلوقتي
-    const allAnswers = await dbService.findMany({
-        model: "teacherCourseQuizAnswer",
-        where: { submissionId },
+            });
+        }
+ 
+        // 2) احسب النتيجة (MCQ/TF اتصححوا وقت الـ submit، والـ WRITTEN لسه متصححين)
+        const correctCount = await tx.teacherCourseQuizAnswer.count({
+            where: { submissionId, isCorrect: true },
+        });
+ 
+        const percentage =
+            totalQuestions > 0
+                ? parseFloat(((correctCount / totalQuestions) * 100).toFixed(2))
+                : 0;
+ 
+        const passed = percentage >= quiz.passingScore;
+ 
+        // 3) قفل الـ submission بشرط إنها لسه PENDING_REVIEW
+        const { count } = await tx.teacherCourseQuizSubmission.updateMany({
+            where: { id: submissionId, status: "PENDING_REVIEW" },
+            data: {
+                correctCount,
+                percentage,
+                passed,
+                gradedAt: new Date(),
+                status: "GRADED",
+            },
+        });
+ 
+        // لو طلب تاني سبقنا، نرمي error والـ transaction كلها ترجع (rollback)
+        if (count === 0) {
+            const error = new Error("SUBMISSION_ALREADY_GRADED");
+            error.cause = 409;
+            throw error;
+        }
+ 
+        // 4) رجّع الـ submission بعد التحديث
+        return tx.teacherCourseQuizSubmission.findUnique({
+            where: { id: submissionId },
+        });
     });
-
-    const correctCount = allAnswers.filter((a) => a.isCorrect === true).length;
-    const totalQuestions = submission.totalQuestions;
-    const percentage = totalQuestions > 0
-        ? parseFloat(((correctCount / totalQuestions) * 100).toFixed(2))
-        : 0;
-    const passed = percentage >= quiz.passingScore;
-
-    const updatedSubmission = await dbService.updateOne({
-        model: "teacherCourseQuizSubmission",
-        where: { id: submissionId },
-        data: {
-            correctCount,
-            percentage,
-            passed,
-            gradedAt: new Date(),
-            status: "GRADED",
-        },
-    });
-
-    return updatedSubmission;
 };
+ 
+

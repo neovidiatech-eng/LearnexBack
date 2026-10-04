@@ -80,6 +80,14 @@ export const getCourses = async ({
 };
 
 export const getCourseById = async ({ courseId, teacherId }) => {
+  console.log({
+  courseId,
+  teacherId,
+  types: {
+    courseId: typeof courseId,
+    teacherId: typeof teacherId,
+  },
+});
   const course = await dbService.findFirst({
     model: "teacherCourse",
     where: {

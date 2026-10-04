@@ -89,6 +89,7 @@ const swaggerSpec = {
     { name: "Teacher Sections", description: "Teacher section management" },
     { name: "Teacher Items", description: "Teacher course item management" },
     { name: "Teacher Quizzes", description: "Teacher quiz & question management" },
+    { name: "Teacher Certificates", description: "Teacher certificate management" },
     { name: "Admin Auth", description: "Admin authentication" },
     { name: "Admin Students", description: "Admin student management" },
     { name: "Admin Teachers", description: "Admin teacher management" },
@@ -99,7 +100,13 @@ const swaggerSpec = {
     { name: "Admin Coupons", description: "Admin coupon management" },
     { name: "Admin Offers", description: "Admin offer management" },
     { name: "Admin Activity Logs", description: "System activity logs" },
+    { name: "Admin Settings", description: "Admin app settings & CMS management" },
     { name: "Notifications", description: "Notification management" },
+    { name: "Student Profile", description: "Student profile management" },
+    { name: "Student Courses", description: "Student course favorites" },
+    { name: "Student Teachers", description: "Browse teachers" },
+    { name: "Student Cart", description: "Student shopping cart management" },
+    { name: "Settings", description: "Public app settings & pages" },
   ],
   paths: {
 
@@ -192,6 +199,270 @@ const swaggerSpec = {
         responses: json200(dataResponse("Token refreshed")),
       },
     },
+    "/api/v1/auth/forgot-password": {
+      post: {
+        summary: "Request a password reset OTP",
+        tags: ["Auth"],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["email"],
+                properties: {
+                  email: { type: "string", format: "email", example: "student@learnx.com" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...json200(msgResponse("OTP sent to email")),
+          404: { description: "Email not found" },
+        },
+      },
+    },
+    "/api/v1/auth/reset-password": {
+      patch: {
+        summary: "Reset password using OTP",
+        tags: ["Auth"],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["email", "otp", "password", "confirmPassword"],
+                properties: {
+                  email: { type: "string", format: "email", example: "student@learnx.com" },
+                  otp: { type: "string", example: "123456" },
+                  password: { type: "string", format: "password", example: "NewPassword@123!" },
+                  confirmPassword: { type: "string", format: "password", example: "NewPassword@123!" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...json200(msgResponse("Password reset successfully")),
+          400: { description: "Invalid or expired OTP" },
+        },
+      },
+    },
+
+    // ───────────────────────────────────────────────────────────
+    // STUDENT PROFILE  (/api/v1/student/me)
+    // ───────────────────────────────────────────────────────────
+    "/api/v1/student/me/profile": {
+      get: {
+        summary: "Get student profile",
+        tags: ["Student Profile"],
+        security: bearerSecurity,
+        responses: json200(dataResponse("Profile retrieved")),
+      },
+      patch: {
+        summary: "Update student profile",
+        tags: ["Student Profile"],
+        security: bearerSecurity,
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  fullName: { type: "string", example: "Ahmed Mohamed" },
+                  phone: { type: "string", example: "+201012345678" },
+                  country: { type: "string", example: "EG" },
+                  dateOfBirth: { type: "string", format: "date", example: "1998-05-15" },
+                  preferredLanguage: { type: "string", enum: ["ar", "en"], example: "ar" },
+                },
+              },
+            },
+          },
+        },
+        responses: json200(dataResponse("Profile updated")),
+      },
+      delete: {
+        summary: "Delete student account",
+        tags: ["Student Profile"],
+        security: bearerSecurity,
+        responses: {
+          204: { description: "Account deleted" },
+          401: { description: "Unauthorized" },
+        },
+      },
+    },
+    "/api/v1/student/me/change-password": {
+      patch: {
+        summary: "Change student password",
+        tags: ["Student Profile"],
+        security: bearerSecurity,
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["currentPassword", "newPassword", "confirmPassword"],
+                properties: {
+                  currentPassword: { type: "string", format: "password", example: "OldPassword@123!" },
+                  newPassword: { type: "string", format: "password", example: "NewPassword@123!" },
+                  confirmPassword: { type: "string", format: "password", example: "NewPassword@123!" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...json200(msgResponse("Password changed")),
+          400: { description: "Wrong current password" },
+        },
+      },
+    },
+    "/api/v1/student/me/profile-image": {
+      patch: {
+        summary: "Update student profile/cover photo",
+        tags: ["Student Profile"],
+        security: bearerSecurity,
+        requestBody: {
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                properties: {
+                  profilePhoto: { type: "string", format: "binary", description: "Profile photo" },
+                  coverPhoto: { type: "string", format: "binary", description: "Cover photo" },
+                },
+              },
+            },
+          },
+        },
+        responses: json200(msgResponse("Images updated")),
+      },
+    },
+
+    // ───────────────────────────────────────────────────────────
+    // STUDENT COURSES  (/api/v1/student/courses)
+    // ───────────────────────────────────────────────────────────
+    "/api/v1/student/courses/favorites": {
+      get: {
+        summary: "Get student favourite courses",
+        tags: ["Student Courses"],
+        security: bearerSecurity,
+        parameters: [
+          ...paginationParams,
+          { in: "query", name: "locale", schema: { type: "string", enum: ["ar", "en"], default: "ar" }, description: "Translation locale" },
+        ],
+        responses: json200(listResponse()),
+      },
+    },
+    "/api/v1/student/courses/{courseId}/favorite": {
+      patch: {
+        summary: "Toggle course favourite",
+        tags: ["Student Courses"],
+        security: bearerSecurity,
+        parameters: [uuidParam("courseId", "Course ID")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["isFavourite"],
+                properties: {
+                  isFavourite: { type: "boolean", example: true },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...json200(dataResponse("COURSE_ADDED_TO_FAVORITES")),
+          404: { description: "Course not found" },
+        },
+      },
+    },
+
+    // ───────────────────────────────────────────────────────────
+    // STUDENT TEACHERS  (/api/v1/student/teachers)
+    // ───────────────────────────────────────────────────────────
+    "/api/v1/student/teachers": {
+      get: {
+        summary: "Browse all teachers",
+        tags: ["Student Teachers"],
+        security: bearerSecurity,
+        parameters: paginationParams,
+        responses: json200(listResponse()),
+      },
+    },
+    "/api/v1/student/teachers/{teacherId}": {
+      get: {
+        summary: "Get teacher profile by ID",
+        tags: ["Student Teachers"],
+        security: bearerSecurity,
+        parameters: [uuidParam("teacherId", "Teacher ID")],
+        responses: {
+          ...json200(dataResponse("Teacher retrieved")),
+          404: { description: "Teacher not found" },
+        },
+      },
+    },
+
+    // ───────────────────────────────────────────────────────────
+    // PUBLIC SETTINGS  (/api/v1/settings)
+    // ───────────────────────────────────────────────────────────
+    "/api/v1/settings/app-info": {
+      get: {
+        summary: "Get public app info (name, logo, contact…)",
+        tags: ["Settings"],
+        security: bearerSecurity,
+        responses: json200(dataResponse("App info retrieved")),
+      },
+    },
+    "/api/v1/settings/pages": {
+      get: {
+        summary: "Get all public CMS pages",
+        tags: ["Settings"],
+        responses: json200(listResponse()),
+      },
+    },
+    "/api/v1/settings/pages/{slug}": {
+      get: {
+        summary: "Get a CMS page by slug",
+        tags: ["Settings"],
+        security: bearerSecurity,
+        parameters: [
+          { in: "path", name: "slug", required: true, schema: { type: "string" }, example: "about-us", description: "Page slug" },
+        ],
+        responses: {
+          ...json200(dataResponse("Page retrieved")),
+          404: { description: "Page not found" },
+        },
+      },
+    },
+    "/api/v1/settings/language": {
+      patch: {
+        summary: "Change preferred language",
+        tags: ["Settings"],
+        security: bearerSecurity,
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["language"],
+                properties: {
+                  language: { type: "string", enum: ["ar", "en", "fr"], example: "ar" },
+                },
+              },
+            },
+          },
+        },
+        responses: json200(msgResponse("Language updated")),
+      },
+    },
 
     // ───────────────────────────────────────────────────────────
     // TEACHER AUTH  (/api/v1/teacher/auth)
@@ -264,6 +535,70 @@ const swaggerSpec = {
         tags: ["Teacher Auth"],
         security: bearerSecurity,
         responses: json200(dataResponse("Token refreshed")),
+      },
+    },
+
+    // ───────────────────────────────────────────────────────────
+    // TEACHER CERTIFICATES  (/api/v1/teacher/certificates)
+    // ───────────────────────────────────────────────────────────
+    "/api/v1/teacher/certificates": {
+      post: {
+        summary: "Upload a teacher certificate",
+        tags: ["Teacher Certificates"],
+        security: bearerSecurity,
+        requestBody: {
+          required: true,
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                required: ["type", "title", "issuer", "issueYear", "file"],
+                properties: {
+                  type: { type: "string", enum: ["ACADEMIC", "PROFESSIONAL", "OTHER"], example: "ACADEMIC" },
+                  title: { type: "string", example: "Bachelor of Computer Science" },
+                  issuer: { type: "string", example: "Cairo University" },
+                  issueYear: { type: "integer", example: 2020 },
+                  file: { type: "string", format: "binary", description: "Certificate file (PDF or image, max 15MB)" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...json201(dataResponse("Certificate uploaded")),
+          404: { description: "Teacher not found" },
+        },
+      },
+      get: {
+        summary: "Get all teacher certificates",
+        tags: ["Teacher Certificates"],
+        security: bearerSecurity,
+        parameters: [
+          { in: "query", name: "status", schema: { type: "string", enum: ["PENDING", "APPROVED", "REJECTED"] }, description: "Filter by status" },
+        ],
+        responses: json200(listResponse()),
+      },
+    },
+    "/api/v1/teacher/certificates/{id}": {
+      get: {
+        summary: "Get certificate by ID",
+        tags: ["Teacher Certificates"],
+        security: bearerSecurity,
+        parameters: [uuidParam("id", "Certificate ID")],
+        responses: {
+          ...json200(dataResponse("Certificate retrieved")),
+          404: { description: "Certificate not found" },
+        },
+      },
+      delete: {
+        summary: "Delete a certificate",
+        tags: ["Teacher Certificates"],
+        security: bearerSecurity,
+        parameters: [uuidParam("id", "Certificate ID")],
+        responses: {
+          ...json200(msgResponse("Certificate deleted")),
+          404: { description: "Certificate not found" },
+        },
       },
     },
 
@@ -1061,6 +1396,67 @@ const swaggerSpec = {
         responses: json200(msgResponse("Teacher rejected")),
       },
     },
+    "/api/v1/admin/teachers/certificate/{certificateId}/verify": {
+      patch: {
+        summary: "Verify a teacher certificate",
+        tags: ["Admin Teachers"],
+        security: bearerSecurity,
+        parameters: [uuidParam("certificateId", "Certificate ID")],
+        responses: {
+          ...json200(msgResponse("Certificate verified")),
+          404: { description: "Certificate not found" },
+        },
+      },
+    },
+    "/api/v1/admin/teachers/certificate/{certificateId}/reject": {
+      patch: {
+        summary: "Reject a teacher certificate",
+        tags: ["Admin Teachers"],
+        security: bearerSecurity,
+        parameters: [uuidParam("certificateId", "Certificate ID")],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: { reason: { type: "string", example: "Certificate is not valid" } },
+              },
+            },
+          },
+        },
+        responses: {
+          ...json200(msgResponse("Certificate rejected")),
+          404: { description: "Certificate not found" },
+        },
+      },
+    },
+    "/api/v1/admin/teachers/{courseId}/change-status": {
+      patch: {
+        summary: "Change teacher-course status (approve/reject)",
+        tags: ["Admin Teachers"],
+        security: bearerSecurity,
+        parameters: [uuidParam("courseId", "TeacherCourse ID")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["status"],
+                properties: {
+                  status: { type: "string", enum: ["APPROVED", "REJECTED"], example: "APPROVED" },
+                  rejectionReason: { type: "string", example: "Content quality issue", description: "Required when status is REJECTED" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...json200(dataResponse("Status updated")),
+          404: { description: "Course not found" },
+        },
+      },
+    },
 
     // ───────────────────────────────────────────────────────────
     // ADMIN CATEGORIES  (/api/v1/admin/categories)
@@ -1687,6 +2083,69 @@ const swaggerSpec = {
     },
 
     // ───────────────────────────────────────────────────────────
+    // ADMIN SETTINGS  (/api/v1/admin/settings)
+    // ───────────────────────────────────────────────────────────
+    "/api/v1/admin/settings/app-info": {
+      patch: {
+        summary: "Update app info (name, logo, contact…)",
+        tags: ["Admin Settings"],
+        security: bearerSecurity,
+        requestBody: {
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                properties: {
+                  logo_url: { type: "string", format: "binary", description: "App logo image" },
+                  appName: { type: "string", example: "LearnX" },
+                  email: { type: "string", format: "email" },
+                  phone: { type: "string", example: "+201012345678" },
+                },
+              },
+            },
+          },
+        },
+        responses: json200(dataResponse("App info updated")),
+      },
+    },
+    "/api/v1/admin/settings/pages": {
+      get: {
+        summary: "Get all CMS pages (admin)",
+        tags: ["Admin Settings"],
+        security: bearerSecurity,
+        responses: json200(listResponse()),
+      },
+    },
+    "/api/v1/admin/settings/pages/{slug}": {
+      patch: {
+        summary: "Update a CMS page by slug",
+        tags: ["Admin Settings"],
+        security: bearerSecurity,
+        parameters: [
+          { in: "path", name: "slug", required: true, schema: { type: "string" }, example: "about-us", description: "Page slug" },
+        ],
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  title: { type: "string", example: "About Us" },
+                  content: { type: "string", example: "<h1>About Us</h1>" },
+                  locale: { type: "string", enum: ["ar", "en", "fr"], example: "ar" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...json200(dataResponse("Page updated")),
+          404: { description: "Page not found" },
+        },
+      },
+    },
+
+    // ───────────────────────────────────────────────────────────
     // NOTIFICATIONS  (/api/v1/notification)
     // ───────────────────────────────────────────────────────────
     "/api/v1/notification": {
@@ -1744,6 +2203,132 @@ const swaggerSpec = {
         security: bearerSecurity,
         parameters: [uuidParam("id", "Notification ID")],
         responses: json200(msgResponse("Notification deleted")),
+      },
+    },
+    "/api/v1/student/cart": {
+      get: {
+        summary: "Get student cart",
+        description: "Returns the authenticated student's cart with enriched item details (course title, thumbnail, instructor). Locale is controlled via `locale` query param or `Accept-Language` header.",
+        tags: ["Student Cart"],
+        security: bearerSecurity,
+        parameters: [
+          { in: "query", name: "locale", schema: { type: "string", enum: ["ar", "en"], default: "ar" }, description: "Translation locale" },
+        ],
+        responses: {
+          ...json200({
+            type: "object",
+            properties: {
+              message: { type: "string", example: "SUCCESS" },
+              data: {
+                type: "object",
+                properties: {
+                  id: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440000" },
+                  totalItems: { type: "integer", example: 2 },
+                  totalPrice: { type: "integer", example: 350 },
+                  items: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        id: { type: "string", format: "uuid" },
+                        type: { type: "string", enum: ["COURSE", "TEACHER_COURSE"] },
+                        itemId: { type: "string", format: "uuid" },
+                        createdAt: { type: "string", format: "date-time" },
+                        course: { type: "object", description: "Enriched course details" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          }),
+          401: { description: "Unauthorized" },
+        },
+      },
+    },
+
+    "/api/v1/student/cart/add": {
+      post: {
+        summary: "Add item to cart",
+        description: "Adds a COURSE or TEACHER_COURSE to the student's cart. Validates that the course is published/approved, is not free (for COURSE type), and the student is not already enrolled.",
+        tags: ["Student Cart"],
+        security: bearerSecurity,
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["type", "itemId"],
+                properties: {
+                  type: { type: "string", enum: ["COURSE", "TEACHER_COURSE"], example: "COURSE", description: "Type of item to add" },
+                  itemId: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440000", description: "Course or TeacherCourse ID" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...json201({
+            type: "object",
+            properties: {
+              message: { type: "string", example: "ITEM_ADDED_TO_CART" },
+              data: { type: "object", description: "Updated cart object" },
+            },
+          }),
+          400: { description: "Course not published / free course / invalid type" },
+          401: { description: "Unauthorized" },
+          409: { description: "Item already in cart or already enrolled" },
+        },
+      },
+    },
+
+    "/api/v1/student/cart/remove/{itemId}": {
+      delete: {
+        summary: "Remove item from cart",
+        description: "Removes a single CartItem by its own ID (not the course ID). Cart totals are recalculated automatically.",
+        tags: ["Student Cart"],
+        security: bearerSecurity,
+        parameters: [uuidParam("itemId", "CartItem ID (not the course ID)")],
+        responses: {
+          ...json200({
+            type: "object",
+            properties: {
+              message: { type: "string", example: "ITEM_REMOVED_FROM_CART" },
+              data: { type: "object", description: "Updated cart object" },
+            },
+          }),
+          401: { description: "Unauthorized" },
+          404: { description: "Cart or item not found" },
+        },
+      },
+    },
+
+    "/api/v1/student/cart/clear": {
+      delete: {
+        summary: "Clear cart",
+        description: "Removes all items from the student's cart and resets totals to zero.",
+        tags: ["Student Cart"],
+        security: bearerSecurity,
+        responses: {
+          ...json200({
+            type: "object",
+            properties: {
+              message: { type: "string", example: "CART_CLEARED" },
+              data: {
+                type: "object",
+                properties: {
+                  id: { type: "string", format: "uuid" },
+                  totalItems: { type: "integer", example: 0 },
+                  totalPrice: { type: "integer", example: 0 },
+                  items: { type: "array", items: {}, example: [] },
+                },
+              },
+            },
+          }),
+          401: { description: "Unauthorized" },
+          404: { description: "Cart not found" },
+        },
       },
     },
   },

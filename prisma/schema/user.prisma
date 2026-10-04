@@ -25,6 +25,7 @@ model User {
   courseReviews     CourseReview[]     @relation("StudentCourseReviews")
   coupunRedemptions CoupunRedemption[]
   teacherReviews    TeacherReview[]    @relation("StudentTeacherReviews")
+  cart              Cart?
 
   @@index([roleId])
   @@index([status])
@@ -52,7 +53,7 @@ model Teacher {
   user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   experienceYears    Int                  @default(0)
   cvUrl              String?
-  introVideoUrl      String?   
+  introVideoUrl      String?
   referralCode       String?
   subject            String
   headline           String?
