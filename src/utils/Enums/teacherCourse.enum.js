@@ -14,3 +14,9 @@ export const quizTypeEnum = {
   TRUE_FALSE: "TRUE_FALSE",
   WRITTEN: "WRITTEN",
 };
+
+
+export const coursesType={
+  COURSE: "COURSE",
+  TEACHER_COURSE: "TEACHER_COURSE",
+}

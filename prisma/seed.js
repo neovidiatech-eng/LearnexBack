@@ -11,6 +11,7 @@ import { seedTeachers } from "./seeders/teachers.seed.js";
 import { seedStudents } from "./seeders/students.seed.js";
 import { seedCourses } from "./seeders/courses.seed.js";
 import { seedEnrollments } from "./seeders/enrollments.seed.js";
+import { seedCarts } from "./seeders/cart.seed.js";
 import { seedActivityLogs } from "./seeders/activityLogs.seed.js";
 import { seedNotifications } from "./seeders/notifications.seed.js";
 import { seedCms } from "./seeders/cms.seed.js";
@@ -49,13 +50,16 @@ async function main() {
   // 8. Enrollments (depends on students + courses)
   await seedEnrollments(prisma, students, courses);
 
-  // 9. Activity Logs (independent)
+  // 9. Carts (depends on students + courses)
+  await seedCarts(prisma, students, courses);
+
+  // 10. Activity Logs (independent)
   await seedActivityLogs(prisma);
 
-  // 10. Notifications (depends on students + teachers + admin)
+  // 11. Notifications (depends on students + teachers + admin)
   await seedNotifications(prisma, students, teachers, admin);
 
-  // 11. CMS & App Settings (independent)
+  // 12. CMS & App Settings (independent)
   await seedCms(prisma);
 
   console.log("\n✅ Database seeding completed successfully!");
