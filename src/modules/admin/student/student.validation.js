@@ -70,8 +70,26 @@ export const createStudent = {
     .options({ allowUnknown: false }),  
 };
 export const updateStudent = {
-  params:changeStatus.params,
-  body: createStudent.body
-    .required()
-    .options({ allowUnknown: false }),  
+  params: changeStatus.params,
+  body: joi
+    .object()
+    .keys({
+      fullName: joi.string().min(2).max(100).trim().optional(),
+      firstName: joi.string().min(2).max(50).trim().optional(),
+      lastName: joi.string().min(2).max(50).trim().optional(),
+      email: generalFields.email.optional(),
+      password: generalFields.password.optional(),
+      phone: generalFields.phone.optional(),
+      country: joi.string().min(2).max(100).trim().optional(),
+      dateOfBirth: joi.date().iso().less("now").optional(),
+      status: joi
+        .string()
+        .valid(...Object.values(userStatusEnum))
+        .optional(),
+      notes: joi.string().max(1000).trim().optional(),
+      courseIds: joi.array().items(generalFields.id).optional(),
+    })
+    .optional()
+    .options({ allowUnknown: false }),
 };
+
