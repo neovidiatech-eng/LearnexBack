@@ -103,6 +103,72 @@ export const getProfileService = async (userId) => {
   return teacher;
 };
 
+export const getSharedProfileService = async (teacherId) => {
+  const teacher = await db.findFirst({
+    model: "teacher",
+    where: {
+      id: teacherId,
+      isAvailable: true,
+      user: { status: "ACTIVE" }, 
+    },
+    select: {
+      id: true,
+      subject: true,
+      headline: true,
+      bio: true,
+      experienceYears: true,
+      introVideoUrl: true,
+      linkedinUrl: true,
+      sessionPrice50Min: true,
+      currency: true,
+      avgRating: true,
+      reviewsCount: true,
+      totalStudentsCount: true,
+      totalCoursesCount: true,
+
+      user: {
+        select: {
+          fullName: true,
+          country: true,
+          profilePhoto: true,
+          coverPhoto: true,
+        },
+      },
+
+      certificates: {
+        where: { status: "APPROVED" },
+        select: {
+          id: true,
+          title: true,
+          issuer: true,
+          issueYear: true,
+          fileUrl: true,
+        },
+      },
+
+      courses: {
+        where: { status: "APPROVED" },
+        select: {
+          id: true,
+          name: true,
+          wallPaper: true,
+          price: true,
+          totalHours: true,
+        },
+      },
+    },
+  });
+
+  if (!teacher) {
+    const error = new Error("PROFILE_NOT_FOUND_OR_UNAVAILABLE");
+    error.cause = 404;
+    throw error;
+  }
+
+  return teacher;
+};
+
+
 export const updateProfileService = async (userId, body) => {
   const {
     fullName,
@@ -342,3 +408,4 @@ export const deleteProfileService = async (userId) => {
 
   return { success: true };
 };
+
