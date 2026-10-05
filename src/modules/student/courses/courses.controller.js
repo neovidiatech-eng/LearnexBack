@@ -1,10 +1,11 @@
 import { asyncHandler, successResponse } from "../../../utils/response.js";
 import * as studentCourseService from "./courses.service.js";
+
 export const toggleFavourite = asyncHandler(async (req, res) => {
   const result = await studentCourseService.toggleFavouriteService(
     req.user.id,
     req.params.courseId,
-    req.body.isFavourite,
+    req.body?.itemType || "COURSE",
   );
   return successResponse({
     res,

@@ -26,6 +26,7 @@ model User {
   coupunRedemptions CoupunRedemption[]
   teacherReviews    TeacherReview[]    @relation("StudentTeacherReviews")
   cart              Cart?
+  saveds            Saved[]
 
   @@index([roleId])
   @@index([status])
@@ -124,4 +125,29 @@ model TeacherReview {
   @@index([teacherId])
   @@index([studentId])
   @@map("teacher_reviews")
+}
+
+model Saved {
+  id        String   @id @default(uuid())
+  studentId String
+  student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  itemId    String
+  itemType  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CourseFavorite {
+  id        String   @id @default(uuid())
+  studentId String
+  student   Student  @relation("StudentFavorites", fields: [studentId], references: [id], onDelete: Cascade)
+  itemId    String
+  itemType  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, itemId, itemType])
+  @@index([studentId])
+  @@index([itemId])
+  @@map("course_favorites")
 }
