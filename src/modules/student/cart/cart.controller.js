@@ -44,3 +44,17 @@ export const clearCart = asyncHandler(async (req, res) => {
   const cart = await cartService.clearCartService(req.user.id);
   return successResponse({ res, message: "CART_CLEARED", data: cart });
 });
+
+/**
+ * POST /student/cart/checkout
+ * Converts cart items into enrolled courses.
+ */
+export const checkoutCart = asyncHandler(async (req, res) => {
+  const locale = req.query.locale || req.headers["accept-language"] || "ar";
+  const result = await cartService.checkoutCartService(req.user.id, locale);
+  return successResponse({
+    res,
+    message: "CHECKOUT_SUCCESSFUL",
+    data: result,
+  });
+});

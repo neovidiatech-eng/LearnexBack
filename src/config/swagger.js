@@ -672,7 +672,7 @@ Include the Bearer JWT token in the Authorization header:
     { name: "Student - Teachers", description: "Browse verified teachers and inspect public portfolios" },
     { name: "Student - Cart", description: "Shopping cart items management, pricing, and checkout cleanup" },
     { name: "Student - Saved", description: "Student saved courses management" },
-    { name: "Student Saved", description: "Student saved courses management" },
+    { name: "Student - Quizzes", description: "Student quiz taking, submission, and grading results" },
 
     { name: "Notifications", description: "Global and user-specific push notifications and read receipts" },
     { name: "Settings", description: "Public app metadata, terms/privacy pages, and language preferences" },
@@ -3236,6 +3236,60 @@ Include the Bearer JWT token in the Authorization header:
       },
     },
 
+    "/api/v1/student/courses/enrolled": {
+      get: {
+        summary: "Get student enrolled courses (My Learning)",
+        tags: ["Student - Courses"],
+        security: bearerSecurity,
+        parameters: [
+          ...paginationQueryParams,
+          localeQueryParam,
+          { in: "query", name: "status", schema: { type: "string", enum: ["ACTIVE", "COMPLETED", "CANCELLED"] }, description: "Enrollment status filter" },
+        ],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          401: standardResponses[401],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/student/courses/my-learning": {
+      get: {
+        summary: "Get student enrolled courses (alias)",
+        tags: ["Student - Courses"],
+        security: bearerSecurity,
+        parameters: [
+          ...paginationQueryParams,
+          localeQueryParam,
+          { in: "query", name: "status", schema: { type: "string", enum: ["ACTIVE", "COMPLETED", "CANCELLED"] }, description: "Enrollment status filter" },
+        ],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          401: standardResponses[401],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/student/courses/{courseId}/enroll": {
+      post: {
+        summary: "Enroll directly in a free course",
+        description: "Enrolls the authenticated student in a free published course without going through the cart.",
+        tags: ["Student - Courses"],
+        security: bearerSecurity,
+        parameters: [uuidParam("courseId", "Course ID")],
+        responses: {
+          ...standardResponses[201]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          404: standardResponses[404],
+          409: standardResponses[409],
+          500: standardResponses[500],
+        },
+      },
+    },
+
     // ═══════════════════════════════════════════════════════════
     // STUDENT TEACHERS
     // ═══════════════════════════════════════════════════════════
@@ -3614,6 +3668,32 @@ Include the Bearer JWT token in the Authorization header:
       },
     },
 
+    "/api/v1/student/cart/checkout": {
+      post: {
+        summary: "Checkout student cart",
+        description: "Enrolls student in all course items in their cart and clears the cart.",
+        tags: ["Student Cart"],
+        security: bearerSecurity,
+        responses: {
+          ...json200({
+            type: "object",
+            properties: {
+              message: { type: "string", example: "CHECKOUT_SUCCESSFUL" },
+              data: {
+                type: "object",
+                properties: {
+                  totalEnrolled: { type: "integer", example: 2 },
+                  enrolled: { type: "array", items: {} },
+                },
+              },
+            },
+          }),
+          400: { description: "Cart is empty" },
+          401: { description: "Unauthorized" },
+        },
+      },
+    },
+
     "/api/v1/student/saved/clear": {
       delete: {
         summary: "Clear all saved items",
@@ -3643,6 +3723,109 @@ Include the Bearer JWT token in the Authorization header:
           },
           401: standardResponses[401],
           500: standardResponses[500],
+        },
+      },
+    },
+
+    // ───────────────────────────────────────────────────────────
+    // STUDENT QUIZZES  (/api/v1/student/quizzes)
+    // ───────────────────────────────────────────────────────────
+    "/api/v1/student/quizzes/{quizId}": {
+      get: {
+        summary: "Get quiz details and questions for taking the test",
+        description: "Returns the quiz questions and options WITHOUT revealing isCorrect.",
+        tags: ["Student Quizzes"],
+        security: bearerSecurity,
+        parameters: [uuidParam("quizId", "Quiz ID")],
+        responses: {
+          ...json200({
+            type: "object",
+            properties: {
+              message: { type: "string", example: "SUCCESS" },
+              data: {
+                type: "object",
+                properties: {
+                  id: { type: "string", format: "uuid" },
+                  title: { type: "string", example: "Chapter 1 Quiz" },
+                  duration: { type: "integer", example: 30 },
+                  passingScore: { type: "integer", example: 70 },
+                  totalQuestions: { type: "integer", example: 5 },
+                  hasSubmitted: { type: "boolean", example: false },
+                  questions: { type: "array", items: {} },
+                },
+              },
+            },
+          }),
+          401: { description: "Unauthorized" },
+          404: { description: "Quiz not found" },
+        },
+      },
+    },
+
+    "/api/v1/student/quizzes/{quizId}/submit": {
+      post: {
+        summary: "Submit quiz answers",
+        description: "Submits answers for automatic grading (MCQ/TRUE_FALSE) or pending teacher review (WRITTEN).",
+        tags: ["Student Quizzes"],
+        security: bearerSecurity,
+        parameters: [uuidParam("quizId", "Quiz ID")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["answers"],
+                properties: {
+                  answers: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      required: ["questionId"],
+                      properties: {
+                        questionId: { type: "string", format: "uuid" },
+                        selectedOptionId: { type: "string", format: "uuid", nullable: true },
+                        writtenAnswer: { type: "string", nullable: true },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...json201({
+            type: "object",
+            properties: {
+              message: { type: "string", example: "QUIZ_SUBMITTED_SUCCESSFULLY" },
+              data: { type: "object", description: "Submission results" },
+            },
+          }),
+          401: { description: "Unauthorized" },
+          404: { description: "Quiz not found" },
+          409: { description: "Already submitted" },
+        },
+      },
+    },
+
+    "/api/v1/student/quizzes/{quizId}/my-submission": {
+      get: {
+        summary: "Get student's quiz submission and result",
+        description: "Returns the submission status, scores, pass/fail result, and graded answers.",
+        tags: ["Student Quizzes"],
+        security: bearerSecurity,
+        parameters: [uuidParam("quizId", "Quiz ID")],
+        responses: {
+          ...json200({
+            type: "object",
+            properties: {
+              message: { type: "string", example: "SUCCESS" },
+              data: { type: "object", description: "Submission details" },
+            },
+          }),
+          401: { description: "Unauthorized" },
+          404: { description: "Submission not found" },
         },
       },
     },

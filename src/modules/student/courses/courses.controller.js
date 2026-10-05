@@ -22,3 +22,24 @@ export const getFavorites = asyncHandler(async (req, res) => {
   );
   return successResponse({ res, data: favoriteCourses });
 });
+
+export const enrollFreeCourse = asyncHandler(async (req, res) => {
+  const enrollment = await studentCourseService.enrollFreeCourseService(
+    req.user.id,
+    req.params.courseId
+  );
+  return successResponse({
+    res,
+    status: 201,
+    message: "ENROLLMENT_SUCCESSFUL",
+    data: enrollment,
+  });
+});
+
+export const getEnrolledCourses = asyncHandler(async (req, res) => {
+  const result = await studentCourseService.getEnrolledCoursesService(
+    req.user.id,
+    req.query
+  );
+  return successResponse({ res, data: result });
+});
