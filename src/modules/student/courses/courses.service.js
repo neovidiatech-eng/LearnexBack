@@ -1,47 +1,79 @@
 import * as db from "../../../db/db.service.js";
 import { courseStatusEnum } from "../../../utils/Enums/courseStatus.enum.js";
+import { coursesType } from "../../../utils/Enums/teacherCourse.enum.js";
 
-export const toggleFavouriteService = async (userId, courseId, isFavourite) => {
+export const toggleFavouriteService = async (
+  userId,
+  courseId,
+  itemType = coursesType.COURSE
+) => {
   const student = await db.findFirst({ model: "student", where: { userId } });
   if (!student) {
     const error = new Error("STUDENT_NOT_FOUND");
     error.cause = 404;
     throw error;
   }
-  const course = await db.findFirst({
-    model: "course",
-    where: { id: courseId },
-  });
-  if (!course) {
-    const error = new Error("COURSE_NOT_FOUND");
-    error.cause = 404;
-    throw error;
+
+  if (itemType === coursesType.COURSE) {
+    const course = await db.findFirst({
+      model: "course",
+      where: { id: courseId },
+    });
+    if (!course) {
+      const error = new Error("COURSE_NOT_FOUND");
+      error.cause = 404;
+      throw error;
+    }
+  } else if (itemType === coursesType.TEACHER_COURSE) {
+    const course = await db.findFirst({
+      model: "teacherCourse",
+      where: { id: courseId },
+    });
+    if (!course) {
+      const error = new Error("COURSE_NOT_FOUND");
+      error.cause = 404;
+      throw error;
+    }
   }
-  const favorite = await db.upsertOne({
+
+  const existing = await db.findFirst({
     model: "courseFavorite",
     where: {
-      studentId_courseId: {
-        studentId: student.id,
-        courseId,
-      },
-    },
-    create: {
       studentId: student.id,
-      courseId,
-      isFavourite,
+      itemId: courseId,
+      itemType,
     },
-    update: { isFavourite },
   });
-  return {
-    isFavourite: favorite.isFavourite,
-    message: favorite.isFavourite
-      ? "COURSE_ADDED_TO_FAVORITES"
-      : "COURSE_REMOVED_FROM_FAVORITES",
-  };
+
+  if (!existing) {
+    await db.create({
+      model: "courseFavorite",
+      data: {
+        studentId: student.id,
+        itemId: courseId,
+        itemType,
+      },
+    });
+
+    return {
+      message: "COURSE_ADDED_TO_FAVORITES",
+    };
+  } else {
+    await db.deleteOne({
+      model: "courseFavorite",
+      where: {
+        id: existing.id,
+      },
+    });
+
+    return {
+      message: "COURSE_REMOVED_FROM_FAVORITES",
+    };
+  }
 };
 
 export const getAllFavoritesService = async (userId, query = {}) => {
-      const { search, page = 1, limit = 10, locale = "ar" } = query;
+  const { search, page = 1, limit = 10, locale = "ar", itemType } = query;
   const student = await db.findFirst({
     model: "student",
     where: { userId },
@@ -52,44 +84,106 @@ export const getAllFavoritesService = async (userId, query = {}) => {
     error.cause = 404;
     throw error;
   }
+
   const where = {
     studentId: student.id,
-    isFavourite: true,
-    course: {
-      status: courseStatusEnum.PUBLISHED,
-      ...(search
-        ? {
-            translations: {
-              some: {
-                title: { contains: search, mode: "insensitive" },
-              },
-            },
-          }
-        : {}),
-    },
+    ...(itemType ? { itemType } : {}),
   };
-  const course = await db.findManyWithPaginationAndCount({
+
+  const favorites = await db.findMany({
     model: "courseFavorite",
     where,
-    page: Number(page),
-    limit: Number(limit),
     orderBy: { updatedAt: "desc" },
-    include: {
-      course: {
-        include: {
-          translations: {
-            where: { locale },
-          },
-          instructor: {
-            select: {
-              fullName: true,
-              profilePhoto: true,
+  });
+
+  const enrichedItems = await Promise.all(
+    favorites.map(async (fav) => {
+      if (fav.itemType === coursesType.COURSE) {
+        const course = await db.findOne({
+          model: "course",
+          where: { id: fav.itemId, status: courseStatusEnum.PUBLISHED },
+          include: {
+            translations: {
+              where: { locale },
+            },
+            instructor: {
+              select: {
+                fullName: true,
+                profilePhoto: true,
+              },
             },
           },
-        },
-      },
-    },
-  });
-  return course;
-};
+        });
 
+        if (!course) return null;
+
+        if (search) {
+          const matchTitle = course.translations?.some((t) =>
+            t.title?.toLowerCase().includes(search.toLowerCase())
+          );
+          if (!matchTitle) return null;
+        }
+
+        return {
+          ...fav,
+          course,
+        };
+      } else if (fav.itemType === coursesType.TEACHER_COURSE) {
+        const course = await db.findOne({
+          model: "teacherCourse",
+          where: { id: fav.itemId, status: "APPROVED" },
+          include: {
+            translations: {
+              where: { locale },
+            },
+            teacher: {
+              include: {
+                user: {
+                  select: {
+                    fullName: true,
+                    profilePhoto: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        if (!course) return null;
+
+        if (search) {
+          const matchTitle = course.translations?.some((t) =>
+            t.title?.toLowerCase().includes(search.toLowerCase())
+          );
+          if (!matchTitle) return null;
+        }
+
+        return {
+          ...fav,
+          course: {
+            ...course,
+            instructor: course.teacher?.user ?? null,
+          },
+        };
+      }
+      return fav;
+    })
+  );
+
+  const filtered = enrichedItems.filter(Boolean);
+  const pageNum = Number(page);
+  const limitNum = Number(limit);
+  const total = filtered.length;
+  const paginated = filtered.slice(
+    (pageNum - 1) * limitNum,
+    pageNum * limitNum
+  );
+
+  return {
+    items: paginated,
+    total,
+    page: pageNum,
+    limit: limitNum,
+    totalPages: Math.ceil(total / limitNum) || 1,
+  };
+};
