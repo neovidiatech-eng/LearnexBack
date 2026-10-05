@@ -52,7 +52,6 @@ export const getSavedService = async (userId, locale = "ar") => {
           model: "teacherCourse",
           where: { id: item.itemId },
           include: {
-            translations: { where: { locale } },
             teacher: {
               include: {
                 user: { select: { fullName: true, profilePhoto: true } },

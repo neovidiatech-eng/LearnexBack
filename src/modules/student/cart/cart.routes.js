@@ -24,6 +24,8 @@ router.delete(
 
 router.delete("/clear", cartController.clearCart);
 
+router.post("/checkout", cartController.checkoutCart);
+
 
 
 export default router;

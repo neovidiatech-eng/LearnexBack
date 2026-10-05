@@ -107,6 +107,7 @@ const swaggerSpec = {
     { name: "Student Teachers", description: "Browse teachers" },
     { name: "Student Cart", description: "Student shopping cart management" },
     { name: "Student Saved", description: "Student saved courses management" },
+    { name: "Student Quizzes", description: "Student quiz taking and submissions" },
     { name: "Settings", description: "Public app settings & pages" },
   ],
   paths: {
@@ -380,6 +381,52 @@ const swaggerSpec = {
         responses: {
           ...json200(dataResponse("COURSE_ADDED_TO_FAVORITES")),
           404: { description: "Course not found" },
+        },
+      },
+    },
+
+    "/api/v1/student/courses/enrolled": {
+      get: {
+        summary: "Get student enrolled courses (My Learning)",
+        tags: ["Student Courses"],
+        security: bearerSecurity,
+        parameters: [
+          ...paginationParams,
+          { in: "query", name: "status", schema: { type: "string", enum: ["ACTIVE", "COMPLETED", "CANCELLED"] }, description: "Enrollment status filter" },
+          { in: "query", name: "locale", schema: { type: "string", enum: ["ar", "en", "fr"], default: "ar" }, description: "Translation locale" },
+          { in: "query", name: "search", schema: { type: "string" }, description: "Search by course title" },
+        ],
+        responses: json200(listResponse()),
+      },
+    },
+
+    "/api/v1/student/courses/my-learning": {
+      get: {
+        summary: "Get student enrolled courses alias",
+        tags: ["Student Courses"],
+        security: bearerSecurity,
+        parameters: [
+          ...paginationParams,
+          { in: "query", name: "status", schema: { type: "string", enum: ["ACTIVE", "COMPLETED", "CANCELLED"] }, description: "Enrollment status filter" },
+          { in: "query", name: "locale", schema: { type: "string", enum: ["ar", "en", "fr"], default: "ar" }, description: "Translation locale" },
+          { in: "query", name: "search", schema: { type: "string" }, description: "Search by course title" },
+        ],
+        responses: json200(listResponse()),
+      },
+    },
+
+    "/api/v1/student/courses/{courseId}/enroll": {
+      post: {
+        summary: "Enroll directly in a free course",
+        description: "Enrolls the authenticated student in a free published course without going through the cart.",
+        tags: ["Student Courses"],
+        security: bearerSecurity,
+        parameters: [uuidParam("courseId", "Course ID")],
+        responses: {
+          ...json201(dataResponse("ENROLLMENT_SUCCESSFUL")),
+          400: { description: "Course not published or not free" },
+          404: { description: "Course not found" },
+          409: { description: "Already enrolled" },
         },
       },
     },
@@ -2431,6 +2478,32 @@ const swaggerSpec = {
       },
     },
 
+    "/api/v1/student/cart/checkout": {
+      post: {
+        summary: "Checkout student cart",
+        description: "Enrolls student in all course items in their cart and clears the cart.",
+        tags: ["Student Cart"],
+        security: bearerSecurity,
+        responses: {
+          ...json200({
+            type: "object",
+            properties: {
+              message: { type: "string", example: "CHECKOUT_SUCCESSFUL" },
+              data: {
+                type: "object",
+                properties: {
+                  totalEnrolled: { type: "integer", example: 2 },
+                  enrolled: { type: "array", items: {} },
+                },
+              },
+            },
+          }),
+          400: { description: "Cart is empty" },
+          401: { description: "Unauthorized" },
+        },
+      },
+    },
+
     "/api/v1/student/saved/clear": {
       delete: {
         summary: "Clear all saved items",
@@ -2452,6 +2525,109 @@ const swaggerSpec = {
             },
           }),
           401: { description: "Unauthorized" },
+        },
+      },
+    },
+
+    // ───────────────────────────────────────────────────────────
+    // STUDENT QUIZZES  (/api/v1/student/quizzes)
+    // ───────────────────────────────────────────────────────────
+    "/api/v1/student/quizzes/{quizId}": {
+      get: {
+        summary: "Get quiz details and questions for taking the test",
+        description: "Returns the quiz questions and options WITHOUT revealing isCorrect.",
+        tags: ["Student Quizzes"],
+        security: bearerSecurity,
+        parameters: [uuidParam("quizId", "Quiz ID")],
+        responses: {
+          ...json200({
+            type: "object",
+            properties: {
+              message: { type: "string", example: "SUCCESS" },
+              data: {
+                type: "object",
+                properties: {
+                  id: { type: "string", format: "uuid" },
+                  title: { type: "string", example: "Chapter 1 Quiz" },
+                  duration: { type: "integer", example: 30 },
+                  passingScore: { type: "integer", example: 70 },
+                  totalQuestions: { type: "integer", example: 5 },
+                  hasSubmitted: { type: "boolean", example: false },
+                  questions: { type: "array", items: {} },
+                },
+              },
+            },
+          }),
+          401: { description: "Unauthorized" },
+          404: { description: "Quiz not found" },
+        },
+      },
+    },
+
+    "/api/v1/student/quizzes/{quizId}/submit": {
+      post: {
+        summary: "Submit quiz answers",
+        description: "Submits answers for automatic grading (MCQ/TRUE_FALSE) or pending teacher review (WRITTEN).",
+        tags: ["Student Quizzes"],
+        security: bearerSecurity,
+        parameters: [uuidParam("quizId", "Quiz ID")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["answers"],
+                properties: {
+                  answers: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      required: ["questionId"],
+                      properties: {
+                        questionId: { type: "string", format: "uuid" },
+                        selectedOptionId: { type: "string", format: "uuid", nullable: true },
+                        writtenAnswer: { type: "string", nullable: true },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...json201({
+            type: "object",
+            properties: {
+              message: { type: "string", example: "QUIZ_SUBMITTED_SUCCESSFULLY" },
+              data: { type: "object", description: "Submission results" },
+            },
+          }),
+          401: { description: "Unauthorized" },
+          404: { description: "Quiz not found" },
+          409: { description: "Already submitted" },
+        },
+      },
+    },
+
+    "/api/v1/student/quizzes/{quizId}/my-submission": {
+      get: {
+        summary: "Get student's quiz submission and result",
+        description: "Returns the submission status, scores, pass/fail result, and graded answers.",
+        tags: ["Student Quizzes"],
+        security: bearerSecurity,
+        parameters: [uuidParam("quizId", "Quiz ID")],
+        responses: {
+          ...json200({
+            type: "object",
+            properties: {
+              message: { type: "string", example: "SUCCESS" },
+              data: { type: "object", description: "Submission details" },
+            },
+          }),
+          401: { description: "Unauthorized" },
+          404: { description: "Submission not found" },
         },
       },
     },

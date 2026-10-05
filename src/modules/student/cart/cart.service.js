@@ -266,3 +266,90 @@ export const clearCartService = async (userId) => {
 
   return { id: cart.id, totalItems: 0, totalPrice: 0, items: [] };
 };
+
+/**
+ * POST /cart/checkout
+ * Converts all cart items to CourseEnrollments and clears the cart.
+ */
+export const checkoutCartService = async (userId, locale = "ar") => {
+  const cart = await db.findOne({
+    model: "cart",
+    where: { userId },
+    include: { cartItems: true },
+  });
+
+  if (!cart || !cart.cartItems || cart.cartItems.length === 0) {
+    throwError("CART_IS_EMPTY", 400);
+  }
+
+  const enrolled = [];
+
+  for (const item of cart.cartItems) {
+    if (item.type === coursesType.COURSE) {
+      const course = await db.findOne({
+        model: "course",
+        where: { id: item.itemId },
+        select: {
+          id: true,
+          status: true,
+          originalPrice: true,
+          salePrice: true,
+          totalStudentsCount: true,
+          totalRevenue: true,
+        },
+      });
+
+      if (!course || course.status !== courseStatusEnum.PUBLISHED) {
+        continue;
+      }
+
+      const existingEnrollment = await db.findFirst({
+        model: "courseEnrollment",
+        where: { studentId: userId, courseId: course.id },
+      });
+
+      if (!existingEnrollment) {
+        const paidAmount = Number(course.salePrice ?? course.originalPrice ?? 0);
+        const enrollment = await db.create({
+          model: "courseEnrollment",
+          data: {
+            studentId: userId,
+            courseId: course.id,
+            status: "ACTIVE",
+            paidAmount,
+            progressPercent: 0,
+          },
+        });
+
+        await db.updateOne({
+          model: "course",
+          where: { id: course.id },
+          data: {
+            totalStudentsCount: (course.totalStudentsCount || 0) + 1,
+            totalRevenue: Number(course.totalRevenue || 0) + paidAmount,
+          },
+        });
+
+        enrolled.push(enrollment);
+      }
+    }
+  }
+
+  // Clear cart items
+  await db.deleteMany({
+    model: "cartItem",
+    where: { cartId: cart.id },
+  });
+
+  // Reset cart totals
+  await db.updateOne({
+    model: "cart",
+    where: { id: cart.id },
+    data: { totalItems: 0, totalPrice: 0 },
+  });
+
+  return {
+    totalEnrolled: enrolled.length,
+    enrolled,
+  };
+};
