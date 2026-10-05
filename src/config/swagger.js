@@ -3672,24 +3672,32 @@ Include the Bearer JWT token in the Authorization header:
       post: {
         summary: "Checkout student cart",
         description: "Enrolls student in all course items in their cart and clears the cart.",
-        tags: ["Student Cart"],
+        tags: ["Student - Cart"],
         security: bearerSecurity,
         responses: {
-          ...json200({
-            type: "object",
-            properties: {
-              message: { type: "string", example: "CHECKOUT_SUCCESSFUL" },
-              data: {
-                type: "object",
-                properties: {
-                  totalEnrolled: { type: "integer", example: 2 },
-                  enrolled: { type: "array", items: {} },
+          200: {
+            description: "Checkout completed and courses enrolled successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string", example: "CHECKOUT_SUCCESSFUL" },
+                    data: {
+                      type: "object",
+                      properties: {
+                        totalEnrolled: { type: "integer", example: 2 },
+                        enrolled: { type: "array", items: {} },
+                      },
+                    },
+                  },
                 },
               },
             },
-          }),
-          400: { description: "Cart is empty" },
-          401: { description: "Unauthorized" },
+          },
+          400: standardResponses[400],
+          401: standardResponses[401],
+          500: standardResponses[500],
         },
       },
     },
@@ -3734,30 +3742,38 @@ Include the Bearer JWT token in the Authorization header:
       get: {
         summary: "Get quiz details and questions for taking the test",
         description: "Returns the quiz questions and options WITHOUT revealing isCorrect.",
-        tags: ["Student Quizzes"],
+        tags: ["Student - Quizzes"],
         security: bearerSecurity,
         parameters: [uuidParam("quizId", "Quiz ID")],
         responses: {
-          ...json200({
-            type: "object",
-            properties: {
-              message: { type: "string", example: "SUCCESS" },
-              data: {
-                type: "object",
-                properties: {
-                  id: { type: "string", format: "uuid" },
-                  title: { type: "string", example: "Chapter 1 Quiz" },
-                  duration: { type: "integer", example: 30 },
-                  passingScore: { type: "integer", example: 70 },
-                  totalQuestions: { type: "integer", example: 5 },
-                  hasSubmitted: { type: "boolean", example: false },
-                  questions: { type: "array", items: {} },
+          200: {
+            description: "Quiz details and questions retrieved successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string", example: "SUCCESS" },
+                    data: {
+                      type: "object",
+                      properties: {
+                        id: { type: "string", format: "uuid" },
+                        title: { type: "string", example: "Chapter 1 Quiz" },
+                        duration: { type: "integer", example: 30 },
+                        passingScore: { type: "integer", example: 70 },
+                        totalQuestions: { type: "integer", example: 5 },
+                        hasSubmitted: { type: "boolean", example: false },
+                        questions: { type: "array", items: {} },
+                      },
+                    },
+                  },
                 },
               },
             },
-          }),
-          401: { description: "Unauthorized" },
-          404: { description: "Quiz not found" },
+          },
+          401: standardResponses[401],
+          404: standardResponses[404],
+          500: standardResponses[500],
         },
       },
     },
@@ -3766,7 +3782,7 @@ Include the Bearer JWT token in the Authorization header:
       post: {
         summary: "Submit quiz answers",
         description: "Submits answers for automatic grading (MCQ/TRUE_FALSE) or pending teacher review (WRITTEN).",
-        tags: ["Student Quizzes"],
+        tags: ["Student - Quizzes"],
         security: bearerSecurity,
         parameters: [uuidParam("quizId", "Quiz ID")],
         requestBody: {
@@ -3795,16 +3811,32 @@ Include the Bearer JWT token in the Authorization header:
           },
         },
         responses: {
-          ...json201({
-            type: "object",
-            properties: {
-              message: { type: "string", example: "QUIZ_SUBMITTED_SUCCESSFULLY" },
-              data: { type: "object", description: "Submission results" },
+          201: {
+            description: "Quiz submitted successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string", example: "QUIZ_SUBMITTED_SUCCESSFULLY" },
+                    data: { type: "object", description: "Submission results" },
+                  },
+                },
+              },
             },
-          }),
-          401: { description: "Unauthorized" },
-          404: { description: "Quiz not found" },
-          409: { description: "Already submitted" },
+          },
+          400: standardResponses[400],
+          401: standardResponses[401],
+          404: standardResponses[404],
+          409: {
+            description: "Already submitted",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ConflictErrorResponse" },
+              },
+            },
+          },
+          500: standardResponses[500],
         },
       },
     },
@@ -3813,19 +3845,27 @@ Include the Bearer JWT token in the Authorization header:
       get: {
         summary: "Get student's quiz submission and result",
         description: "Returns the submission status, scores, pass/fail result, and graded answers.",
-        tags: ["Student Quizzes"],
+        tags: ["Student - Quizzes"],
         security: bearerSecurity,
         parameters: [uuidParam("quizId", "Quiz ID")],
         responses: {
-          ...json200({
-            type: "object",
-            properties: {
-              message: { type: "string", example: "SUCCESS" },
-              data: { type: "object", description: "Submission details" },
+          200: {
+            description: "Quiz submission and result retrieved successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string", example: "SUCCESS" },
+                    data: { type: "object", description: "Submission details" },
+                  },
+                },
+              },
             },
-          }),
-          401: { description: "Unauthorized" },
-          404: { description: "Submission not found" },
+          },
+          401: standardResponses[401],
+          404: standardResponses[404],
+          500: standardResponses[500],
         },
       },
     },
