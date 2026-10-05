@@ -1,8 +1,7 @@
-import dbService from "../../../db/db.service.js"
-import { teacherCourseStatusEnum } from "../../../utils/Enums/teacherCourse.enum.js"
-import fs from "fs/promises"
-import path from "path"
-
+import dbService from "../../../db/db.service.js";
+import { coursesType, teacherCourseStatusEnum } from "../../../utils/Enums/teacherCourse.enum.js";
+import fs from "fs/promises";
+import path from "path";
 
 export const createTeacherCourse = async ({
   teacherId,
@@ -10,7 +9,7 @@ export const createTeacherCourse = async ({
   description,
   price,
   totalHours,
-  wallPaper
+  wallPaper,
 }) => {
   const course = await dbService.create({
     model: "teacherCourse",
@@ -20,13 +19,15 @@ export const createTeacherCourse = async ({
       description,
       price,
       totalHours,
-      wallPaper
-    }
-  })
-  return course
+      wallPaper,
+    },
+  });
 
-}
-
+  return {
+    ...course,
+    type: coursesType.TEACHER_COURSE,
+  };
+};
 
 export const getCourses = async ({
   teacherId,
@@ -36,31 +37,29 @@ export const getCourses = async ({
   limit,
 }) => {
   const where =
-    role === "TEACHER"
+    role === "teacher"
       ? {
-        teacherId,
-        ...(search && {
-          name: {
-            contains: search,
-            mode: "insensitive",
-          },
-        }),
-      }
+          teacherId,
+          ...(search && {
+            name: {
+              contains: search,
+              mode: "insensitive",
+            },
+          }),
+        }
       : {
-        status: teacherCourseStatusEnum.APPROVED,
-        ...(search && {
-          name: {
-            contains: search,
-            mode: "insensitive",
-          },
-        }),
-      };
+          status: teacherCourseStatusEnum.APPROVED,
+          ...(search && {
+            name: {
+              contains: search,
+              mode: "insensitive",
+            },
+          }),
+        };
 
-  return await dbService.findManyWithPaginationAndCount({
+  const allCourses = await dbService.findMany({
     model: "teacherCourse",
     where,
-    page,
-    limit,
     orderBy: {
       createdAt: "desc",
     },
@@ -77,26 +76,25 @@ export const getCourses = async ({
       updatedAt: true,
     },
   });
+
+  const allCoursesWithType = allCourses.map((course) => {
+    return {
+      ...course,
+      type: coursesType.TEACHER_COURSE,
+    };
+  });
+
+  return allCoursesWithType;
 };
 
 export const getCourseById = async ({ courseId, teacherId }) => {
-  console.log({
-  courseId,
-  teacherId,
-  types: {
-    courseId: typeof courseId,
-    teacherId: typeof teacherId,
-  },
-});
   const course = await dbService.findFirst({
     model: "teacherCourse",
     where: {
       id: courseId,
       // المدرس صاحب الكورس يشوفه بأي status
       // أي حد تاني يشوف APPROVED بس
-      ...(teacherId
-        ? { teacherId }
-        : { status: "APPROVED" }),
+      ...(teacherId ? { teacherId } : { status: "APPROVED" }),
     },
     include: {
       sections: {
@@ -120,7 +118,10 @@ export const getCourseById = async ({ courseId, teacherId }) => {
     throw error;
   }
 
-  return course;
+  return {
+    ...course,
+    type: coursesType.TEACHER_COURSE,
+  };
 };
 
 export const updateTeacherCourse = async ({
@@ -130,24 +131,24 @@ export const updateTeacherCourse = async ({
   description,
   price,
   totalHours,
-  wallPaper
-
+  wallPaper,
 }) => {
   const course = await dbService.findFirst({
     model: "teacherCourse",
     where: {
       id: courseId,
-      teacherId
+      teacherId,
     },
     select: {
       id: true,
-      wallPaper: true
-    }
-  })
+      wallPaper: true,
+    },
+  });
+
   if (!course) {
-    const error = new Error("TEACHER_COURSE_NOT_FOUND")
-    error.cause = 404
-    throw error
+    const error = new Error("TEACHER_COURSE_NOT_FOUND");
+    error.cause = 404;
+    throw error;
   }
 
   const updateCourse = await dbService.updateOne({
@@ -161,62 +162,65 @@ export const updateTeacherCourse = async ({
       ...(price !== undefined && { price }),
       ...(totalHours !== undefined && { totalHours }),
       ...(wallPaper !== undefined && { wallPaper }),
-    }
+    },
   });
+
   if (wallPaper !== undefined && course.wallPaper && course.wallPaper !== wallPaper) {
     const filePath = path.resolve(course.wallPaper);
     try {
-      await fs.unlink(filePath)
+      await fs.unlink(filePath);
     } catch (error) {
       if (error.code !== "ENOENT") {
-        console.log("error in deleting file: ", error)
+        console.log("error in deleting file: ", error);
       }
     }
   }
-  return updateCourse
 
+  return {
+    ...updateCourse,
+    type: coursesType.TEACHER_COURSE,
+  };
+};
 
-
-}
-
-export const deleteCourse = async ({
-  courseId,
-  teacherId
-}) => {
+export const deleteCourse = async ({ courseId, teacherId }) => {
   const course = await dbService.findFirst({
     model: "teacherCourse",
     where: {
       id: courseId,
-      teacherId
+      teacherId,
     },
     select: {
       id: true,
-      wallPaper: true
-    }
-  })
+      wallPaper: true,
+    },
+  });
+
   if (!course) {
-    const error = new Error("COURSE_NOT_FOUND")
-    error.cause = 404
-    throw error
+    const error = new Error("COURSE_NOT_FOUND");
+    error.cause = 404;
+    throw error;
   }
+
   await dbService.deleteOne({
     model: "teacherCourse",
     where: {
-      id: courseId
-    }
-  })
+      id: courseId,
+    },
+  });
+
   if (course.wallPaper) {
     const filePath = path.resolve(course.wallPaper);
     try {
-      await fs.unlink(filePath)
+      await fs.unlink(filePath);
     } catch (error) {
       if (error.code !== "ENOENT") {
-        console.log("error in deleting file: ", error)
+        console.log("error in deleting file: ", error);
       }
     }
   }
-  return course
 
-}
-
-
+  return {
+    ...course,
+    type: coursesType.TEACHER_COURSE,
+  };
+};

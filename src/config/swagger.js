@@ -671,6 +671,8 @@ Include the Bearer JWT token in the Authorization header:
     { name: "Student - Courses", description: "Favorite courses wishlist toggle and personalized listing" },
     { name: "Student - Teachers", description: "Browse verified teachers and inspect public portfolios" },
     { name: "Student - Cart", description: "Shopping cart items management, pricing, and checkout cleanup" },
+    { name: "Student - Saved", description: "Student saved courses management" },
+    { name: "Student Saved", description: "Student saved courses management" },
 
     { name: "Notifications", description: "Global and user-specific push notifications and read receipts" },
     { name: "Settings", description: "Public app metadata, terms/privacy pages, and language preferences" },
@@ -3212,14 +3214,13 @@ Include the Bearer JWT token in the Authorization header:
         security: bearerSecurity,
         parameters: [uuidParam("courseId", "Course ID")],
         requestBody: {
-          required: true,
+          required: false,
           content: {
             "application/json": {
               schema: {
                 type: "object",
-                required: ["isFavourite"],
                 properties: {
-                  isFavourite: { type: "boolean", example: true },
+                  itemType: { type: "string", enum: ["COURSE", "TEACHER_COURSE"], default: "COURSE", example: "COURSE" },
                 },
               },
             },
@@ -3479,6 +3480,130 @@ Include the Bearer JWT token in the Authorization header:
           400: standardResponses[400],
           401: standardResponses[401],
           500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/student/saved": {
+      get: {
+        summary: "Get student saved items",
+        description: "Returns the authenticated student's saved items with enriched details (course title, instructor, etc.). Locale is controlled via `locale` query param or `Accept-Language` header.",
+        tags: ["Student Saved"],
+        security: bearerSecurity,
+        parameters: [
+          { in: "query", name: "locale", schema: { type: "string", enum: ["ar", "en"], default: "ar" }, description: "Translation locale" },
+        ],
+        responses: {
+          ...json200({
+            type: "object",
+            properties: {
+              message: { type: "string", example: "SUCCESS" },
+              data: {
+                type: "object",
+                properties: {
+                  totalItems: { type: "integer", example: 2 },
+                  items: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        id: { type: "string", format: "uuid" },
+                        itemType: { type: "string", enum: ["COURSE", "TEACHER_COURSE"] },
+                        type: { type: "string", enum: ["COURSE", "TEACHER_COURSE"] },
+                        itemId: { type: "string", format: "uuid" },
+                        createdAt: { type: "string", format: "date-time" },
+                        course: { type: "object", description: "Enriched course details" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          }),
+          401: { description: "Unauthorized" },
+        },
+      },
+    },
+
+    "/api/v1/student/saved/add": {
+      post: {
+        summary: "Add item to saved",
+        description: "Adds a COURSE or TEACHER_COURSE to the student's saved items. Validates that the course is published/approved.",
+        tags: ["Student Saved"],
+        security: bearerSecurity,
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["itemId"],
+                properties: {
+                  type: { type: "string", enum: ["COURSE", "TEACHER_COURSE"], example: "COURSE", description: "Type of item" },
+                  itemType: { type: "string", enum: ["COURSE", "TEACHER_COURSE"], example: "COURSE", description: "Alternative name for type" },
+                  itemId: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440000", description: "Course or TeacherCourse ID" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...json201({
+            type: "object",
+            properties: {
+              message: { type: "string", example: "ITEM_ADDED_TO_SAVED" },
+              data: { type: "object", description: "Updated saved items object" },
+            },
+          }),
+          400: { description: "Course not published / invalid type" },
+          401: { description: "Unauthorized" },
+          409: { description: "Item already saved" },
+        },
+      },
+    },
+
+    "/api/v1/student/saved/remove/{itemId}": {
+      delete: {
+        summary: "Remove item from saved",
+        description: "Removes an item from saved by Saved ID or itemId (course ID).",
+        tags: ["Student Saved"],
+        security: bearerSecurity,
+        parameters: [uuidParam("itemId", "Saved ID or course itemId")],
+        responses: {
+          ...json200({
+            type: "object",
+            properties: {
+              message: { type: "string", example: "ITEM_REMOVED_FROM_SAVED" },
+              data: { type: "object", description: "Updated saved items object" },
+            },
+          }),
+          401: { description: "Unauthorized" },
+          404: { description: "Item not found in saved list" },
+        },
+      },
+    },
+
+    "/api/v1/student/saved/clear": {
+      delete: {
+        summary: "Clear all saved items",
+        description: "Removes all saved items for the authenticated student.",
+        tags: ["Student Saved"],
+        security: bearerSecurity,
+        responses: {
+          ...json200({
+            type: "object",
+            properties: {
+              message: { type: "string", example: "SAVED_CLEARED" },
+              data: {
+                type: "object",
+                properties: {
+                  totalItems: { type: "integer", example: 0 },
+                  items: { type: "array", items: {}, example: [] },
+                },
+              },
+            },
+          }),
+          401: { description: "Unauthorized" },
         },
       },
     },

@@ -3,6 +3,7 @@ import {
   baseRoleEnum,
   courseLevelEnum,
   courseStatusEnum,
+  coursesType,
   enrollmentTypeEnum,
   lessonTypeEnum,
 } from "../../../utils/Enums/index.js";
@@ -121,7 +122,10 @@ export const createCourseService = async (body, reqFiles) => {
     },
   });
 
-  return newCourse;
+  return {
+    ...newCourse,
+    type: coursesType.COURSE,
+  };
 };
 
 export const getAllCoursesService = async ({
@@ -230,7 +234,10 @@ export const getAllCoursesService = async ({
   });
 
   return {
-    courses: result.items,
+    courses: result.items.map((course) => ({
+      ...course,
+      type: coursesType.COURSE,
+    })),
     pagination: result.pagination,
   };
 };
@@ -276,7 +283,12 @@ export const getCourseByIdService = async ({ courseId }) => {
     throw error;
   }
 
-  return { course };
+  return {
+    course: {
+      ...course,
+      type: coursesType.COURSE,
+    },
+  };
 };
 
 export const updateCourseService = async (body, params, reqFiles) => {
@@ -455,7 +467,12 @@ export const updateCourseService = async (body, params, reqFiles) => {
     deleteFile(existingCourse.previewVideoUrl);
   }
 
-  return { course };
+  return {
+    course: {
+      ...course,
+      type: coursesType.COURSE,
+    },
+  };
 };
 export const updateCourseStatusService = async (body, params) => {
   const { status } = body;
@@ -493,7 +510,12 @@ export const updateCourseStatusService = async (body, params) => {
     },
   });
 
-  return { course };
+  return {
+    course: {
+      ...course,
+      type: coursesType.COURSE,
+    },
+  };
 };
 
 export const deleteCourseService = async ({ courseId }) => {
