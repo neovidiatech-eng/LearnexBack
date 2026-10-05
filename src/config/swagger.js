@@ -3488,39 +3488,47 @@ Include the Bearer JWT token in the Authorization header:
       get: {
         summary: "Get student saved items",
         description: "Returns the authenticated student's saved items with enriched details (course title, instructor, etc.). Locale is controlled via `locale` query param or `Accept-Language` header.",
-        tags: ["Student Saved"],
+        tags: ["Student - Saved"],
         security: bearerSecurity,
         parameters: [
           { in: "query", name: "locale", schema: { type: "string", enum: ["ar", "en"], default: "ar" }, description: "Translation locale" },
         ],
         responses: {
-          ...json200({
-            type: "object",
-            properties: {
-              message: { type: "string", example: "SUCCESS" },
-              data: {
-                type: "object",
-                properties: {
-                  totalItems: { type: "integer", example: 2 },
-                  items: {
-                    type: "array",
-                    items: {
+          200: {
+            description: "Saved items retrieved successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string", example: "SUCCESS" },
+                    data: {
                       type: "object",
                       properties: {
-                        id: { type: "string", format: "uuid" },
-                        itemType: { type: "string", enum: ["COURSE", "TEACHER_COURSE"] },
-                        type: { type: "string", enum: ["COURSE", "TEACHER_COURSE"] },
-                        itemId: { type: "string", format: "uuid" },
-                        createdAt: { type: "string", format: "date-time" },
-                        course: { type: "object", description: "Enriched course details" },
+                        totalItems: { type: "integer", example: 2 },
+                        items: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              id: { type: "string", format: "uuid" },
+                              itemType: { type: "string", enum: ["COURSE", "TEACHER_COURSE"] },
+                              type: { type: "string", enum: ["COURSE", "TEACHER_COURSE"] },
+                              itemId: { type: "string", format: "uuid" },
+                              createdAt: { type: "string", format: "date-time" },
+                              course: { type: "object", description: "Enriched course details" },
+                            },
+                          },
+                        },
                       },
                     },
                   },
                 },
               },
             },
-          }),
-          401: { description: "Unauthorized" },
+          },
+          401: standardResponses[401],
+          500: standardResponses[500],
         },
       },
     },
@@ -3529,7 +3537,7 @@ Include the Bearer JWT token in the Authorization header:
       post: {
         summary: "Add item to saved",
         description: "Adds a COURSE or TEACHER_COURSE to the student's saved items. Validates that the course is published/approved.",
-        tags: ["Student Saved"],
+        tags: ["Student - Saved"],
         security: bearerSecurity,
         requestBody: {
           required: true,
@@ -3548,16 +3556,31 @@ Include the Bearer JWT token in the Authorization header:
           },
         },
         responses: {
-          ...json201({
-            type: "object",
-            properties: {
-              message: { type: "string", example: "ITEM_ADDED_TO_SAVED" },
-              data: { type: "object", description: "Updated saved items object" },
+          201: {
+            description: "Item added to saved successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string", example: "ITEM_ADDED_TO_SAVED" },
+                    data: { type: "object", description: "Updated saved items object" },
+                  },
+                },
+              },
             },
-          }),
-          400: { description: "Course not published / invalid type" },
-          401: { description: "Unauthorized" },
-          409: { description: "Item already saved" },
+          },
+          400: standardResponses[400],
+          401: standardResponses[401],
+          409: {
+            description: "Item already saved",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ConflictErrorResponse" },
+              },
+            },
+          },
+          500: standardResponses[500],
         },
       },
     },
@@ -3566,19 +3589,27 @@ Include the Bearer JWT token in the Authorization header:
       delete: {
         summary: "Remove item from saved",
         description: "Removes an item from saved by Saved ID or itemId (course ID).",
-        tags: ["Student Saved"],
+        tags: ["Student - Saved"],
         security: bearerSecurity,
         parameters: [uuidParam("itemId", "Saved ID or course itemId")],
         responses: {
-          ...json200({
-            type: "object",
-            properties: {
-              message: { type: "string", example: "ITEM_REMOVED_FROM_SAVED" },
-              data: { type: "object", description: "Updated saved items object" },
+          200: {
+            description: "Item removed from saved successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string", example: "ITEM_REMOVED_FROM_SAVED" },
+                    data: { type: "object", description: "Updated saved items object" },
+                  },
+                },
+              },
             },
-          }),
-          401: { description: "Unauthorized" },
-          404: { description: "Item not found in saved list" },
+          },
+          401: standardResponses[401],
+          404: standardResponses[404],
+          500: standardResponses[500],
         },
       },
     },
@@ -3587,23 +3618,31 @@ Include the Bearer JWT token in the Authorization header:
       delete: {
         summary: "Clear all saved items",
         description: "Removes all saved items for the authenticated student.",
-        tags: ["Student Saved"],
+        tags: ["Student - Saved"],
         security: bearerSecurity,
         responses: {
-          ...json200({
-            type: "object",
-            properties: {
-              message: { type: "string", example: "SAVED_CLEARED" },
-              data: {
-                type: "object",
-                properties: {
-                  totalItems: { type: "integer", example: 0 },
-                  items: { type: "array", items: {}, example: [] },
+          200: {
+            description: "Saved list cleared successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string", example: "SAVED_CLEARED" },
+                    data: {
+                      type: "object",
+                      properties: {
+                        totalItems: { type: "integer", example: 0 },
+                        items: { type: "array", items: {}, example: [] },
+                      },
+                    },
+                  },
                 },
               },
             },
-          }),
-          401: { description: "Unauthorized" },
+          },
+          401: standardResponses[401],
+          500: standardResponses[500],
         },
       },
     },

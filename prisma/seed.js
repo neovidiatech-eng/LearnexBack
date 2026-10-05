@@ -10,6 +10,7 @@ import { seedCategories } from "./seeders/categories.seed.js";
 import { seedTeachers } from "./seeders/teachers.seed.js";
 import { seedStudents } from "./seeders/students.seed.js";
 import { seedCourses } from "./seeders/courses.seed.js";
+import { seedTeacherCourses } from "./seeders/teacherCourses.seed.js";
 import { seedEnrollments } from "./seeders/enrollments.seed.js";
 import { seedCarts } from "./seeders/cart.seed.js";
 import { seedSaved } from "./seeders/saved.seed.js";
@@ -47,6 +48,9 @@ async function main() {
 
   // 7. Courses (depends on teachers + categories)
   const courses = await seedCourses(prisma, teachers, categories);
+
+  // 7.1. Teacher-Created Courses (depends on teachers)
+  const teacherCourses = await seedTeacherCourses(prisma, teachers);
 
   // 8. Enrollments (depends on students + courses)
   await seedEnrollments(prisma, students, courses);
