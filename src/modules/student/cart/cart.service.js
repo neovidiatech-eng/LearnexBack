@@ -118,13 +118,20 @@ export const getCartService = async (userId, locale = "ar") => {
           model: "teacherCourse",
           where: { id: item.itemId },
           include: {
-            translations: { where: { locale } },
-            instructor: {
-              select: { fullName: true, profilePhoto: true },
-            },
+            teacher:{
+              include:{
+                user:{select:{fullName:true,profilePhoto:true}}
+              }
+            }
+            
           },
         });
-        return { ...item, course: course ?? null };
+        return {
+          ...item,
+          course: course
+            ? { ...course, instructor: course.teacher?.user ?? null }
+            : null,
+        }
       }
       return item;
     })
