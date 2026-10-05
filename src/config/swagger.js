@@ -124,89 +124,26 @@ const standardResponses = {
 
 // ═══════════════════════════════════════════════════════════════
 //  Full OpenAPI Specification (3.0.0)
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 const swaggerSpec = {
   openapi: "3.0.0",
   info: {
-    title: "LearnX LMS API Documentation 🚀",
+    title: "LearnX LMS API Documentation",
     version: "1.0.0",
     description: `
-# 📚 LearnX Learning Management System API
+Interactive API documentation for LearnX Learning Management System.
 
-Welcome to the **LearnX LMS** interactive API documentation. This reference provides frontend developers with full visibility over all routes, schemas, headers, authentication flows, error codes, and sample payloads.
+### Admin Credentials
+- **Email:** \`admin@learnex.com\`
+- **Password:** \`Admin@123456\`
 
----
+### Authentication
+Include the Bearer JWT token in the Authorization header:
+\`Authorization: Bearer <your_access_token>\`
 
-### 🔑 Test Accounts & Default Seed Credentials
-
-Use these pre-seeded credentials to quickly authenticate and test endpoints:
-
-| Role | Email | Password | Role Description |
-| :--- | :--- | :--- | :--- |
-| 👑 **Super Admin** | \`admin@learnex.com\` | \`Admin@123456\` | Full admin privileges (Users, Courses, Staff, Roles, CMS, Settings) |
-| 👨‍🏫 **Teacher 1** | \`ahmed.hassan@learnex.com\` | \`Teacher@123456\` | Web Development Instructor (Approved & Active) |
-| 👨‍🏫 **Teacher 2** | \`sara.ibrahim@learnex.com\` | \`Teacher@123456\` | Data Science Instructor (Approved & Active) |
-| 👨‍🏫 **Teacher 3** | \`omar.ali@learnex.com\` | \`Teacher@123456\` | Mobile Development Instructor (Approved & Active) |
-| 🎓 **Student 1** | \`youssef.mahmoud@learnex.com\` | \`Student@123456\` | Active Student with active enrollments & cart |
-| 🎓 **Student 2** | \`nour.khaled@learnex.com\` | \`Student@123456\` | Active Student |
-| 🎓 **Student 3** | \`karim.mostafa@learnex.com\` | \`Student@123456\` | Active Student |
-
----
-
-### 🛡️ Authentication Guide (Bearer JWT)
-
-1. Call the corresponding login endpoint:
-   - **Admin:** \`POST /api/v1/admin/auth/login\`
-   - **Teacher:** \`POST /api/v1/teacher/auth/login\`
-   - **Student:** \`POST /api/v1/student/auth/login\`
-2. Retrieve the \`accessToken\` from the response.
-3. Click the **Authorize** 🔓 button at the top right of this page and enter:
-   \`\`\`text
-   Bearer <your_access_token>
-   \`\`\`
-4. When access token expires, pass the \`refreshToken\` in the \`Authorization\` header to the corresponding \`/refresh-token\` route to get a new pair.
-
----
-
-### 🌐 Global Headers & Localization
-
-- \`Authorization\`: \`Bearer <jwt_token>\` (For authenticated routes)
-- \`Accept-Language\`: \`ar\` (Arabic, default) | \`en\` (English) | \`fr\` (French)
-- \`Content-Type\`: \`application/json\` or \`multipart/form-data\` (for file uploads)
-
----
-
-### 📦 Standard Response Architecture
-
-- **Success Response Structure:**
-  \`\`\`json
-  {
-    "message": "SUCCESS_MESSAGE_KEY",
-    "data": { ... }
-  }
-  \`\`\`
-- **Standard Error Response:**
-  \`\`\`json
-  {
-    "message": "ERROR_MESSAGE_KEY",
-    "status": 400,
-    "success": false
-  }
-  \`\`\`
-- **Validation Error (HTTP 400):**
-  \`\`\`json
-  {
-    "error_message": "VALIDATION_ERROR",
-    "validationError": [
-      {
-        "key": "body",
-        "details": [
-          { "message": "Email is required", "path": "email" }
-        ]
-      }
-    ]
-  }
-  \`\`\`
+### Headers & Localization
+- \`Accept-Language\`: \`ar\` | \`en\` | \`fr\`
+- \`Content-Type\`: \`application/json\` or \`multipart/form-data\`
     `,
     contact: {
       name: "LearnX Tech Team",
@@ -215,8 +152,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
   },
   servers: [
     { url: "https://learnx.agro-plus.net", description: "Production Server" },
-    { url: "http://localhost:3000", description: "Local Development Server (Port 3000)" },
-    { url: "http://localhost:3015", description: "Docker Local Server (Port 3015)" },
+    { url: "http://localhost:3000", description: "Local Development Server" },
+    { url: "http://localhost:3015", description: "Docker Local Server" },
   ],
   components: {
     securitySchemes: {
@@ -224,13 +161,10 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         type: "http",
         scheme: "bearer",
         bearerFormat: "JWT",
-        description: "Enter your JWT token in the format: Bearer <token>",
+        description: "Enter Bearer token: Bearer <token>",
       },
     },
     schemas: {
-      // ─────────────────────────────────────────────────────────
-      // Base / Shared Response Schemas
-      // ─────────────────────────────────────────────────────────
       SuccessMessageResponse: {
         type: "object",
         properties: {
@@ -241,7 +175,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         type: "object",
         properties: {
           message: { type: "string", example: "SUCCESS" },
-          data: { type: "object", description: "Response payload data" },
+          data: { type: "object" },
         },
       },
       PaginationMeta: {
@@ -321,9 +255,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
 
-      // ─────────────────────────────────────────────────────────
-      // 🎓 Student DTOs
-      // ─────────────────────────────────────────────────────────
+      // Student DTOs
       StudentSignupDTO: {
         type: "object",
         required: ["fullName", "email", "password", "confirmPassword", "phone"],
@@ -339,8 +271,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         type: "object",
         required: ["email", "password"],
         properties: {
-          email: { type: "string", format: "email", example: "student@learnex.com" },
-          password: { type: "string", format: "password", example: "Student@123456" },
+          email: { type: "string", format: "email", example: "admin@learnex.com" },
+          password: { type: "string", format: "password", example: "Admin@123456" },
         },
       },
       ConfirmEmailDTO: {
@@ -355,14 +287,14 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         type: "object",
         required: ["email"],
         properties: {
-          email: { type: "string", format: "email", example: "student@learnex.com" },
+          email: { type: "string", format: "email", example: "user@learnex.com" },
         },
       },
       ResetPasswordDTO: {
         type: "object",
         required: ["email", "otp", "password", "confirmPassword"],
         properties: {
-          email: { type: "string", format: "email", example: "student@learnex.com" },
+          email: { type: "string", format: "email", example: "user@learnex.com" },
           otp: { type: "string", minLength: 6, maxLength: 6, example: "123456" },
           password: { type: "string", format: "password", example: "NewPassword@123!" },
           confirmPassword: { type: "string", format: "password", example: "NewPassword@123!" },
@@ -371,8 +303,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
       StudentUpdateProfileDTO: {
         type: "object",
         properties: {
-          fullName: { type: "string", example: "Youssef Mahmoud Updated" },
-          email: { type: "string", format: "email", example: "youssef.updated@learnex.com" },
+          fullName: { type: "string", example: "Youssef Mahmoud" },
+          email: { type: "string", format: "email", example: "youssef@learnex.com" },
           phone: { type: "string", example: "+201334567890" },
           dateOfBirth: { type: "string", format: "date", example: "1998-05-15" },
         },
@@ -394,9 +326,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
 
-      // ─────────────────────────────────────────────────────────
-      // 👨‍🏫 Teacher DTOs
-      // ─────────────────────────────────────────────────────────
+      // Teacher DTOs
       TeacherSignupDTO: {
         type: "object",
         required: ["email", "password", "phone", "subject"],
@@ -542,9 +472,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
 
-      // ─────────────────────────────────────────────────────────
-      // 👑 Admin DTOs
-      // ─────────────────────────────────────────────────────────
+      // Admin DTOs
       AdminStudentCreateDTO: {
         type: "object",
         required: ["firstName", "lastName", "email", "password"],
@@ -718,49 +646,44 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
   },
   tags: [
-    // 👑 ADMIN SECTION
-    { name: "👑 Admin - Authentication", description: "Admin login, logout, and token refresh" },
-    { name: "👑 Admin - Students Management", description: "CRUD operations, status toggling, and export for students" },
-    { name: "👑 Admin - Teachers Management", description: "Teacher verification, application reviews, status, certificates, and course approvals" },
-    { name: "👑 Admin - Categories Management", description: "Course categories with multilingual translations and icons" },
-    { name: "👑 Admin - Courses Management", description: "Global courses, curriculum sections, and video/text lessons" },
-    { name: "👑 Admin - Staff Management", description: "Staff members, administrative roles, and privileges" },
-    { name: "👑 Admin - Roles & Permissions", description: "Dynamic RBAC roles, permission sets, and localized titles" },
-    { name: "👑 Admin - Coupons Management", description: "Discount vouchers, redemption limits, and status toggles" },
-    { name: "👑 Admin - Offers Management", description: "Promotional offers, percentage discounts, and validity schedules" },
-    { name: "👑 Admin - Activity Logs", description: "Audit trail, security metrics, and real-time activity tracking" },
-    { name: "👑 Admin - CMS & App Settings", description: "Logo branding, app metadata, and static CMS pages" },
+    { name: "Admin - Auth", description: "Admin login, logout, and token refresh" },
+    { name: "Admin - Students", description: "Students management, status toggling, and Excel export" },
+    { name: "Admin - Teachers", description: "Teacher verification, application reviews, certificates, and course approvals" },
+    { name: "Admin - Categories", description: "Course categories with multilingual translations and icons" },
+    { name: "Admin - Courses", description: "Central courses, curriculum sections, and video/text lessons" },
+    { name: "Admin - Staff", description: "Staff members, administrative roles, and privileges" },
+    { name: "Admin - Roles & Permissions", description: "RBAC roles, permission sets, and localized titles" },
+    { name: "Admin - Coupons", description: "Discount vouchers, redemption limits, and status toggles" },
+    { name: "Admin - Offers", description: "Promotional offers, percentage discounts, and validity schedules" },
+    { name: "Admin - Activity Logs", description: "Audit trail, security metrics, and real-time activity tracking" },
+    { name: "Admin - Settings & CMS", description: "App metadata, logo branding, and static CMS pages" },
 
-    // 👨‍🏫 TEACHER SECTION
-    { name: "👨‍🏫 Teacher - Authentication", description: "Teacher registration with CV upload, login, password recovery, and tokens" },
-    { name: "👨‍🏫 Teacher - Profile Management", description: "Teacher bio, hourly session pricing, avatar uploads, and visibility" },
-    { name: "👨‍🏫 Teacher - Certificates", description: "Teacher academic/professional credentials submission and tracking" },
-    { name: "👨‍🏫 Teacher - Courses Management", description: "Teacher self-published courses CRUD" },
-    { name: "👨‍🏫 Teacher - Course Sections", description: "Curriculum modules and section reordering" },
-    { name: "👨‍🏫 Teacher - Course Items & Lessons", description: "Lesson materials (Video / PDF / Document uploads)" },
-    { name: "👨‍🏫 Teacher - Quizzes & Questions", description: "Section quizzes, MCQ questions, submissions, and manual grading" },
+    { name: "Teacher - Auth", description: "Teacher registration with CV upload, login, and password recovery" },
+    { name: "Teacher - Profile", description: "Teacher bio, hourly session pricing, avatar uploads, and visibility" },
+    { name: "Teacher - Certificates", description: "Teacher academic/professional credentials submission and tracking" },
+    { name: "Teacher - Courses", description: "Teacher self-published courses CRUD" },
+    { name: "Teacher - Sections", description: "Curriculum modules and section reordering" },
+    { name: "Teacher - Items", description: "Lesson materials (Video / PDF / Document uploads)" },
+    { name: "Teacher - Quizzes", description: "Section quizzes, MCQ questions, submissions, and grading" },
 
-    // 🎓 STUDENT SECTION
-    { name: "🎓 Student - Authentication", description: "Student signup, OTP email verification, login, password recovery, and refresh tokens" },
-    { name: "🎓 Student - Profile Management", description: "Personal data, avatar/cover images, password change, and account deletion" },
-    { name: "🎓 Student - Favorites & Courses", description: "Favorite courses wishlist toggle and personalized course listing" },
-    { name: "🎓 Student - Browse Teachers", description: "Browse verified teachers and inspect public teacher portfolios" },
-    { name: "🎓 Student - Shopping Cart", description: "Shopping cart items management, pricing calculations, and checkout cleanup" },
+    { name: "Student - Auth", description: "Student signup, OTP email verification, login, and password recovery" },
+    { name: "Student - Profile", description: "Personal data, avatar/cover images, password change, and deletion" },
+    { name: "Student - Courses", description: "Favorite courses wishlist toggle and personalized listing" },
+    { name: "Student - Teachers", description: "Browse verified teachers and inspect public portfolios" },
+    { name: "Student - Cart", description: "Shopping cart items management, pricing, and checkout cleanup" },
 
-    // 🔔 GLOBAL & SETTINGS
-    { name: "🔔 Notifications System", description: "Global and user-specific push notifications and read receipts" },
-    { name: "⚙️ Public Settings & CMS", description: "Public app metadata, terms/privacy pages, and UI language preferences" },
+    { name: "Notifications", description: "Global and user-specific push notifications and read receipts" },
+    { name: "Settings", description: "Public app metadata, terms/privacy pages, and language preferences" },
   ],
 
   paths: {
     // ═══════════════════════════════════════════════════════════
-    // 👑 ADMIN AUTHENTICATION
+    // ADMIN AUTH
     // ═══════════════════════════════════════════════════════════
     "/api/v1/admin/auth/login": {
       post: {
         summary: "Admin Login",
-        description: "Authenticate Super Admin or Staff using email & password. Returns access and refresh JWT tokens.",
-        tags: ["👑 Admin - Authentication"],
+        tags: ["Admin - Auth"],
         requestBody: {
           required: true,
           content: {
@@ -801,8 +724,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/admin/auth/refresh-token": {
       get: {
         summary: "Refresh Admin Access Token",
-        description: "Send Refresh Token in Bearer Authorization header to issue a new Access Token.",
-        tags: ["👑 Admin - Authentication"],
+        tags: ["Admin - Auth"],
         security: bearerSecurity,
         responses: {
           ...standardResponses[200]({
@@ -812,7 +734,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
               data: {
                 type: "object",
                 properties: {
-                  accessToken: { type: "string", example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." },
+                  accessToken: { type: "string" },
                 },
               },
             },
@@ -825,8 +747,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/admin/auth/logout": {
       post: {
         summary: "Admin Logout",
-        description: "Invalidates the active session and clears the cached auth tokens.",
-        tags: ["👑 Admin - Authentication"],
+        tags: ["Admin - Auth"],
         security: bearerSecurity,
         responses: {
           ...standardResponses[200]({ $ref: "#/components/schemas/SuccessMessageResponse" }),
@@ -837,13 +758,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 👑 ADMIN STUDENTS MANAGEMENT
+    // ADMIN STUDENTS
     // ═══════════════════════════════════════════════════════════
     "/api/v1/admin/students": {
       post: {
         summary: "Create Student Account",
-        description: "Creates a new student account with initial profile data and optional course enrollments.",
-        tags: ["👑 Admin - Students Management"],
+        tags: ["Admin - Students"],
         security: bearerSecurity,
         requestBody: {
           required: true,
@@ -863,18 +783,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
       get: {
-        summary: "Get All Students (Paginated)",
-        description: "Retrieves all registered students with filtering by name/email search keyword and active/blocked status.",
-        tags: ["👑 Admin - Students Management"],
+        summary: "Get All Students",
+        tags: ["Admin - Students"],
         security: bearerSecurity,
         parameters: [
           ...paginationQueryParams,
-          {
-            in: "query",
-            name: "status",
-            schema: { type: "string", enum: ["ACTIVE", "INACTIVE", "BLOCKED"] },
-            description: "Filter by student status",
-          },
+          { in: "query", name: "status", schema: { type: "string", enum: ["ACTIVE", "INACTIVE", "BLOCKED"] } },
         ],
         responses: {
           ...standardResponses[200]({
@@ -898,15 +812,11 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/admin/students/export": {
       get: {
-        summary: "Export Students to Excel (.xlsx)",
-        description: "Generates and streams an Excel spreadsheet containing all student accounts and statistics.",
-        tags: ["👑 Admin - Students Management"],
+        summary: "Export Students to Excel",
+        tags: ["Admin - Students"],
         security: bearerSecurity,
         responses: {
-          200: {
-            description: "Excel file stream",
-            content: { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {} },
-          },
+          200: { description: "Excel spreadsheet stream" },
           401: standardResponses[401],
           403: standardResponses[403],
           500: standardResponses[500],
@@ -915,8 +825,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/admin/students/{studentId}": {
       get: {
-        summary: "Get Student Details by ID",
-        tags: ["👑 Admin - Students Management"],
+        summary: "Get Student by ID",
+        tags: ["Admin - Students"],
         security: bearerSecurity,
         parameters: [uuidParam("studentId", "Student User ID")],
         responses: {
@@ -929,7 +839,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
       },
       patch: {
         summary: "Update Student Information",
-        tags: ["👑 Admin - Students Management"],
+        tags: ["Admin - Students"],
         security: bearerSecurity,
         parameters: [uuidParam("studentId", "Student User ID")],
         requestBody: {
@@ -950,7 +860,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
       },
       delete: {
         summary: "Delete Student Account",
-        tags: ["👑 Admin - Students Management"],
+        tags: ["Admin - Students"],
         security: bearerSecurity,
         parameters: [uuidParam("studentId", "Student User ID")],
         responses: {
@@ -964,8 +874,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/admin/students/{studentId}/status": {
       patch: {
-        summary: "Change Student Status (Active / Blocked)",
-        tags: ["👑 Admin - Students Management"],
+        summary: "Change Student Status",
+        tags: ["Admin - Students"],
         security: bearerSecurity,
         parameters: [uuidParam("studentId", "Student User ID")],
         requestBody: {
@@ -994,12 +904,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 👑 ADMIN TEACHERS MANAGEMENT
+    // ADMIN TEACHERS
     // ═══════════════════════════════════════════════════════════
     "/api/v1/admin/teachers": {
       post: {
-        summary: "Create Teacher Account (Direct by Admin)",
-        tags: ["👑 Admin - Teachers Management"],
+        summary: "Create Teacher Account",
+        tags: ["Admin - Teachers"],
         security: bearerSecurity,
         requestBody: {
           required: true,
@@ -1019,13 +929,13 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
       get: {
-        summary: "Get All Teachers (Paginated & Filtered)",
-        tags: ["👑 Admin - Teachers Management"],
+        summary: "Get All Teachers",
+        tags: ["Admin - Teachers"],
         security: bearerSecurity,
         parameters: [
           ...paginationQueryParams,
           { in: "query", name: "status", schema: { type: "string", enum: ["ACTIVE", "INACTIVE", "BLOCKED", "PENDING"] } },
-          { in: "query", name: "subject", schema: { type: "string" }, description: "Filter by teaching subject" },
+          { in: "query", name: "subject", schema: { type: "string" } },
         ],
         responses: {
           ...standardResponses[200]({
@@ -1050,7 +960,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/admin/teachers/export": {
       get: {
         summary: "Export Teachers to Excel",
-        tags: ["👑 Admin - Teachers Management"],
+        tags: ["Admin - Teachers"],
         security: bearerSecurity,
         responses: {
           200: { description: "Excel spreadsheet stream" },
@@ -1062,8 +972,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/admin/teachers/{teacherId}": {
       get: {
-        summary: "Get Teacher Details by ID",
-        tags: ["👑 Admin - Teachers Management"],
+        summary: "Get Teacher by ID",
+        tags: ["Admin - Teachers"],
         security: bearerSecurity,
         parameters: [uuidParam("teacherId", "Teacher ID")],
         responses: {
@@ -1076,7 +986,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
       },
       patch: {
         summary: "Update Teacher Profile",
-        tags: ["👑 Admin - Teachers Management"],
+        tags: ["Admin - Teachers"],
         security: bearerSecurity,
         parameters: [uuidParam("teacherId", "Teacher ID")],
         requestBody: {
@@ -1097,7 +1007,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
       },
       delete: {
         summary: "Delete Teacher Account",
-        tags: ["👑 Admin - Teachers Management"],
+        tags: ["Admin - Teachers"],
         security: bearerSecurity,
         parameters: [uuidParam("teacherId", "Teacher ID")],
         responses: {
@@ -1112,7 +1022,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/admin/teachers/{teacherId}/assign-courses": {
       patch: {
         summary: "Assign Courses to Teacher",
-        tags: ["👑 Admin - Teachers Management"],
+        tags: ["Admin - Teachers"],
         security: bearerSecurity,
         parameters: [uuidParam("teacherId", "Teacher ID")],
         requestBody: {
@@ -1141,8 +1051,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/admin/teachers/{teacherId}/cv": {
       patch: {
-        summary: "Upload / Replace Teacher CV",
-        tags: ["👑 Admin - Teachers Management"],
+        summary: "Upload Teacher CV",
+        tags: ["Admin - Teachers"],
         security: bearerSecurity,
         parameters: [uuidParam("teacherId", "Teacher ID")],
         requestBody: {
@@ -1153,7 +1063,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
                 type: "object",
                 required: ["cvUrl"],
                 properties: {
-                  cvUrl: { type: "string", format: "binary", description: "CV file" },
+                  cvUrl: { type: "string", format: "binary" },
                 },
               },
             },
@@ -1172,8 +1082,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/admin/teachers/requests/{teacherId}/approve": {
       patch: {
         summary: "Approve Teacher Application",
-        description: "Approves a pending teacher applicant and activates their instructor capabilities.",
-        tags: ["👑 Admin - Teachers Management"],
+        tags: ["Admin - Teachers"],
         security: bearerSecurity,
         parameters: [uuidParam("teacherId", "Teacher ID")],
         responses: {
@@ -1188,8 +1097,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/admin/teachers/requests/{teacherId}/reject": {
       patch: {
         summary: "Reject Teacher Application",
-        description: "Rejects a pending teacher applicant with a mandatory rejection feedback message.",
-        tags: ["👑 Admin - Teachers Management"],
+        tags: ["Admin - Teachers"],
         security: bearerSecurity,
         parameters: [uuidParam("teacherId", "Teacher ID")],
         requestBody: {
@@ -1200,7 +1108,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
                 type: "object",
                 required: ["rejectionReason"],
                 properties: {
-                  rejectionReason: { type: "string", minLength: 5, example: "Missing required certifications or insufficient experience." },
+                  rejectionReason: { type: "string", minLength: 5, example: "Incomplete CV documentation." },
                 },
               },
             },
@@ -1218,8 +1126,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/admin/teachers/certificate/{certificateId}/verify": {
       patch: {
-        summary: "Verify & Approve Teacher Certificate",
-        tags: ["👑 Admin - Teachers Management"],
+        summary: "Verify Teacher Certificate",
+        tags: ["Admin - Teachers"],
         security: bearerSecurity,
         parameters: [uuidParam("certificateId", "Certificate ID")],
         responses: {
@@ -1234,7 +1142,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/admin/teachers/certificate/{certificateId}/reject": {
       patch: {
         summary: "Reject Teacher Certificate",
-        tags: ["👑 Admin - Teachers Management"],
+        tags: ["Admin - Teachers"],
         security: bearerSecurity,
         parameters: [uuidParam("certificateId", "Certificate ID")],
         responses: {
@@ -1248,8 +1156,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/admin/teachers/{courseId}/change-status": {
       patch: {
-        summary: "Approve / Reject Teacher Published Course",
-        tags: ["👑 Admin - Teachers Management"],
+        summary: "Approve / Reject Teacher Course",
+        tags: ["Admin - Teachers"],
         security: bearerSecurity,
         parameters: [uuidParam("courseId", "Teacher Course ID")],
         requestBody: {
@@ -1261,7 +1169,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
                 required: ["status"],
                 properties: {
                   status: { type: "string", enum: ["APPROVED", "REJECTED"], example: "APPROVED" },
-                  rejectionReason: { type: "string", example: "Please improve audio quality in Section 2." },
+                  rejectionReason: { type: "string", example: "Please update video resolution in module 1." },
                 },
               },
             },
@@ -1279,12 +1187,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 👑 ADMIN CATEGORIES MANAGEMENT
+    // ADMIN CATEGORIES
     // ═══════════════════════════════════════════════════════════
     "/api/v1/admin/categories": {
       get: {
-        summary: "Get All Categories (Paginated & Localized)",
-        tags: ["👑 Admin - Categories Management"],
+        summary: "Get All Categories",
+        tags: ["Admin - Categories"],
         security: bearerSecurity,
         parameters: [...paginationQueryParams, localeQueryParam],
         responses: {
@@ -1295,8 +1203,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
       post: {
-        summary: "Create Course Category",
-        tags: ["👑 Admin - Categories Management"],
+        summary: "Create Category",
+        tags: ["Admin - Categories"],
         security: bearerSecurity,
         requestBody: {
           required: true,
@@ -1319,7 +1227,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/admin/categories/{categoryId}": {
       get: {
         summary: "Get Category by ID",
-        tags: ["👑 Admin - Categories Management"],
+        tags: ["Admin - Categories"],
         security: bearerSecurity,
         parameters: [uuidParam("categoryId", "Category ID"), localeQueryParam],
         responses: {
@@ -1332,7 +1240,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
       },
       patch: {
         summary: "Update Category",
-        tags: ["👑 Admin - Categories Management"],
+        tags: ["Admin - Categories"],
         security: bearerSecurity,
         parameters: [uuidParam("categoryId", "Category ID")],
         requestBody: {
@@ -1353,7 +1261,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
       },
       delete: {
         summary: "Delete Category",
-        tags: ["👑 Admin - Categories Management"],
+        tags: ["Admin - Categories"],
         security: bearerSecurity,
         parameters: [uuidParam("categoryId", "Category ID")],
         responses: {
@@ -1367,13 +1275,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 👑 ADMIN COURSES MANAGEMENT
+    // ADMIN COURSES
     // ═══════════════════════════════════════════════════════════
     "/api/v1/admin/courses": {
       post: {
-        summary: "Create Course (Admin)",
-        description: "Creates a complete LMS course with translations, pricing, level, and thumbnail.",
-        tags: ["👑 Admin - Courses Management"],
+        summary: "Create Course",
+        tags: ["Admin - Courses"],
         security: bearerSecurity,
         requestBody: {
           required: true,
@@ -1392,8 +1299,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
       get: {
-        summary: "Get All Courses (Admin Catalog)",
-        tags: ["👑 Admin - Courses Management"],
+        summary: "Get All Courses (Catalog)",
+        tags: ["Admin - Courses"],
         security: bearerSecurity,
         parameters: [
           ...paginationQueryParams,
@@ -1426,8 +1333,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/admin/courses/{courseId}": {
       get: {
-        summary: "Get Course by ID (with Full Sections & Lessons)",
-        tags: ["👑 Admin - Courses Management"],
+        summary: "Get Course by ID",
+        tags: ["Admin - Courses"],
         security: bearerSecurity,
         parameters: [uuidParam("courseId", "Course ID")],
         responses: {
@@ -1440,7 +1347,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
       },
       patch: {
         summary: "Update Course",
-        tags: ["👑 Admin - Courses Management"],
+        tags: ["Admin - Courses"],
         security: bearerSecurity,
         parameters: [uuidParam("courseId", "Course ID")],
         requestBody: {
@@ -1461,7 +1368,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
       },
       delete: {
         summary: "Delete Course",
-        tags: ["👑 Admin - Courses Management"],
+        tags: ["Admin - Courses"],
         security: bearerSecurity,
         parameters: [uuidParam("courseId", "Course ID")],
         responses: {
@@ -1475,8 +1382,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/admin/courses/{courseId}/status": {
       patch: {
-        summary: "Update Course Status (Draft / Published / Archived)",
-        tags: ["👑 Admin - Courses Management"],
+        summary: "Update Course Status",
+        tags: ["Admin - Courses"],
         security: bearerSecurity,
         parameters: [uuidParam("courseId", "Course ID")],
         requestBody: {
@@ -1506,7 +1413,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/admin/courses/{courseId}/sections": {
       post: {
         summary: "Add Section to Course",
-        tags: ["👑 Admin - Courses Management"],
+        tags: ["Admin - Courses"],
         security: bearerSecurity,
         parameters: [uuidParam("courseId", "Course ID")],
         requestBody: {
@@ -1536,7 +1443,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/admin/courses/sections/{sectionId}": {
       patch: {
         summary: "Update Course Section",
-        tags: ["👑 Admin - Courses Management"],
+        tags: ["Admin - Courses"],
         security: bearerSecurity,
         parameters: [uuidParam("sectionId", "Section ID")],
         requestBody: {
@@ -1564,7 +1471,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
       },
       delete: {
         summary: "Delete Course Section",
-        tags: ["👑 Admin - Courses Management"],
+        tags: ["Admin - Courses"],
         security: bearerSecurity,
         parameters: [uuidParam("sectionId", "Section ID")],
         responses: {
@@ -1579,7 +1486,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/admin/courses/sections/{sectionId}/lessons": {
       post: {
         summary: "Add Lesson to Section",
-        tags: ["👑 Admin - Courses Management"],
+        tags: ["Admin - Courses"],
         security: bearerSecurity,
         parameters: [uuidParam("sectionId", "Section ID")],
         requestBody: {
@@ -1624,7 +1531,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/admin/courses/lessons/{lessonId}": {
       patch: {
         summary: "Update Lesson",
-        tags: ["👑 Admin - Courses Management"],
+        tags: ["Admin - Courses"],
         security: bearerSecurity,
         parameters: [uuidParam("lessonId", "Lesson ID")],
         requestBody: {
@@ -1657,7 +1564,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
       },
       delete: {
         summary: "Delete Lesson",
-        tags: ["👑 Admin - Courses Management"],
+        tags: ["Admin - Courses"],
         security: bearerSecurity,
         parameters: [uuidParam("lessonId", "Lesson ID")],
         responses: {
@@ -1671,12 +1578,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 👑 ADMIN ROLES & PERMISSIONS
+    // ADMIN ROLES & PERMISSIONS
     // ═══════════════════════════════════════════════════════════
     "/api/v1/admin/roles": {
       post: {
-        summary: "Create RBAC Role",
-        tags: ["👑 Admin - Roles & Permissions"],
+        summary: "Create Role",
+        tags: ["Admin - Roles & Permissions"],
         security: bearerSecurity,
         requestBody: {
           required: true,
@@ -1696,7 +1603,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
       },
       get: {
         summary: "Get All Roles",
-        tags: ["👑 Admin - Roles & Permissions"],
+        tags: ["Admin - Roles & Permissions"],
         security: bearerSecurity,
         parameters: [...paginationQueryParams, localeQueryParam],
         responses: {
@@ -1709,8 +1616,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/admin/roles/{roleId}": {
       get: {
-        summary: "Get Role Details by ID",
-        tags: ["👑 Admin - Roles & Permissions"],
+        summary: "Get Role by ID",
+        tags: ["Admin - Roles & Permissions"],
         security: bearerSecurity,
         parameters: [uuidParam("roleId", "Role ID"), localeQueryParam],
         responses: {
@@ -1722,8 +1629,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
       patch: {
-        summary: "Update Role & Assigned Permissions",
-        tags: ["👑 Admin - Roles & Permissions"],
+        summary: "Update Role & Permissions",
+        tags: ["Admin - Roles & Permissions"],
         security: bearerSecurity,
         parameters: [uuidParam("roleId", "Role ID")],
         requestBody: {
@@ -1745,7 +1652,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
       },
       delete: {
         summary: "Delete Role",
-        tags: ["👑 Admin - Roles & Permissions"],
+        tags: ["Admin - Roles & Permissions"],
         security: bearerSecurity,
         parameters: [uuidParam("roleId", "Role ID")],
         responses: {
@@ -1759,12 +1666,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 👑 ADMIN STAFF MANAGEMENT
+    // ADMIN STAFF
     // ═══════════════════════════════════════════════════════════
     "/api/v1/admin/staff": {
       post: {
         summary: "Create Staff Member",
-        tags: ["👑 Admin - Staff Management"],
+        tags: ["Admin - Staff"],
         security: bearerSecurity,
         requestBody: {
           required: true,
@@ -1784,8 +1691,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
       get: {
-        summary: "Get All Staff Members (Paginated)",
-        tags: ["👑 Admin - Staff Management"],
+        summary: "Get All Staff Members",
+        tags: ["Admin - Staff"],
         security: bearerSecurity,
         parameters: [
           ...paginationQueryParams,
@@ -1802,8 +1709,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/admin/staff/roles": {
       get: {
-        summary: "Get Available Roles for Staff Assignment",
-        tags: ["👑 Admin - Staff Management"],
+        summary: "Get Available Roles for Staff",
+        tags: ["Admin - Staff"],
         security: bearerSecurity,
         responses: {
           ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
@@ -1815,8 +1722,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/admin/staff/export": {
       get: {
-        summary: "Export Staff to Excel (.xlsx)",
-        tags: ["👑 Admin - Staff Management"],
+        summary: "Export Staff to Excel",
+        tags: ["Admin - Staff"],
         security: bearerSecurity,
         responses: {
           200: { description: "Excel spreadsheet stream" },
@@ -1828,8 +1735,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/admin/staff/{staffId}": {
       get: {
-        summary: "Get Staff Member Details",
-        tags: ["👑 Admin - Staff Management"],
+        summary: "Get Staff Member by ID",
+        tags: ["Admin - Staff"],
         security: bearerSecurity,
         parameters: [uuidParam("staffId", "Staff User ID")],
         responses: {
@@ -1842,7 +1749,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
       },
       patch: {
         summary: "Update Staff Member Profile / Role",
-        tags: ["👑 Admin - Staff Management"],
+        tags: ["Admin - Staff"],
         security: bearerSecurity,
         parameters: [uuidParam("staffId", "Staff User ID")],
         requestBody: {
@@ -1864,7 +1771,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
       },
       delete: {
         summary: "Delete Staff Member",
-        tags: ["👑 Admin - Staff Management"],
+        tags: ["Admin - Staff"],
         security: bearerSecurity,
         parameters: [uuidParam("staffId", "Staff User ID")],
         responses: {
@@ -1878,8 +1785,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/admin/staff/{staffId}/status": {
       patch: {
-        summary: "Change Staff Status (Active / Inactive)",
-        tags: ["👑 Admin - Staff Management"],
+        summary: "Change Staff Status",
+        tags: ["Admin - Staff"],
         security: bearerSecurity,
         parameters: [uuidParam("staffId", "Staff User ID")],
         requestBody: {
@@ -1908,12 +1815,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 👑 ADMIN OFFERS MANAGEMENT
+    // ADMIN OFFERS
     // ═══════════════════════════════════════════════════════════
     "/api/v1/admin/offers": {
       post: {
-        summary: "Create Promotional Offer",
-        tags: ["👑 Admin - Offers Management"],
+        summary: "Create Offer",
+        tags: ["Admin - Offers"],
         security: bearerSecurity,
         requestBody: {
           required: true,
@@ -1932,8 +1839,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
       get: {
-        summary: "Get All Offers (Paginated)",
-        tags: ["👑 Admin - Offers Management"],
+        summary: "Get All Offers",
+        tags: ["Admin - Offers"],
         security: bearerSecurity,
         parameters: [
           ...paginationQueryParams,
@@ -1952,7 +1859,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/admin/offers/{offerId}": {
       get: {
         summary: "Get Offer by ID",
-        tags: ["👑 Admin - Offers Management"],
+        tags: ["Admin - Offers"],
         security: bearerSecurity,
         parameters: [uuidParam("offerId", "Offer ID"), localeQueryParam],
         responses: {
@@ -1965,7 +1872,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
       },
       patch: {
         summary: "Update Offer",
-        tags: ["👑 Admin - Offers Management"],
+        tags: ["Admin - Offers"],
         security: bearerSecurity,
         parameters: [uuidParam("offerId", "Offer ID")],
         requestBody: {
@@ -1987,7 +1894,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
       },
       delete: {
         summary: "Delete Offer",
-        tags: ["👑 Admin - Offers Management"],
+        tags: ["Admin - Offers"],
         security: bearerSecurity,
         parameters: [uuidParam("offerId", "Offer ID")],
         responses: {
@@ -2002,7 +1909,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/admin/offers/{offerId}/status": {
       patch: {
         summary: "Change Offer Status",
-        tags: ["👑 Admin - Offers Management"],
+        tags: ["Admin - Offers"],
         security: bearerSecurity,
         parameters: [uuidParam("offerId", "Offer ID")],
         requestBody: {
@@ -2031,12 +1938,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 👑 ADMIN COUPONS MANAGEMENT
+    // ADMIN COUPONS
     // ═══════════════════════════════════════════════════════════
     "/api/v1/admin/coupons": {
       post: {
-        summary: "Create Discount Coupon",
-        tags: ["👑 Admin - Coupons Management"],
+        summary: "Create Coupon",
+        tags: ["Admin - Coupons"],
         security: bearerSecurity,
         requestBody: {
           required: true,
@@ -2056,8 +1963,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
       get: {
-        summary: "Get All Coupons (Paginated & Filtered)",
-        tags: ["👑 Admin - Coupons Management"],
+        summary: "Get All Coupons",
+        tags: ["Admin - Coupons"],
         security: bearerSecurity,
         parameters: [
           ...paginationQueryParams,
@@ -2074,7 +1981,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/admin/coupons/{id}": {
       get: {
         summary: "Get Coupon by ID",
-        tags: ["👑 Admin - Coupons Management"],
+        tags: ["Admin - Coupons"],
         security: bearerSecurity,
         parameters: [uuidParam("id", "Coupon ID")],
         responses: {
@@ -2087,7 +1994,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
       },
       patch: {
         summary: "Update Coupon",
-        tags: ["👑 Admin - Coupons Management"],
+        tags: ["Admin - Coupons"],
         security: bearerSecurity,
         parameters: [uuidParam("id", "Coupon ID")],
         requestBody: {
@@ -2109,7 +2016,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
       },
       delete: {
         summary: "Delete Coupon",
-        tags: ["👑 Admin - Coupons Management"],
+        tags: ["Admin - Coupons"],
         security: bearerSecurity,
         parameters: [uuidParam("id", "Coupon ID")],
         responses: {
@@ -2124,7 +2031,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/admin/coupons/{id}/toggle-status": {
       patch: {
         summary: "Toggle Coupon Active Status",
-        tags: ["👑 Admin - Coupons Management"],
+        tags: ["Admin - Coupons"],
         security: bearerSecurity,
         parameters: [uuidParam("id", "Coupon ID")],
         responses: {
@@ -2138,12 +2045,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 👑 ADMIN ACTIVITY LOGS
+    // ADMIN ACTIVITY LOGS
     // ═══════════════════════════════════════════════════════════
     "/api/v1/admin/activityLogs/stats": {
       get: {
-        summary: "Get Activity Log Statistics & Metrics",
-        tags: ["👑 Admin - Activity Logs"],
+        summary: "Get Activity Log Statistics",
+        tags: ["Admin - Activity Logs"],
         security: bearerSecurity,
         responses: {
           ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
@@ -2155,13 +2062,13 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/admin/activityLogs": {
       get: {
-        summary: "Get System Activity Logs (Paginated & Filtered)",
-        tags: ["👑 Admin - Activity Logs"],
+        summary: "Get System Activity Logs",
+        tags: ["Admin - Activity Logs"],
         security: bearerSecurity,
         parameters: [
           ...paginationQueryParams,
-          { in: "query", name: "role", schema: { type: "string" }, description: "Filter by actor role" },
-          { in: "query", name: "module", schema: { type: "string" }, description: "Filter by system module (Auth, Courses, etc.)" },
+          { in: "query", name: "role", schema: { type: "string" } },
+          { in: "query", name: "module", schema: { type: "string" } },
           { in: "query", name: "status", schema: { type: "string", enum: ["SUCCESS", "FAILED"] } },
           { in: "query", name: "actorId", schema: { type: "string", format: "uuid" } },
           { in: "query", name: "startDate", schema: { type: "string", format: "date-time" } },
@@ -2177,8 +2084,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/admin/activityLogs/{id}": {
       get: {
-        summary: "Get Activity Log Details by ID",
-        tags: ["👑 Admin - Activity Logs"],
+        summary: "Get Activity Log by ID",
+        tags: ["Admin - Activity Logs"],
         security: bearerSecurity,
         parameters: [uuidParam("id", "Activity Log ID")],
         responses: {
@@ -2192,12 +2099,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 👑 ADMIN CMS & SETTINGS
+    // ADMIN SETTINGS & CMS
     // ═══════════════════════════════════════════════════════════
     "/api/v1/admin/settings/pages": {
       get: {
-        summary: "Get All CMS Static Pages (Admin)",
-        tags: ["👑 Admin - CMS & App Settings"],
+        summary: "Get All CMS Static Pages",
+        tags: ["Admin - Settings & CMS"],
         security: bearerSecurity,
         parameters: [...paginationQueryParams, localeQueryParam],
         responses: {
@@ -2210,8 +2117,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/admin/settings/app-info": {
       patch: {
-        summary: "Update Platform Info, Social Links & Logo",
-        tags: ["👑 Admin - CMS & App Settings"],
+        summary: "Update Platform Info & Logo",
+        tags: ["Admin - Settings & CMS"],
         security: bearerSecurity,
         requestBody: {
           content: {
@@ -2221,11 +2128,11 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
                 properties: {
                   appName: { type: "string", example: "LearnX Academy" },
                   appVersion: { type: "string", example: "1.2.0" },
-                  aboutUs: { type: "string", example: "Leading online e-learning academy in the MENA region." },
+                  aboutUs: { type: "string", example: "Leading online e-learning academy." },
                   facebookUrl: { type: "string", format: "uri", example: "https://facebook.com/learnx" },
                   instaUrl: { type: "string", format: "uri", example: "https://instagram.com/learnx" },
                   websiteUrl: { type: "string", format: "uri", example: "https://learnx.com" },
-                  copyright: { type: "string", example: "جميع الحقوق محفوظة © 2026 LearnX" },
+                  copyright: { type: "string", example: "All rights reserved © 2026 LearnX" },
                   logo_url: { type: "string", format: "binary", description: "App logo file" },
                 },
               },
@@ -2243,10 +2150,10 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/admin/settings/pages/{slug}": {
       patch: {
-        summary: "Update Static Page Content (Terms, Privacy, About)",
-        tags: ["👑 Admin - CMS & App Settings"],
+        summary: "Update Static Page Content",
+        tags: ["Admin - Settings & CMS"],
         security: bearerSecurity,
-        parameters: [stringPathParam("slug", "Page slug (e.g. privacy-policy, terms-and-conditions)", "privacy-policy")],
+        parameters: [stringPathParam("slug", "Page slug (privacy-policy, terms-and-conditions)", "privacy-policy")],
         requestBody: {
           required: true,
           content: {
@@ -2256,7 +2163,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
                 required: ["title", "content"],
                 properties: {
                   title: { type: "string", example: "Privacy Policy" },
-                  content: { type: "string", example: "<h1>Privacy Policy</h1><p>We respect your privacy...</p>" },
+                  content: { type: "string", example: "<h1>Privacy Policy</h1><p>Content goes here...</p>" },
                   locale: { type: "string", enum: ["ar", "en", "fr"], default: "ar" },
                 },
               },
@@ -2275,13 +2182,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 👨‍🏫 TEACHER AUTHENTICATION
+    // TEACHER AUTH
     // ═══════════════════════════════════════════════════════════
     "/api/v1/teacher/auth/signup": {
       post: {
-        summary: "Teacher Signup Application (with CV Upload)",
-        description: "Submit teacher registration with experience, subject, intro video, and CV document for admin review.",
-        tags: ["👨‍🏫 Teacher - Authentication"],
+        summary: "Teacher Signup Application",
+        tags: ["Teacher - Auth"],
         requestBody: {
           required: true,
           content: {
@@ -2306,8 +2212,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/teacher/auth/login": {
       post: {
         summary: "Teacher Login",
-        description: "Authenticate teacher account. Note: Returns 403 if the application is still pending admin approval or inactive.",
-        tags: ["👨‍🏫 Teacher - Authentication"],
+        tags: ["Teacher - Auth"],
         requestBody: {
           required: true,
           content: {
@@ -2333,10 +2238,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
             },
           }),
           400: standardResponses[400],
-          403: {
-            description: "Account under review (PENDING) or blocked/inactive",
-            content: { "application/json": { schema: { $ref: "#/components/schemas/ForbiddenErrorResponse" } } },
-          },
+          403: standardResponses[403],
           404: standardResponses[404],
           500: standardResponses[500],
         },
@@ -2345,7 +2247,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/teacher/auth/forgot-password": {
       post: {
         summary: "Request Password Reset OTP (Teacher)",
-        tags: ["👨‍🏫 Teacher - Authentication"],
+        tags: ["Teacher - Auth"],
         requestBody: {
           required: true,
           content: {
@@ -2365,7 +2267,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/teacher/auth/reset-password": {
       patch: {
         summary: "Reset Teacher Password using OTP",
-        tags: ["👨‍🏫 Teacher - Authentication"],
+        tags: ["Teacher - Auth"],
         requestBody: {
           required: true,
           content: {
@@ -2384,7 +2286,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/teacher/auth/refresh-token": {
       get: {
         summary: "Refresh Teacher Access Token",
-        tags: ["👨‍🏫 Teacher - Authentication"],
+        tags: ["Teacher - Auth"],
         security: bearerSecurity,
         responses: {
           ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
@@ -2395,12 +2297,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 👨‍🏫 TEACHER PROFILE MANAGEMENT
+    // TEACHER PROFILE
     // ═══════════════════════════════════════════════════════════
     "/api/v1/teacher/me/profile": {
       get: {
         summary: "Get My Teacher Profile",
-        tags: ["👨‍🏫 Teacher - Profile Management"],
+        tags: ["Teacher - Profile"],
         security: bearerSecurity,
         responses: {
           ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
@@ -2410,8 +2312,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
       patch: {
-        summary: "Update Teacher Profile Information",
-        tags: ["👨‍🏫 Teacher - Profile Management"],
+        summary: "Update Teacher Profile",
+        tags: ["Teacher - Profile"],
         security: bearerSecurity,
         requestBody: {
           content: {
@@ -2429,8 +2331,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
       delete: {
-        summary: "Delete Teacher Profile & All Related Assets",
-        tags: ["👨‍🏫 Teacher - Profile Management"],
+        summary: "Delete Teacher Profile",
+        tags: ["Teacher - Profile"],
         security: bearerSecurity,
         responses: {
           ...standardResponses[204](),
@@ -2442,8 +2344,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/teacher/me/{teacherId}": {
       get: {
-        summary: "Get Public / Shared Teacher Profile by ID",
-        tags: ["👨‍🏫 Teacher - Profile Management"],
+        summary: "Get Public Teacher Profile",
+        tags: ["Teacher - Profile"],
         security: bearerSecurity,
         parameters: [uuidParam("teacherId", "Teacher ID")],
         responses: {
@@ -2456,8 +2358,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/teacher/me/session-pricing": {
       patch: {
-        summary: "Update 50-Min Session Hourly Pricing",
-        tags: ["👨‍🏫 Teacher - Profile Management"],
+        summary: "Update 50-Min Session Hourly Price",
+        tags: ["Teacher - Profile"],
         security: bearerSecurity,
         requestBody: {
           required: true,
@@ -2484,8 +2386,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/teacher/me/profile-image": {
       patch: {
-        summary: "Upload Teacher Profile / Cover Photos",
-        tags: ["👨‍🏫 Teacher - Profile Management"],
+        summary: "Upload Profile / Cover Photo",
+        tags: ["Teacher - Profile"],
         security: bearerSecurity,
         requestBody: {
           content: {
@@ -2511,8 +2413,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/teacher/me/visibility": {
       patch: {
-        summary: "Toggle Teacher Availability Status",
-        tags: ["👨‍🏫 Teacher - Profile Management"],
+        summary: "Toggle Profile Availability",
+        tags: ["Teacher - Profile"],
         security: bearerSecurity,
         requestBody: {
           content: {
@@ -2536,12 +2438,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 👨‍🏫 TEACHER CERTIFICATES
+    // TEACHER CERTIFICATES
     // ═══════════════════════════════════════════════════════════
     "/api/v1/teacher/certificates": {
       post: {
-        summary: "Upload Certificate / Academic Degree",
-        tags: ["👨‍🏫 Teacher - Certificates"],
+        summary: "Upload Certificate",
+        tags: ["Teacher - Certificates"],
         security: bearerSecurity,
         requestBody: {
           required: true,
@@ -2560,8 +2462,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
       get: {
-        summary: "Get All My Uploaded Certificates",
-        tags: ["👨‍🏫 Teacher - Certificates"],
+        summary: "Get All Uploaded Certificates",
+        tags: ["Teacher - Certificates"],
         security: bearerSecurity,
         parameters: [
           ...paginationQueryParams,
@@ -2577,8 +2479,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/teacher/certificates/{id}": {
       get: {
-        summary: "Get Certificate Details by ID",
-        tags: ["👨‍🏫 Teacher - Certificates"],
+        summary: "Get Certificate by ID",
+        tags: ["Teacher - Certificates"],
         security: bearerSecurity,
         parameters: [uuidParam("id", "Certificate ID")],
         responses: {
@@ -2590,7 +2492,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
       },
       delete: {
         summary: "Delete Certificate",
-        tags: ["👨‍🏫 Teacher - Certificates"],
+        tags: ["Teacher - Certificates"],
         security: bearerSecurity,
         parameters: [uuidParam("id", "Certificate ID")],
         responses: {
@@ -2603,12 +2505,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 👨‍🏫 TEACHER COURSES MANAGEMENT
+    // TEACHER COURSES
     // ═══════════════════════════════════════════════════════════
     "/api/v1/teacher/courses": {
       post: {
         summary: "Create Course (Teacher)",
-        tags: ["👨‍🏫 Teacher - Courses Management"],
+        tags: ["Teacher - Courses"],
         security: bearerSecurity,
         requestBody: {
           required: true,
@@ -2627,8 +2529,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
       get: {
-        summary: "Get All My Published Courses",
-        tags: ["👨‍🏫 Teacher - Courses Management"],
+        summary: "Get My Courses",
+        tags: ["Teacher - Courses"],
         security: bearerSecurity,
         parameters: paginationQueryParams,
         responses: {
@@ -2641,8 +2543,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/teacher/courses/{id}": {
       get: {
-        summary: "Get Teacher Course by ID",
-        tags: ["👨‍🏫 Teacher - Courses Management"],
+        summary: "Get Course by ID",
+        tags: ["Teacher - Courses"],
         security: bearerSecurity,
         parameters: [uuidParam("id", "Course ID")],
         responses: {
@@ -2653,8 +2555,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
       patch: {
-        summary: "Update Teacher Course",
-        tags: ["👨‍🏫 Teacher - Courses Management"],
+        summary: "Update Course",
+        tags: ["Teacher - Courses"],
         security: bearerSecurity,
         parameters: [uuidParam("id", "Course ID")],
         requestBody: {
@@ -2673,8 +2575,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
       delete: {
-        summary: "Delete Teacher Course",
-        tags: ["👨‍🏫 Teacher - Courses Management"],
+        summary: "Delete Course",
+        tags: ["Teacher - Courses"],
         security: bearerSecurity,
         parameters: [uuidParam("id", "Course ID")],
         responses: {
@@ -2687,12 +2589,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 👨‍🏫 TEACHER COURSE SECTIONS
+    // TEACHER SECTIONS
     // ═══════════════════════════════════════════════════════════
     "/api/v1/teacher/sections/{courseId}": {
       post: {
         summary: "Create Course Section",
-        tags: ["👨‍🏫 Teacher - Course Sections"],
+        tags: ["Teacher - Sections"],
         security: bearerSecurity,
         parameters: [uuidParam("courseId", "Course ID")],
         requestBody: {
@@ -2713,7 +2615,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
       },
       get: {
         summary: "Get All Sections of a Course",
-        tags: ["👨‍🏫 Teacher - Course Sections"],
+        tags: ["Teacher - Sections"],
         security: bearerSecurity,
         parameters: [uuidParam("courseId", "Course ID")],
         responses: {
@@ -2726,8 +2628,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/teacher/sections/{courseId}/reorder": {
       patch: {
-        summary: "Reorder Course Sections",
-        tags: ["👨‍🏫 Teacher - Course Sections"],
+        summary: "Reorder Sections",
+        tags: ["Teacher - Sections"],
         security: bearerSecurity,
         parameters: [uuidParam("courseId", "Course ID")],
         requestBody: {
@@ -2750,7 +2652,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/teacher/sections/{courseId}/{sectionId}": {
       get: {
         summary: "Get Section by ID",
-        tags: ["👨‍🏫 Teacher - Course Sections"],
+        tags: ["Teacher - Sections"],
         security: bearerSecurity,
         parameters: [uuidParam("courseId", "Course ID"), uuidParam("sectionId", "Section ID")],
         responses: {
@@ -2761,8 +2663,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
       patch: {
-        summary: "Update Section Name / Order",
-        tags: ["👨‍🏫 Teacher - Course Sections"],
+        summary: "Update Section",
+        tags: ["Teacher - Sections"],
         security: bearerSecurity,
         parameters: [uuidParam("courseId", "Course ID"), uuidParam("sectionId", "Section ID")],
         requestBody: {
@@ -2789,7 +2691,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
       },
       delete: {
         summary: "Delete Section",
-        tags: ["👨‍🏫 Teacher - Course Sections"],
+        tags: ["Teacher - Sections"],
         security: bearerSecurity,
         parameters: [uuidParam("courseId", "Course ID"), uuidParam("sectionId", "Section ID")],
         responses: {
@@ -2802,12 +2704,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 👨‍🏫 TEACHER COURSE ITEMS & LESSONS
+    // TEACHER ITEMS
     // ═══════════════════════════════════════════════════════════
     "/api/v1/teacher/items/{sectionId}": {
       post: {
-        summary: "Add Material Item (Video / PDF) to Section",
-        tags: ["👨‍🏫 Teacher - Course Items & Lessons"],
+        summary: "Add Material Item to Section",
+        tags: ["Teacher - Items"],
         security: bearerSecurity,
         parameters: [uuidParam("sectionId", "Section ID")],
         requestBody: {
@@ -2830,7 +2732,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/teacher/items/{sectionId}/items": {
       get: {
         summary: "Get All Items in a Section",
-        tags: ["👨‍🏫 Teacher - Course Items & Lessons"],
+        tags: ["Teacher - Items"],
         security: bearerSecurity,
         parameters: [uuidParam("sectionId", "Section ID")],
         responses: {
@@ -2844,7 +2746,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/teacher/items/{sectionId}/{itemId}": {
       get: {
         summary: "Get Item by ID",
-        tags: ["👨‍🏫 Teacher - Course Items & Lessons"],
+        tags: ["Teacher - Items"],
         security: bearerSecurity,
         parameters: [uuidParam("sectionId", "Section ID"), uuidParam("itemId", "Item ID")],
         responses: {
@@ -2855,8 +2757,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
       patch: {
-        summary: "Update Item Title / Material File",
-        tags: ["👨‍🏫 Teacher - Course Items & Lessons"],
+        summary: "Update Item",
+        tags: ["Teacher - Items"],
         security: bearerSecurity,
         parameters: [uuidParam("sectionId", "Section ID"), uuidParam("itemId", "Item ID")],
         requestBody: {
@@ -2875,8 +2777,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
       delete: {
-        summary: "Delete Material Item",
-        tags: ["👨‍🏫 Teacher - Course Items & Lessons"],
+        summary: "Delete Item",
+        tags: ["Teacher - Items"],
         security: bearerSecurity,
         parameters: [uuidParam("sectionId", "Section ID"), uuidParam("itemId", "Item ID")],
         responses: {
@@ -2889,12 +2791,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 👨‍🏫 TEACHER QUIZZES & QUESTIONS
+    // TEACHER QUIZZES
     // ═══════════════════════════════════════════════════════════
     "/api/v1/teacher/quizes/{sectionId}/quiz": {
       post: {
-        summary: "Create Quiz for Section",
-        tags: ["👨‍🏫 Teacher - Quizzes & Questions"],
+        summary: "Create Section Quiz",
+        tags: ["Teacher - Quizzes"],
         security: bearerSecurity,
         parameters: [uuidParam("sectionId", "Section ID")],
         requestBody: {
@@ -2914,8 +2816,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
       get: {
-        summary: "Get Section Quiz & Question Bank",
-        tags: ["👨‍🏫 Teacher - Quizzes & Questions"],
+        summary: "Get Section Quiz",
+        tags: ["Teacher - Quizzes"],
         security: bearerSecurity,
         parameters: [uuidParam("sectionId", "Section ID")],
         responses: {
@@ -2926,8 +2828,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
       patch: {
-        summary: "Update Quiz Settings (Duration / Passing Score)",
-        tags: ["👨‍🏫 Teacher - Quizzes & Questions"],
+        summary: "Update Quiz Settings",
+        tags: ["Teacher - Quizzes"],
         security: bearerSecurity,
         parameters: [uuidParam("sectionId", "Section ID")],
         requestBody: {
@@ -2955,8 +2857,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
       delete: {
-        summary: "Delete Section Quiz",
-        tags: ["👨‍🏫 Teacher - Quizzes & Questions"],
+        summary: "Delete Quiz",
+        tags: ["Teacher - Quizzes"],
         security: bearerSecurity,
         parameters: [uuidParam("sectionId", "Section ID")],
         responses: {
@@ -2969,8 +2871,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/teacher/quizes/{sectionId}/quiz/questions/{questionId}": {
       patch: {
-        summary: "Update Quiz Question & Correct Option",
-        tags: ["👨‍🏫 Teacher - Quizzes & Questions"],
+        summary: "Update Quiz Question",
+        tags: ["Teacher - Quizzes"],
         security: bearerSecurity,
         parameters: [uuidParam("sectionId", "Section ID"), uuidParam("questionId", "Question ID")],
         requestBody: {
@@ -2998,8 +2900,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/teacher/quizes/quiz/{quizId}/submissions": {
       get: {
-        summary: "Get All Student Submissions for a Quiz",
-        tags: ["👨‍🏫 Teacher - Quizzes & Questions"],
+        summary: "Get Quiz Submissions",
+        tags: ["Teacher - Quizzes"],
         security: bearerSecurity,
         parameters: [uuidParam("quizId", "Quiz ID")],
         responses: {
@@ -3012,8 +2914,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/teacher/quizes/quiz/{quizId}/submissions/{submissionId}": {
       get: {
-        summary: "Get Student Submission Answers Details",
-        tags: ["👨‍🏫 Teacher - Quizzes & Questions"],
+        summary: "Get Submission Answers Details",
+        tags: ["Teacher - Quizzes"],
         security: bearerSecurity,
         parameters: [uuidParam("quizId", "Quiz ID"), uuidParam("submissionId", "Submission ID")],
         responses: {
@@ -3026,8 +2928,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/teacher/quizes/quiz/{quizId}/submissions/{submissionId}/grade": {
       patch: {
-        summary: "Grade Submission Answers & Submit Feedback",
-        tags: ["👨‍🏫 Teacher - Quizzes & Questions"],
+        summary: "Grade Submission",
+        tags: ["Teacher - Quizzes"],
         security: bearerSecurity,
         parameters: [uuidParam("quizId", "Quiz ID"), uuidParam("submissionId", "Submission ID")],
         requestBody: {
@@ -3049,13 +2951,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 🎓 STUDENT AUTHENTICATION
+    // STUDENT AUTH
     // ═══════════════════════════════════════════════════════════
     "/api/v1/student/auth/signup": {
       post: {
         summary: "Student Signup",
-        description: "Registers a new student account and triggers an email confirmation OTP.",
-        tags: ["🎓 Student - Authentication"],
+        tags: ["Student - Auth"],
         requestBody: {
           required: true,
           content: {
@@ -3082,8 +2983,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/student/auth/login": {
       post: {
         summary: "Student Login",
-        description: "Authenticate student credentials to retrieve access and refresh JWT tokens.",
-        tags: ["🎓 Student - Authentication"],
+        tags: ["Student - Auth"],
         requestBody: {
           required: true,
           content: {
@@ -3117,7 +3017,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/student/auth/confirm-email": {
       patch: {
         summary: "Confirm Student Email with OTP",
-        tags: ["🎓 Student - Authentication"],
+        tags: ["Student - Auth"],
         requestBody: {
           required: true,
           content: {
@@ -3136,8 +3036,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/student/auth/forgot-password": {
       post: {
-        summary: "Request Password Reset OTP (Student)",
-        tags: ["🎓 Student - Authentication"],
+        summary: "Request Password Reset OTP",
+        tags: ["Student - Auth"],
         requestBody: {
           required: true,
           content: {
@@ -3158,7 +3058,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/student/auth/reset-password": {
       patch: {
         summary: "Reset Password with OTP",
-        tags: ["🎓 Student - Authentication"],
+        tags: ["Student - Auth"],
         requestBody: {
           required: true,
           content: {
@@ -3183,7 +3083,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/student/auth/refresh-token": {
       get: {
         summary: "Refresh Student Access Token",
-        tags: ["🎓 Student - Authentication"],
+        tags: ["Student - Auth"],
         security: bearerSecurity,
         responses: {
           ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
@@ -3194,12 +3094,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 🎓 STUDENT PROFILE MANAGEMENT
+    // STUDENT PROFILE
     // ═══════════════════════════════════════════════════════════
     "/api/v1/student/me/profile": {
       get: {
         summary: "Get My Student Profile",
-        tags: ["🎓 Student - Profile Management"],
+        tags: ["Student - Profile"],
         security: bearerSecurity,
         responses: {
           ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
@@ -3209,8 +3109,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
       patch: {
-        summary: "Update Student Profile Information",
-        tags: ["🎓 Student - Profile Management"],
+        summary: "Update Student Profile",
+        tags: ["Student - Profile"],
         security: bearerSecurity,
         requestBody: {
           content: {
@@ -3228,8 +3128,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
       delete: {
-        summary: "Delete My Student Account",
-        tags: ["🎓 Student - Profile Management"],
+        summary: "Delete Student Account",
+        tags: ["Student - Profile"],
         security: bearerSecurity,
         responses: {
           ...standardResponses[204](),
@@ -3242,7 +3142,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/student/me/change-password": {
       patch: {
         summary: "Change Student Password",
-        tags: ["🎓 Student - Profile Management"],
+        tags: ["Student - Profile"],
         security: bearerSecurity,
         requestBody: {
           required: true,
@@ -3264,7 +3164,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/student/me/profile-image": {
       patch: {
         summary: "Upload Student Profile / Cover Photo",
-        tags: ["🎓 Student - Profile Management"],
+        tags: ["Student - Profile"],
         security: bearerSecurity,
         requestBody: {
           content: {
@@ -3289,12 +3189,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 🎓 STUDENT FAVORITES & COURSES
+    // STUDENT COURSES
     // ═══════════════════════════════════════════════════════════
     "/api/v1/student/courses/favorites": {
       get: {
-        summary: "Get My Favorite Courses (Wishlist)",
-        tags: ["🎓 Student - Favorites & Courses"],
+        summary: "Get Favorite Courses",
+        tags: ["Student - Courses"],
         security: bearerSecurity,
         parameters: [...paginationQueryParams, localeQueryParam],
         responses: {
@@ -3307,8 +3207,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/student/courses/{courseId}/favorite": {
       patch: {
-        summary: "Toggle Course Favorite Wishlist Status",
-        tags: ["🎓 Student - Favorites & Courses"],
+        summary: "Toggle Course Favorite",
+        tags: ["Student - Courses"],
         security: bearerSecurity,
         parameters: [uuidParam("courseId", "Course ID")],
         requestBody: {
@@ -3336,12 +3236,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 🎓 STUDENT BROWSE TEACHERS
+    // STUDENT TEACHERS
     // ═══════════════════════════════════════════════════════════
     "/api/v1/student/teachers": {
       get: {
-        summary: "Browse All Available Teachers",
-        tags: ["🎓 Student - Browse Teachers"],
+        summary: "Browse Teachers",
+        tags: ["Student - Teachers"],
         security: bearerSecurity,
         parameters: paginationQueryParams,
         responses: {
@@ -3353,8 +3253,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/student/teachers/{teacherId}": {
       get: {
-        summary: "Get Teacher Public Portfolio by ID",
-        tags: ["🎓 Student - Browse Teachers"],
+        summary: "Get Teacher Details",
+        tags: ["Student - Teachers"],
         security: bearerSecurity,
         parameters: [uuidParam("teacherId", "Teacher ID")],
         responses: {
@@ -3367,12 +3267,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 🎓 STUDENT SHOPPING CART
+    // STUDENT CART
     // ═══════════════════════════════════════════════════════════
     "/api/v1/student/cart": {
       get: {
-        summary: "Get My Shopping Cart with Item Details & Total Price",
-        tags: ["🎓 Student - Shopping Cart"],
+        summary: "Get Shopping Cart",
+        tags: ["Student - Cart"],
         security: bearerSecurity,
         responses: {
           ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
@@ -3385,7 +3285,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/student/cart/add": {
       post: {
         summary: "Add Course to Cart",
-        tags: ["🎓 Student - Shopping Cart"],
+        tags: ["Student - Cart"],
         security: bearerSecurity,
         requestBody: {
           required: true,
@@ -3400,10 +3300,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
           400: standardResponses[400],
           401: standardResponses[401],
           404: standardResponses[404],
-          409: {
-            description: "Item already in cart or already enrolled",
-            content: { "application/json": { schema: { $ref: "#/components/schemas/ConflictErrorResponse" } } },
-          },
+          409: standardResponses[409],
           500: standardResponses[500],
         },
       },
@@ -3411,9 +3308,9 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/student/cart/remove/{itemId}": {
       delete: {
         summary: "Remove Item from Cart",
-        tags: ["🎓 Student - Shopping Cart"],
+        tags: ["Student - Cart"],
         security: bearerSecurity,
-        parameters: [uuidParam("itemId", "Course or Teacher Course Item ID")],
+        parameters: [uuidParam("itemId", "Item ID")],
         responses: {
           ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
           400: standardResponses[400],
@@ -3426,7 +3323,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/student/cart/clear": {
       delete: {
         summary: "Clear Shopping Cart",
-        tags: ["🎓 Student - Shopping Cart"],
+        tags: ["Student - Cart"],
         security: bearerSecurity,
         responses: {
           ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
@@ -3438,17 +3335,17 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // 🔔 NOTIFICATIONS SYSTEM
+    // NOTIFICATIONS
     // ═══════════════════════════════════════════════════════════
     "/api/v1/notification": {
       get: {
-        summary: "Get My Notifications (Paginated)",
-        tags: ["🔔 Notifications System"],
+        summary: "Get Notifications",
+        tags: ["Notifications"],
         security: bearerSecurity,
         parameters: [
           ...paginationQueryParams,
-          { in: "query", name: "isRead", schema: { type: "boolean" }, description: "Filter by read status" },
-          { in: "query", name: "type", schema: { type: "string" }, description: "Filter by notification type" },
+          { in: "query", name: "isRead", schema: { type: "boolean" } },
+          { in: "query", name: "type", schema: { type: "string" } },
         ],
         responses: {
           ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
@@ -3457,8 +3354,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
         },
       },
       post: {
-        summary: "Send Notification (Admin / System)",
-        tags: ["🔔 Notifications System"],
+        summary: "Send Notification",
+        tags: ["Notifications"],
         security: bearerSecurity,
         requestBody: {
           required: true,
@@ -3478,8 +3375,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/notification/read-all": {
       patch: {
-        summary: "Mark All My Notifications as Read",
-        tags: ["🔔 Notifications System"],
+        summary: "Mark All Notifications as Read",
+        tags: ["Notifications"],
         security: bearerSecurity,
         responses: {
           ...standardResponses[200]({ $ref: "#/components/schemas/SuccessMessageResponse" }),
@@ -3490,8 +3387,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/notification/{id}/read": {
       patch: {
-        summary: "Mark Single Notification as Read",
-        tags: ["🔔 Notifications System"],
+        summary: "Mark Notification as Read",
+        tags: ["Notifications"],
         security: bearerSecurity,
         parameters: [uuidParam("id", "Notification ID")],
         responses: {
@@ -3506,7 +3403,7 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     "/api/v1/notification/{id}": {
       delete: {
         summary: "Delete Notification",
-        tags: ["🔔 Notifications System"],
+        tags: ["Notifications"],
         security: bearerSecurity,
         parameters: [uuidParam("id", "Notification ID")],
         responses: {
@@ -3520,12 +3417,12 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
 
     // ═══════════════════════════════════════════════════════════
-    // ⚙️ PUBLIC SETTINGS & CMS
+    // PUBLIC SETTINGS & CMS
     // ═══════════════════════════════════════════════════════════
     "/api/v1/settings/app-info": {
       get: {
-        summary: "Get Public App Info, Branding & Social Links",
-        tags: ["⚙️ Public Settings & CMS"],
+        summary: "Get App Info & Social Links",
+        tags: ["Settings"],
         security: bearerSecurity,
         responses: {
           ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
@@ -3536,8 +3433,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/settings/pages": {
       get: {
-        summary: "Get All Public CMS Pages List",
-        tags: ["⚙️ Public Settings & CMS"],
+        summary: "Get All Public CMS Pages",
+        tags: ["Settings"],
         responses: {
           ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
           500: standardResponses[500],
@@ -3546,8 +3443,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/settings/pages/{slug}": {
       get: {
-        summary: "Get Public CMS Page by Slug (e.g. privacy-policy, terms-and-conditions)",
-        tags: ["⚙️ Public Settings & CMS"],
+        summary: "Get CMS Page by Slug",
+        tags: ["Settings"],
         security: bearerSecurity,
         parameters: [stringPathParam("slug", "Page slug", "about-us")],
         responses: {
@@ -3560,8 +3457,8 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
     },
     "/api/v1/settings/language": {
       patch: {
-        summary: "Update User Preferred System Language",
-        tags: ["⚙️ Public Settings & CMS"],
+        summary: "Update Preferred Language",
+        tags: ["Settings"],
         security: bearerSecurity,
         requestBody: {
           required: true,
@@ -3589,122 +3486,262 @@ Use these pre-seeded credentials to quickly authenticate and test endpoints:
 };
 
 // ═══════════════════════════════════════════════════════════════
-//  Swagger UI Custom Theme & Middleware Setup
-// ═══════════════════════════════════════════════════════════════
+//  Clean Dark Mode Theme with Blue Highlights
+// ═══════════════════════════════════════════════════════════
 const customCss = `
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
   
-  * { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important; }
+  html, body, .swagger-ui {
+    background-color: #0b0f19 !important;
+    color: #cbd5e1 !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  }
 
-  /* Top Bar Branding */
+  /* Top Navigation Bar */
   .swagger-ui .topbar {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    padding: 12px 0;
-    border-bottom: 2px solid #3b82f6;
+    background: #0f172a !important;
+    border-bottom: 1px solid #1e293b !important;
+    padding: 10px 0 !important;
   }
-  .swagger-ui .topbar .topbar-wrapper img {
-    content: url('https://raw.githubusercontent.com/swagger-api/swagger-ui/master/dist/favicon-32x32.png');
-    height: 34px;
+  .swagger-ui .topbar .topbar-wrapper a {
+    color: #60a5fa !important;
+    font-weight: 700 !important;
+    font-size: 1.15rem !important;
+    text-decoration: none !important;
   }
-  .swagger-ui .topbar a {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #f8fafc !important;
-    text-decoration: none;
+  .swagger-ui .topbar .download-url-wrapper {
+    display: none !important;
   }
 
-  /* Info Container */
+  /* Info / Header Container */
   .swagger-ui .info {
-    margin: 30px 0;
-    padding: 24px;
-    background: #f8fafc;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    background: #0f172a !important;
+    border: 1px solid #1e293b !important;
+    border-radius: 12px !important;
+    padding: 24px !important;
+    margin: 24px 0 !important;
   }
   .swagger-ui .info .title {
-    font-size: 2.2rem;
-    font-weight: 800;
-    color: #0f172a;
+    color: #f8fafc !important;
+    font-size: 1.85rem !important;
+    font-weight: 800 !important;
+  }
+  .swagger-ui .info p, .swagger-ui .info li, .swagger-ui .info h3 {
+    color: #94a3b8 !important;
+  }
+  .swagger-ui .info h3 {
+    color: #60a5fa !important;
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    margin-top: 14px !important;
+  }
+  .swagger-ui .info code {
+    background: #1e293b !important;
+    color: #38bdf8 !important;
+    border: 1px solid #334155 !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
   }
 
-  /* Authorization button styling */
-  .swagger-ui .btn.authorize {
-    background-color: #2563eb;
-    color: #ffffff;
-    border-color: #2563eb;
-    border-radius: 8px;
-    font-weight: 600;
-    padding: 8px 20px;
-    transition: all 0.2s ease-in-out;
+  /* Scheme & Server Select Container */
+  .swagger-ui .scheme-container {
+    background: #0f172a !important;
+    border: 1px solid #1e293b !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+    padding: 14px 20px !important;
+    margin-bottom: 24px !important;
   }
-  .swagger-ui .btn.authorize:hover {
-    background-color: #1d4ed8;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  .swagger-ui .scheme-container label {
+    color: #94a3b8 !important;
+  }
+
+  /* Buttons & Authorize */
+  .swagger-ui .btn {
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+  }
+  .swagger-ui .btn.authorize {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border-color: #2563eb !important;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3) !important;
   }
   .swagger-ui .btn.authorize svg {
-    fill: #ffffff;
+    fill: #ffffff !important;
+  }
+  .swagger-ui .btn.cancel {
+    background: #ef4444 !important;
+    color: #ffffff !important;
+    border-color: #ef4444 !important;
   }
 
-  /* Section Tags */
+  /* Filter Input */
+  .swagger-ui .filter .operation-filter-input {
+    background: #0f172a !important;
+    color: #f8fafc !important;
+    border: 1px solid #1e293b !important;
+    border-radius: 8px !important;
+    padding: 8px 14px !important;
+  }
+
+  /* Section / Tag Headers */
+  .swagger-ui .opblock-tag-section {
+    margin-bottom: 20px !important;
+  }
   .swagger-ui .opblock-tag {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #1e293b;
-    border-bottom: 2px solid #e2e8f0;
-    padding-bottom: 8px;
-    margin-top: 24px;
+    color: #f8fafc !important;
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    border-bottom: 1px solid #1e293b !important;
+    padding: 10px 0 !important;
+  }
+  .swagger-ui .opblock-tag small {
+    color: #64748b !important;
   }
 
-  /* Operations Blocks */
+  /* Operation Card Blocks */
   .swagger-ui .opblock {
-    border-radius: 10px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    margin: 0 0 14px;
-    border: 1px solid #e2e8f0;
-    overflow: hidden;
+    background: #0f172a !important;
+    border: 1px solid #1e293b !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+    margin: 0 0 10px 0 !important;
+  }
+  .swagger-ui .opblock .opblock-summary {
+    border-bottom: none !important;
+    padding: 10px 14px !important;
   }
   .swagger-ui .opblock .opblock-summary-method {
-    border-radius: 6px;
-    font-weight: 700;
-    font-size: 0.85rem;
-    min-width: 80px;
-    text-align: center;
+    font-weight: 700 !important;
+    border-radius: 4px !important;
+    min-width: 75px !important;
+    text-align: center !important;
+  }
+  .swagger-ui .opblock .opblock-summary-path {
+    color: #f1f5f9 !important;
+    font-weight: 600 !important;
+  }
+  .swagger-ui .opblock .opblock-summary-path__deprecated {
+    color: #64748b !important;
+  }
+  .swagger-ui .opblock .opblock-summary-description {
+    color: #94a3b8 !important;
   }
 
-  /* Tables inside Markdown Description */
-  .swagger-ui .info table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 16px 0;
-    background: #ffffff;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid #e2e8f0;
+  /* Operation Specific Color Tinting */
+  .swagger-ui .opblock.opblock-get { border-color: #1e3a8a !important; }
+  .swagger-ui .opblock.opblock-get .opblock-summary-method { background: #2563eb !important; }
+
+  .swagger-ui .opblock.opblock-post { border-color: #064e3b !important; }
+  .swagger-ui .opblock.opblock-post .opblock-summary-method { background: #059669 !important; }
+
+  .swagger-ui .opblock.opblock-patch { border-color: #78350f !important; }
+  .swagger-ui .opblock.opblock-patch .opblock-summary-method { background: #d97706 !important; }
+
+  .swagger-ui .opblock.opblock-delete { border-color: #7f1d1d !important; }
+  .swagger-ui .opblock.opblock-delete .opblock-summary-method { background: #dc2626 !important; }
+
+  /* Expanded Operation Body */
+  .swagger-ui .opblock-body {
+    background: #090d16 !important;
+    border-top: 1px solid #1e293b !important;
   }
-  .swagger-ui .info table th {
-    background: #f1f5f9;
-    padding: 10px 14px;
-    text-align: left;
-    font-weight: 700;
-    border-bottom: 2px solid #cbd5e1;
-    color: #334155;
+  .swagger-ui .opblock-section-header {
+    background: #0f172a !important;
+    color: #94a3b8 !important;
+    border-bottom: 1px solid #1e293b !important;
+    padding: 8px 14px !important;
   }
-  .swagger-ui .info table td {
-    padding: 10px 14px;
-    border-bottom: 1px solid #e2e8f0;
-    color: #475569;
+  .swagger-ui .opblock-section-header h4 {
+    color: #cbd5e1 !important;
   }
-  .swagger-ui .info table tr:last-child td {
-    border-bottom: none;
+
+  /* Parameters & Tables */
+  .swagger-ui table {
+    color: #cbd5e1 !important;
   }
-  .swagger-ui code {
-    background: #f1f5f9 !important;
-    color: #2563eb !important;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.9em;
-    font-family: 'Fira Code', monospace !important;
+  .swagger-ui table thead tr th, .swagger-ui table thead tr td {
+    color: #94a3b8 !important;
+    border-bottom: 1px solid #1e293b !important;
+  }
+  .swagger-ui .parameter__name {
+    color: #f8fafc !important;
+    font-weight: 600 !important;
+  }
+  .swagger-ui .parameter__type {
+    color: #38bdf8 !important;
+  }
+  .swagger-ui .parameter__in {
+    color: #64748b !important;
+  }
+
+  /* Form Elements, Inputs & Selects */
+  .swagger-ui select, .swagger-ui input[type=text], .swagger-ui textarea {
+    background: #0f172a !important;
+    color: #f8fafc !important;
+    border: 1px solid #334155 !important;
+    border-radius: 6px !important;
+  }
+  .swagger-ui select option {
+    background: #0f172a !important;
+    color: #f8fafc !important;
+  }
+
+  /* Code Blocks, Responses & Schema Viewers */
+  .swagger-ui .responses-inner {
+    background: #090d16 !important;
+  }
+  .swagger-ui .response-col_status {
+    color: #f8fafc !important;
+    font-weight: 700 !important;
+  }
+  .swagger-ui .response-col_description {
+    color: #94a3b8 !important;
+  }
+  .swagger-ui .highlight-code, .swagger-ui .microlight, .swagger-ui pre {
+    background: #030712 !important;
+    border: 1px solid #1e293b !important;
+    border-radius: 6px !important;
+    color: #38bdf8 !important;
+  }
+  .swagger-ui pre code {
+    color: #38bdf8 !important;
+    background: transparent !important;
+  }
+  .swagger-ui .model-box {
+    background: #0f172a !important;
+    border-radius: 6px !important;
+  }
+  .swagger-ui .model {
+    color: #cbd5e1 !important;
+  }
+  .swagger-ui .prop-name {
+    color: #60a5fa !important;
+  }
+  .swagger-ui .prop-type {
+    color: #34d399 !important;
+  }
+
+  /* Modals */
+  .swagger-ui .dialog-ux .backdrop-ux {
+    background: rgba(0, 0, 0, 0.8) !important;
+  }
+  .swagger-ui .dialog-ux .modal-ux {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    border-radius: 12px !important;
+    color: #f8fafc !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5) !important;
+  }
+  .swagger-ui .dialog-ux .modal-ux-header {
+    border-bottom: 1px solid #1e293b !important;
+  }
+  .swagger-ui .dialog-ux .modal-ux-header h3 {
+    color: #f8fafc !important;
+  }
+  .swagger-ui .auth-container h4, .swagger-ui .auth-container p, .swagger-ui .auth-container label {
+    color: #cbd5e1 !important;
   }
 `;
 
@@ -3714,9 +3751,11 @@ export const setupSwagger = (app) => {
     swaggerUi.serve,
     swaggerUi.setup(swaggerSpec, {
       customCss,
-      customSiteTitle: "LearnX LMS API Interactive Documentation 🚀",
+      customSiteTitle: "LearnX API Documentation",
       swaggerOptions: {
-        docExpansion: "none",
+        docExpansion: "list",
+        defaultModelsExpandDepth: 1,
+        defaultModelExpandDepth: 1,
         filter: true,
         persistAuthorization: true,
         displayRequestDuration: true,
