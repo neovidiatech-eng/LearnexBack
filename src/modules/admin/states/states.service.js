@@ -1,4 +1,5 @@
 import * as db from "../../../db/db.service.js";
+import dayjs from "dayjs";
 const calculateGrowthPercent = (current, previous) => {
   if (!previous || previous === 0) {
     return current > 0 ? 100 : 0;
@@ -7,19 +8,31 @@ const calculateGrowthPercent = (current, previous) => {
   return Number(growth.toFixed(1));
 };
 export const getStatesService = async (query = {}, locale = "en") => {
-  const now = new Date();
-  const selectedYear = query.year ? Number(query.year) : now.getFullYear();
-  ///////month
-  const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const now = dayjs();
+
+  const selectedYear = query.year ? Number(query.year) : now.year();
+
+  // month
+  const startOfCurrentMonth = now.startOf("month").toDate();
+
+  const startOfNextMonth = now.add(1, "month").startOf("month").toDate();
+
+  const startOfLastMonth = now.subtract(1, "month").startOf("month").toDate();
+
   const endOfLastMonth = startOfCurrentMonth;
-  /////////year
-  const startOfYear = new Date(selectedYear, 0, 1);
-  const endOfYear = new Date(selectedYear + 1, 0, 1);
-  /////////hours
-  const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const prev24Hours = new Date(Date.now() - 48 * 60 * 60 * 1000);
+
+  // year
+  const startOfYear = dayjs().year(selectedYear).startOf("year").toDate();
+
+  const endOfYear = dayjs()
+    .year(selectedYear + 1)
+    .startOf("year")
+    .toDate();
+
+  // hours
+  const last24Hours = now.subtract(24, "hour").toDate();
+
+  const prev24Hours = now.subtract(48, "hour").toDate();
 
   const monthsNames = [
     "Jan",
@@ -155,6 +168,39 @@ export const getStatesService = async (query = {}, locale = "en") => {
       },
       select: { enrolledAt: true, paidAmount: true },
     }),
+
+    dbService.findMany({
+      model: "category",
+      include: {
+        translations: true,
+        courses: {
+          select: {
+            _count: {
+              select: { enrollments: true },
+            },
+          },
+        },
+      },
+    }),
+    dbService.findMany({
+      model: "notification",
+      take: 5,
+      orderBy: { createdAt: "desc" },
+      include: { notificationTranslations: true },
+    }),
+
+    dbService.findMany({
+      model: "activityLog",
+      take: 5,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        userName: true,
+        action: true,
+        module: true,
+        status: true,
+        createdAt: true,
+      },
+    }),
   ]);
-    
 };
