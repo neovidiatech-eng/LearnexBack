@@ -65,17 +65,17 @@ export const decodedToken = async ({
     include:
       model === "user"
         ? {
-            role: {
-              include: {
-                rolePermissions: {
-                  include: {
-                    permission: true,
-                  },
+          role: {
+            include: {
+              rolePermissions: {
+                include: {
+                  permission: true,
                 },
-                roleTranslations: true,
               },
+              roleTranslations: true,
             },
-          }
+          },
+        }
         : undefined,
   });
   if (!user) {
@@ -90,7 +90,7 @@ export const decodedToken = async ({
 };
 
 export const generateLoginCredentials = async ({ user, role }) => {
-  const userId = user.id || user._id; 
+  const userId = user.id || user._id;
 
   const rawRole =
     (typeof role === "string" ? role : null) ||

@@ -60,5 +60,5 @@ router.get(
   authentication({ tokenType: tokenTypeEnum.REFRESH }),
   authController.getNewCredentials
 );
-router.post("/logout",authentication(),authController.logout)
+router.post("/logout", authentication(), authController.logout)
 export default router;

@@ -48,11 +48,7 @@ export const getAllCategoriesService = async ({
         description: true,
       },
     },
-    _count: {
-      select: {
-        courses: true,
-      },
-    },
+   
   };
 
   const result = await DBService.findManyWithPaginationAndCount({
@@ -90,11 +86,7 @@ export const getCategoryByIdService = async (categoryId, locale) => {
           },
         },
       },
-      _count: {
-        select: {
-          courses: true,
-        },
-      },
+     
     },
   });
 
@@ -109,6 +101,9 @@ export const getCategoryByIdService = async (categoryId, locale) => {
 
 export const createCategoryService = async (body, file, query = {}) => {
   const { name, description, locale = "en" } = body;
+  const coursesCount = Number(body.coursesCount) || 0;
+  const studentsCount = Number(body.studentsCount) || 0;
+
   const slug = (
     body.slug ||
     query.slug ||
@@ -128,6 +123,20 @@ export const createCategoryService = async (body, file, query = {}) => {
     error.cause = 409;
     throw error;
   }
+
+  const nameExist = await DBService.findFirst({
+    model: "categoryTranslation",
+    where: {
+      name: { equals: name, mode: "insensitive" },
+      locale,
+    },
+  });
+  if (nameExist) {
+    const error = new Error("CATEGORY_NAME_ALREADY_EXISTS");
+    error.cause = 409;
+    throw error;
+  }
+
   const image = file ? file.relativeDestination : null;
 
   const category = await DBService.create({
@@ -135,6 +144,8 @@ export const createCategoryService = async (body, file, query = {}) => {
     data: {
       slug,
       image,
+      coursesCount,
+      studentsCount,
       translations: {
         create: [
           {
@@ -153,11 +164,9 @@ export const createCategoryService = async (body, file, query = {}) => {
   return { category };
 };
 
-export const editCategoryService = async (
-  categoryId,
-  { name, description, locale = "en" },
-  file
-) => {
+export const editCategoryService = async (categoryId, body, file) => {
+  const { name, description, coursesCount, studentsCount, locale = "en" } = body;
+
   const categoryExists = await DBService.findFirst({
     model: "category",
     where: { id: categoryId },
@@ -169,6 +178,22 @@ export const editCategoryService = async (
     throw error;
   }
 
+  if (name) {
+    const nameExist = await DBService.findFirst({
+      model: "categoryTranslation",
+      where: {
+        name: { equals: name, mode: "insensitive" },
+        locale,
+        categoryId: { not: categoryId },
+      },
+    });
+    if (nameExist) {
+      const error = new Error("CATEGORY_NAME_ALREADY_EXISTS");
+      error.cause = 409;
+      throw error;
+    }
+  }
+
   const updatedCategory = await DBService.updateOne({
     model: "category",
     where: { id: categoryId },
@@ -176,6 +201,8 @@ export const editCategoryService = async (
       ...(file && {
         image: file.relativeDestination,
       }),
+      ...(coursesCount !== undefined && { coursesCount: Number(coursesCount) }),
+      ...(studentsCount !== undefined && { studentsCount: Number(studentsCount) }),
 
       translations: {
         update: {
