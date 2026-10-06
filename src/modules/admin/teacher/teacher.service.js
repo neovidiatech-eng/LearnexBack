@@ -2,7 +2,7 @@ import ExcelJS from "exceljs";
 import * as dbService from "../../../db/db.service.js";
 import { authProviderEnum } from "../../../utils/Enums/authProvider.enum.js";
 import { userStatusEnum } from "../../../utils/Enums/userStatus.enum.js";
-import { generateEncryption } from "../../../utils/security/encryption.security.js";
+import { decryptEncription, generateEncryption } from "../../../utils/security/encryption.security.js";
 import { generateHash } from "../../../utils/security/hash.security.js";
 import { baseRoleEnum } from "../../../utils/Enums/role.enum.js";
 import { emailEvent } from "../../../utils/events/email.event.js";
@@ -198,7 +198,13 @@ export const getAllTeachersService = async ({
     orderBy: { createdAt: "desc" },
     select,
   });
-
+for (const teacher of result.items) {
+    if (teacher.user?.phone) {
+      teacher.user.phone = await decryptEncription({
+        cipherText: teacher.user.phone,
+      });
+    }
+  }
   return {
     teachers: result.items,
     pagination: result.pagination,
@@ -253,7 +259,11 @@ export const getTeacherByIdService = async (teacherId) => {
     error.cause = 404;
     throw error;
   }
-
+ if (teacher.user?.phone) {
+   teacher.user.phone = await decryptEncription({
+     cipherText: teacher.user.phone,
+   });
+ }
   return teacher;
 };
 
@@ -305,9 +315,7 @@ export const updateTeacherService = async (body, teacherId) => {
   const hashPassword = password
     ? await generateHash({ plainText: password })
     : undefined;
-  const encPhone = phone
-    ? await generateEncryption({ plainText: phone })
-    : undefined;
+ 
   const resolvedFullName = fullName || (firstName && lastName ? `${firstName} ${lastName}`.trim() : firstName || lastName);
 
   const teacher = await dbService.updateOne({
@@ -325,7 +333,7 @@ export const updateTeacherService = async (body, teacherId) => {
           ...(resolvedFullName && { fullName: resolvedFullName }),
           ...(email && { email: email.toLowerCase() }),
           ...(hashPassword && { password: hashPassword }),
-          ...(encPhone && { phone: encPhone }),
+          ...(phone && { phone}),
           ...(country && { country }),
           ...(status && { status }),
         },
@@ -351,6 +359,7 @@ export const updateTeacherService = async (body, teacherId) => {
       },
     },
   });
+
 
   return teacher;
 };
