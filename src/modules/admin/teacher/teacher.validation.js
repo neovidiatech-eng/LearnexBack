@@ -54,6 +54,7 @@ export const updateTeacher = {
   body: joi
     .object()
     .keys({
+      fullName: joi.string().min(2).max(100).trim().optional(),
       firstName: joi.string().min(2).max(50).trim().optional(),
       lastName: joi.string().min(2).max(50).trim().optional(),
       email: generalFields.email.optional(),
@@ -68,6 +69,7 @@ export const updateTeacher = {
       bio: joi.string().max(2000).trim().allow("", null).optional(),
       linkedinUrl: joi.string().uri().allow("", null).optional(),
       country: joi.string().min(2).max(100).trim().optional(),
+      courseIds: joi.array().items(generalFields.id).optional(),
     })
     .required()
     .options({ allowUnknown: false }),

@@ -281,6 +281,7 @@ export const updateTeacherService = async (body, teacherId) => {
     bio,
     linkedinUrl,
     country,
+    courseIds,
   } = body;
 
   const existingTeacher = await dbService.findFirst({
@@ -312,11 +313,36 @@ export const updateTeacherService = async (body, teacherId) => {
     }
   }
 
+  if (courseIds && courseIds.length) {
+    const courses = await dbService.findMany({
+      model: "course",
+      where: {
+        id: { in: courseIds },
+      },
+      select: {
+        id: true,
+      },
+    });
+    if (courses.length !== courseIds.length) {
+      const error = new Error("COURSES_NOT_FOUND");
+      error.cause = 404;
+      throw error;
+    }
+  }
+
   const hashPassword = password
     ? await generateHash({ plainText: password })
     : undefined;
- 
-  const resolvedFullName = fullName || (firstName && lastName ? `${firstName} ${lastName}`.trim() : firstName || lastName);
+
+  const encPhone = phone
+    ? await generateEncryption({ plainText: phone })
+    : undefined;
+
+  const resolvedFullName =
+    fullName ||
+    (firstName && lastName
+      ? `${firstName} ${lastName}`.trim()
+      : firstName || lastName);
 
   const teacher = await dbService.updateOne({
     model: "teacher",
@@ -333,7 +359,7 @@ export const updateTeacherService = async (body, teacherId) => {
           ...(resolvedFullName && { fullName: resolvedFullName }),
           ...(email && { email: email.toLowerCase() }),
           ...(hashPassword && { password: hashPassword }),
-          ...(phone && { phone}),
+          ...(phone && { phone: encPhone }),
           ...(country && { country }),
           ...(status && { status }),
         },
@@ -360,6 +386,19 @@ export const updateTeacherService = async (body, teacherId) => {
     },
   });
 
+  if (courseIds && courseIds.length) {
+    await dbService.updateMany({
+      model: "course",
+      where: { id: { in: courseIds } },
+      data: { instructorId: teacher.user.id },
+    });
+  }
+
+  if (teacher.user?.phone) {
+    teacher.user.phone = await decryptEncription({
+      cipherText: teacher.user.phone,
+    });
+  }
 
   return teacher;
 };
