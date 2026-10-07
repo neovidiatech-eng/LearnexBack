@@ -33,7 +33,7 @@ export const createTeacher = {
       email: generalFields.email.required(),
       password: generalFields.password.optional(), 
       phone: generalFields.phone.required(),
-      subject: joi.string().min(2).max(100).trim().required(),
+      subject: joi.string().min(2).max(100).trim().optional(),
       experienceYears: joi.number().integer().min(0).max(70).required(),
       status: joi
         .string()
