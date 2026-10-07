@@ -16,6 +16,13 @@ router.patch(
   courseController.toggleFavourite,
 );
 
+// Categories
+router.get(
+  "/categories",
+  validation(courseValidation.getCategories),
+  courseController.getCategories
+);
+
 // Enrolled courses (My learning)
 router.get(
   "/enrolled",
@@ -28,11 +35,44 @@ router.get(
   courseController.getEnrolledCourses
 );
 
-// Direct Free Course Enrollment
+router.get(
+  "/",
+  validation(courseValidation.getCourseCatalog),
+  courseController.getCourseCatalog
+);
+
 router.post(
   "/:courseId/enroll",
   validation(courseValidation.enrollCourse),
   courseController.enrollFreeCourse
+);
+
+router.post(
+  "/:courseId/lessons/:lessonId/complete",
+  validation(courseValidation.completeLesson),
+  courseController.completeLesson
+);
+
+router.post(
+  "/:courseId/reviews",
+  validation(courseValidation.addCourseReview),
+  courseController.addCourseReview
+);
+router.get(
+  "/:courseId/reviews",
+  validation(courseValidation.getCourseReviews),
+  courseController.getCourseReviews
+);
+router.delete(
+  "/:courseId/reviews",
+  validation(courseValidation.deleteCourseReview),
+  courseController.deleteCourseReview
+);
+
+router.get(
+  "/:courseId",
+  validation(courseValidation.getCourseDetails),
+  courseController.getCourseDetails
 );
 
 export default router;
