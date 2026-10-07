@@ -100,6 +100,11 @@ export const PERMISSIONS_V2 = {
     DELETE: "reviews:delete",
   },
 
+  WORK_HOURS: {
+    READ: "workHours:read",
+    UPDATE: "workHours:update",
+  },
+
   // Settings & Policies
   SETTINGS: {
     READ: "settings:read",

@@ -361,6 +361,55 @@ Include the Bearer JWT token in the Authorization header:
           currency: { type: "string", example: "USD" },
         },
       },
+      TeacherWorkHoursUpdateDTO: {
+        type: "object",
+        required: ["workHours"],
+        properties: {
+          workHours: {
+            type: "array",
+            items: {
+              type: "object",
+              required: ["day", "slots"],
+              properties: {
+                day: {
+                  type: "string",
+                  enum: [
+                    "SATURDAY",
+                    "SUNDAY",
+                    "MONDAY",
+                    "TUESDAY",
+                    "WEDNESDAY",
+                    "THURSDAY",
+                    "FRIDAY",
+                  ],
+                  example: "MONDAY",
+                },
+                slots: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    required: ["startTime", "endTime"],
+                    properties: {
+                      startTime: {
+                        type: "string",
+                        pattern: "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$",
+                        example: "09:00",
+                        description: "Start time in HH:mm 24-hour format",
+                      },
+                      endTime: {
+                        type: "string",
+                        pattern: "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$",
+                        example: "17:00",
+                        description: "End time in HH:mm 24-hour format",
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
       TeacherCertificateCreateDTO: {
         type: "object",
         required: ["type", "title", "issuer", "issueYear", "file"],
@@ -2397,6 +2446,39 @@ Include the Bearer JWT token in the Authorization header:
         },
         responses: {
           ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          401: standardResponses[401],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/teacher/me/workHours": {
+      get: {
+        summary: "Get Teacher Work Hours",
+        tags: ["Teacher - Profile"],
+        security: bearerSecurity,
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          401: standardResponses[401],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+      patch: {
+        summary: "Update Teacher Work Hours",
+        tags: ["Teacher - Profile"],
+        security: bearerSecurity,
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/TeacherWorkHoursUpdateDTO" },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          400: standardResponses[400],
           401: standardResponses[401],
           404: standardResponses[404],
           500: standardResponses[500],
