@@ -12,6 +12,7 @@ export const toggleVisibility = asyncHandler(async (req, res) => {
   });
 });
 
+
 export const getProfile = asyncHandler(async (req, res) => {
   const teacher = await profileService.getProfileService(req.user.id);
   return successResponse({
@@ -67,3 +68,24 @@ export const updateImageProfile = asyncHandler(async (req, res) => {
       status:204
     });
   });
+
+export const updateWorkHours = asyncHandler(async (req, res) => {
+
+  const teacher = await profileService.updateWorkHoursService(
+    req.user.id,
+    req.body.workHours,
+  );
+  return successResponse({
+    res,
+    data: teacher,
+  });
+});
+
+export const getWorkHours = asyncHandler(async (req, res) => {
+
+  const workHours = await profileService.getWorkHoursService(req.user.id);
+  return successResponse({
+    res,
+    data: workHours,
+  });
+});
