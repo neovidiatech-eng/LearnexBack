@@ -109,7 +109,7 @@ export const getSharedProfileService = async (teacherId) => {
     where: {
       id: teacherId,
       isAvailable: true,
-      user: { status: "ACTIVE" }, 
+      user: { status: "ACTIVE" },
     },
     select: {
       id: true,
@@ -167,7 +167,6 @@ export const getSharedProfileService = async (teacherId) => {
 
   return teacher;
 };
-
 
 export const updateProfileService = async (userId, body) => {
   const {
@@ -408,4 +407,134 @@ export const deleteProfileService = async (userId) => {
 
   return { success: true };
 };
+export const updateWorkHoursService = async (userId, workHours = []) => {
+  console.log("workHours", workHours);
+  console.log("userId", userId);
 
+  const teacher = await db.findFirst({
+    model: "teacher",
+    where: { userId },
+    select: { id: true },
+  });
+
+  if (!teacher) {
+    const error = new Error("TEACHER_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+
+  const seenDays = new Set();
+
+  const formattedWorkHours = workHours.map((hour) => {
+    if (seenDays.has(hour.day)) {
+      const error = new Error(`Duplicate day '${hour.day}' provided in workHours`);
+      error.cause = 400;
+      throw error;
+    }
+    seenDays.add(hour.day);
+
+    const slots = (hour.slots || []).map((slot) => {
+      if (slot.startTime >= slot.endTime) {
+        const error = new Error(
+          `Start time (${slot.startTime}) must be before end time (${slot.endTime}) on ${hour.day}`
+        );
+        error.cause = 400;
+        throw error;
+      }
+      return {
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+      };
+    });
+
+    const sortedSlots = [...slots].sort((a, b) =>
+      a.startTime.localeCompare(b.startTime)
+    );
+
+    for (let i = 0; i < sortedSlots.length - 1; i++) {
+      const current = sortedSlots[i];
+      const next = sortedSlots[i + 1];
+      if (current.endTime > next.startTime) {
+        const error = new Error(
+          `Overlapping time slots detected for ${hour.day}: [${current.startTime} - ${current.endTime}] overlaps with [${next.startTime} - ${next.endTime}]`
+        );
+        error.cause = 400;
+        throw error;
+      }
+    }
+
+    return {
+      day: hour.day,
+      slots: sortedSlots,
+    };
+  });
+
+  const existingRecord = await db.findFirst({
+    model: "teacherWorkHours",
+    where: { teacherId: teacher.id },
+  });
+
+  let result;
+  if (existingRecord) {
+    result = await db.updateOne({
+      model: "teacherWorkHours",
+      where: { id: existingRecord.id },
+      data: {
+        workHours: formattedWorkHours,
+      },
+      select: {
+        id: true,
+        teacherId: true,
+        workHours: true,
+        updatedAt: true,
+      },
+    });
+  } else {
+    result = await db.create({
+      model: "teacherWorkHours",
+      data: {
+        teacherId: teacher.id,
+        workHours: formattedWorkHours,
+      },
+      select: {
+        id: true,
+        teacherId: true,
+        workHours: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
+
+  return result;
+};
+
+export const getWorkHoursService = async (userId) => {
+  console.log("userId", userId);
+
+  const teacher = await db.findFirst({
+    model: "teacher",
+    where: { userId },
+    select: { id: true },
+  });
+
+  if (!teacher) {
+    const error = new Error("TEACHER_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+
+  const workHoursRecord = await db.findFirst({
+    model: "teacherWorkHours",
+    where: { teacherId: teacher.id },
+    select: {
+      id: true,
+      teacherId: true,
+      workHours: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  return workHoursRecord || { teacherId: teacher.id, workHours: [] };
+};
