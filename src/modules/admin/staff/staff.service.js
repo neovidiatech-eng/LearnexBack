@@ -24,10 +24,11 @@ const staffUserSelect = {
   role: {
     select: {
       id: true,
+      slug: true,
+      color: true,
       roleTranslations: {
         select: {
           name: true,
-          slug: true,
           lang: true,
         },
       },
@@ -38,9 +39,11 @@ const staffUserSelect = {
 // ─── Helper: verify a user belongs to Staff scope ────────────────────────────
 const verifyStaffScope = (user) => {
   if (!user) return false;
-  const roleSlugs =
-    user.role?.roleTranslations?.map((t) => t.slug.toLowerCase()) || [];
-  return !roleSlugs.some((slug) => EXCLUDED_STAFF_ROLE_SLUGS.includes(slug));
+  const roleSlug = user.role?.slug?.toLowerCase();
+  if (roleSlug && EXCLUDED_STAFF_ROLE_SLUGS.includes(roleSlug)) {
+    return false;
+  }
+  return true;
 };
 
 // ─── Helper: resolve a role ID from slug, rejecting excluded roles ───────────
@@ -59,8 +62,8 @@ const resolveStaffRoleId = async (roleId) => {
     throw error;
   }
 
-  const slugs = role.roleTranslations.map((t) => t.slug.toLowerCase());
-  if (slugs.some((s) => EXCLUDED_STAFF_ROLE_SLUGS.includes(s))) {
+  const roleSlug = role.slug?.toLowerCase();
+  if (roleSlug && EXCLUDED_STAFF_ROLE_SLUGS.includes(roleSlug)) {
     const error = new Error("INVALID_STAFF_ROLE");
     error.cause = 400;
     throw error;
@@ -322,18 +325,15 @@ export const getStaffRolesService = async () => {
   const roles = await DBService.findMany({
     model: "role",
     where: {
-      roleTranslations: {
-        none: {
-          slug: { in: EXCLUDED_STAFF_ROLE_SLUGS },
-        },
-      },
+      slug: { notIn: EXCLUDED_STAFF_ROLE_SLUGS },
     },
     select: {
       id: true,
+      slug: true,
+      color: true,
       roleTranslations: {
         select: {
           name: true,
-          slug: true,
           lang: true,
         },
       },
