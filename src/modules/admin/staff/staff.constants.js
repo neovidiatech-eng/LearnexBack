@@ -1,13 +1,9 @@
-
 export const EXCLUDED_STAFF_ROLE_SLUGS = ["student", "teacher"];
-
 
 export const buildStaffScopeFilter = () => ({
   role: {
-    roleTranslations: {
-      none: {
-        slug: { in: EXCLUDED_STAFF_ROLE_SLUGS },
-      },
+    slug: {
+      notIn: EXCLUDED_STAFF_ROLE_SLUGS,
     },
   },
 });

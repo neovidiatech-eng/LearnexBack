@@ -13,37 +13,33 @@ export const createRoleService = async (body) => {
       error.cause = 400;
       throw error;
     }
-    translations = [{ lang, name, slug }];
+    translations = [{ lang, name }];
   }
 
-  const formattedTranslations = translations.map((item) => {
-    const itemLang = item.lang || item.locale || "en";
-    const rawName = item.name || name;
-    const itemSlug = item.slug || slugify(rawName, { lower: true });
+  const primaryName = name || translations[0]?.name || "role";
+  const primarySlug = (slug || translations[0]?.slug || slugify(primaryName, { lower: true })).trim();
 
-    return {
-      lang: itemLang,
-      name: rawName,
-      slug: itemSlug,
-    };
+  // Check if role slug already exists on Role model
+  const existingRole = await DBService.findFirst({
+    model: "role",
+    where: { slug: primarySlug },
   });
 
-
-  const existingTranslations = await DBService.findMany({
-    model: "roleTranslation",
-    where: {
-      OR: formattedTranslations.map((t) => ({
-        lang: t.lang,
-        slug: t.slug,
-      })),
-    },
-  });
-
-  if (existingTranslations && existingTranslations.length > 0) {
+  if (existingRole) {
     const error = new Error("ROLE_SLUG_ALREADY_EXISTS");
     error.cause = 409;
     throw error;
   }
+
+  const formattedTranslations = translations.map((item) => {
+    const itemLang = item.lang || item.locale || "en";
+    const rawName = (item.name || primaryName).trim();
+
+    return {
+      lang: itemLang,
+      name: rawName,
+    };
+  });
 
   const targetPermissions = permissionIds || permissions || [];
   let validPermissionIds = [];
@@ -64,9 +60,7 @@ export const createRoleService = async (body) => {
         existingPermissions.flatMap((p) => [p.id, p.code])
       );
       const invalidPermissions = targetPermissions.filter((p) => !foundSet.has(p));
-      const error = new Error(
-        `SOME_PERMISSIONS_NOT_FOUND`
-      );
+      const error = new Error("SOME_PERMISSIONS_NOT_FOUND");
       error.meta = { invalidPermissions };
       error.cause = 404;
       throw error;
@@ -78,6 +72,7 @@ export const createRoleService = async (body) => {
   const role = await DBService.create({
     model: "role",
     data: {
+      slug: primarySlug,
       color: color || null,
       roleTranslations: {
         create: formattedTranslations,
@@ -115,19 +110,22 @@ export const getAllRolesService = async ({
   const targetLang = lang || locale;
   const where = search
     ? {
-        roleTranslations: {
-          some: {
-            OR: [
-              { name: { contains: search, mode: "insensitive" } },
-              { slug: { contains: search, mode: "insensitive" } },
-            ],
+        OR: [
+          { slug: { contains: search, mode: "insensitive" } },
+          {
+            roleTranslations: {
+              some: {
+                name: { contains: search, mode: "insensitive" },
+              },
+            },
           },
-        },
+        ],
       }
     : {};
 
   const select = {
     id: true,
+    slug: true,
     color: true,
     createdAt: true,
     updatedAt: true,
@@ -136,7 +134,6 @@ export const getAllRolesService = async ({
       select: {
         lang: true,
         name: true,
-        slug: true,
       },
     },
     rolePermissions: {
@@ -212,61 +209,65 @@ export const updateRoleService = async (roleId, body) => {
   }
 
   return await DBService.transaction(async (tx) => {
-    if (color !== undefined) {
+    let newSlug = undefined;
+    if (slug) {
+      newSlug = slugify(slug, { lower: true }).trim();
+    } else if (name && !translations) {
+      newSlug = slugify(name, { lower: true }).trim();
+    }
+
+    if (newSlug && newSlug !== existingRole.slug) {
+      const conflict = await tx.findFirst({
+        model: "role",
+        where: {
+          slug: newSlug,
+          id: { not: roleId },
+        },
+      });
+
+      if (conflict) {
+        const error = new Error("ROLE_SLUG_ALREADY_EXISTS");
+        error.cause = 409;
+        throw error;
+      }
+    }
+
+    if (color !== undefined || newSlug !== undefined) {
       await tx.updateOne({
         model: "role",
         where: { id: roleId },
-        data: { color },
+        data: {
+          ...(color !== undefined && { color }),
+          ...(newSlug !== undefined && { slug: newSlug }),
+        },
       });
     }
 
-    const newTranslations = translations || (name ? [{ lang, name, slug }] : null);
+    const newTranslations = translations || (name ? [{ lang, name }] : null);
     if (newTranslations && newTranslations.length > 0) {
       for (const item of newTranslations) {
         const itemLang = item.lang || item.locale || "en";
-        const rawName = item.name || name;
-        const itemSlug = (
-          item.slug ||
-          rawName
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-+|-+$/g, "")
-        ).trim();
+        const rawName = (item.name || name || "").trim();
 
-        const conflict = await tx.findFirst({
-          model: "roleTranslation",
-          where: {
-            lang: itemLang,
-            slug: itemSlug,
-            NOT: { roleId },
-          },
-        });
-
-        if (conflict) {
-          const error = new Error("ROLE_SLUG_ALREADY_EXISTS");
-          error.cause = 409;
-          throw error;
-        }
-
-        await tx.upsertOne({
-          model: "roleTranslation",
-          where: {
-            roleId_lang: {
+        if (rawName) {
+          await tx.upsertOne({
+            model: "roleTranslation",
+            where: {
+              roleId_lang: {
+                roleId,
+                lang: itemLang,
+              },
+            },
+            update: {
+              name: rawName,
+            },
+            create: {
               roleId,
               lang: itemLang,
+              name: rawName,
             },
-          },
-          update: {
-            name: rawName,
-            slug: itemSlug,
-          },
-          create: {
-            roleId,
-            lang: itemLang,
-            name: rawName,
-            slug: itemSlug,
-          },
-        });
+          });
+        }
       }
     }
 
@@ -291,9 +292,7 @@ export const updateRoleService = async (roleId, body) => {
           const invalidPermissions = targetPermissions.filter(
             (p) => !foundSet.has(p)
           );
-          const error = new Error(
-            `SOME_PERMISSIONS_NOT_FOUND`
-          );
+          const error = new Error("SOME_PERMISSIONS_NOT_FOUND");
           error.cause = 404;
           error.meta = { invalidPermissions };
           throw error;
