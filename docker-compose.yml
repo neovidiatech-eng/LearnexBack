@@ -13,6 +13,8 @@ services:
       - PORT=3015
       - DATABASE_URL=postgresql://${POSTGRES_USER:-learnx_db}:${POSTGRES_PASSWORD:-LearnX_Secret_DB_Pass_2026!}@postgres:5432/${POSTGRES_DB:-learnx_db}?schema=public
       - REDIS_URL=redis://redis:6379
+    volumes:
+      - ./uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy

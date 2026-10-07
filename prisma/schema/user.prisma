@@ -56,7 +56,7 @@ model Teacher {
   cvUrl              String?
   introVideoUrl      String?
   referralCode       String?
-  subject            String
+  subject            String?
   headline           String?
   bio                String?              @db.Text
   linkedinUrl        String?
@@ -107,9 +107,10 @@ model TeacherCertificate {
 }
 
 model TeacherReview {
-  id      String  @id @default(uuid())
-  rating  Int
-  comment String? @db.Text
+  id       String  @id @default(uuid())
+  rating   Int
+  comment  String? @db.Text
+  isHidden Boolean @default(false)
 
   studentId String
   student   User   @relation("StudentTeacherReviews", fields: [studentId], references: [id], onDelete: Cascade)
@@ -125,6 +126,7 @@ model TeacherReview {
   @@unique([studentId, teacherId])
   @@index([teacherId])
   @@index([studentId])
+  @@index([isHidden])
   @@map("teacher_reviews")
 }
 

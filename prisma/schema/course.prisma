@@ -153,6 +153,7 @@ model CourseReview {
   id        String   @id @default(uuid())
   rating    Int
   comment   String   @db.Text
+  isHidden  Boolean  @default(false)
   studentId String
   student   User     @relation("StudentCourseReviews", fields: [studentId], references: [id], onDelete: Cascade)
   courseId  String
@@ -162,6 +163,8 @@ model CourseReview {
 
   @@unique([studentId, courseId])
   @@index([courseId])
+  @@index([studentId])
+  @@index([isHidden])
   @@map("course_reviews")
 }
 
