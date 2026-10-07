@@ -3,8 +3,7 @@ import bcrypt from "bcryptjs";
 const studentsData = [
   {
     email: "youssef.mahmoud@learnex.com",
-    firstName: "Youssef",
-    lastName: "Mahmoud",
+    fullName: "Youssef Mahmoud",
     phone: "+201334567890",
     country: "EG",
     dateOfBirth: new Date("1998-05-15"),
@@ -12,8 +11,7 @@ const studentsData = [
   },
   {
     email: "nour.khaled@learnex.com",
-    firstName: "Nour",
-    lastName: "Khaled",
+    fullName: "Nour Khaled",
     phone: "+201445678901",
     country: "EG",
     dateOfBirth: new Date("2000-09-22"),
@@ -21,8 +19,7 @@ const studentsData = [
   },
   {
     email: "karim.mostafa@learnex.com",
-    firstName: "Karim",
-    lastName: "Mostafa",
+    fullName: "Karim Mostafa",
     phone: "+201556789012",
     country: "EG",
     dateOfBirth: new Date("1999-03-10"),
@@ -30,8 +27,7 @@ const studentsData = [
   },
   {
     email: "aya.samy@learnex.com",
-    firstName: "Aya",
-    lastName: "Samy",
+    fullName: "Aya Samy",
     phone: "+201667890123",
     country: "EG",
     dateOfBirth: new Date("2001-07-18"),
@@ -39,8 +35,7 @@ const studentsData = [
   },
   {
     email: "hassan.fathy@learnex.com",
-    firstName: "Hassan",
-    lastName: "Fathy",
+    fullName: "Hassan Fathy",
     phone: "+201778901234",
     country: "EG",
     dateOfBirth: new Date("1997-11-30"),
@@ -62,7 +57,7 @@ export async function seedStudents(prisma, roles) {
       create: {
         email: s.email,
         password: hashedPassword,
-        fullName: `${s.firstName} ${s.lastName}`,
+        fullName: s.fullName,
         phone: s.phone,
         country: s.country,
         status: "ACTIVE",

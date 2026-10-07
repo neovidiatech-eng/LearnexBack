@@ -11,8 +11,6 @@ import { CertificateStatus } from "../../../utils/Enums/teacherCertificate.enum.
 export const createTeacherService = async (body) => {
   const {
     fullName,
-    firstName,
-    lastName,
     email,
     password,
     phone,
@@ -69,8 +67,6 @@ export const createTeacherService = async (body) => {
     select: { id: true },
   });
 
-  const resolvedFullName = fullName || (firstName && lastName ? `${firstName} ${lastName}`.trim() : firstName || lastName || "Teacher");
-
   const teacher = await dbService.create({
     model: "teacher",
     data: {
@@ -80,7 +76,7 @@ export const createTeacherService = async (body) => {
       linkedinUrl,
       user: {
         create: {
-          fullName: resolvedFullName,
+          fullName,
           email: email.toLowerCase(),
           password: hashPassword,
           phone: encPhone,
@@ -270,8 +266,6 @@ export const getTeacherByIdService = async (teacherId) => {
 export const updateTeacherService = async (body, teacherId) => {
   const {
     fullName,
-    firstName,
-    lastName,
     email,
     password,
     phone,
@@ -338,12 +332,6 @@ export const updateTeacherService = async (body, teacherId) => {
     ? await generateEncryption({ plainText: phone })
     : undefined;
 
-  const resolvedFullName =
-    fullName ||
-    (firstName && lastName
-      ? `${firstName} ${lastName}`.trim()
-      : firstName || lastName);
-
   const teacher = await dbService.updateOne({
     model: "teacher",
     where: { id: existingTeacher.id },
@@ -356,7 +344,7 @@ export const updateTeacherService = async (body, teacherId) => {
       ...(linkedinUrl !== undefined && { linkedinUrl }),
       user: {
         update: {
-          ...(resolvedFullName && { fullName: resolvedFullName }),
+          ...(fullName && { fullName }),
           ...(email && { email: email.toLowerCase() }),
           ...(hashPassword && { password: hashPassword }),
           ...(phone && { phone: encPhone }),
@@ -474,38 +462,6 @@ export const assignCoursesToTeacherService = async (
     message: "COURSES_ASSIGNED_SUCCESSFULLY",
     assignedCoursesCount: courseIds.length,
   };
-};
-
-export const updateTeacherCvService = async (teacherId, file) => {
-  const teacher = await dbService.findFirst({
-    model: "teacher",
-    where: {
-      OR: [{ id: teacherId }, { userId: teacherId }],
-    },
-  });
-
-  if (!teacher) {
-    const error = new Error("TEACHER_NOT_FOUND");
-    error.cause = 404;
-    throw error;
-  }
-
-  const updatedTeacher = await dbService.updateOne({
-    model: "teacher",
-    where: { id: teacher.id },
-    data: {
-      ...(file && {
-        cvUrl: file.relativeDestination,
-      }),
-    },
-    select: {
-      id: true,
-      cvUrl: true,
-      updatedAt: true,
-    },
-  });
-
-  return updatedTeacher;
 };
 
 export const deleteTeacherService = async (teacherId) => {

@@ -14,8 +14,6 @@ import { deleteCache, getCache, setCache } from "../../../db/redis.service.js";
 export const teacherSignupService = async (body, reqFiles) => {
   const {
     fullName,
-    firstName,
-    lastName,
     email,
     password,
     phone,
@@ -60,12 +58,6 @@ export const teacherSignupService = async (body, reqFiles) => {
     select: { id: true },
   });
 
-  const resolvedFullName =
-    fullName?.trim() ||
-    (firstName && lastName
-      ? `${firstName} ${lastName}`.trim()
-      : firstName || lastName || "Teacher");
-
   const createdTeacher = await DBService.create({
     model: "teacher",
     data: {
@@ -79,7 +71,7 @@ export const teacherSignupService = async (body, reqFiles) => {
       user: {
         create: {
           email: normalizedEmail,
-          fullName: resolvedFullName,
+          fullName: fullName.trim(),
           password: hashPassword,
           phone: encPhone,
           roleId: role?.id || null,

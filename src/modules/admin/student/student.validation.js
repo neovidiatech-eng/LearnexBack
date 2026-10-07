@@ -52,8 +52,7 @@ export const createStudent = {
   body: joi
     .object()
     .keys({
-      firstName: joi.string().min(2).max(50).trim().required(),
-      lastName: joi.string().min(2).max(50).trim().required(),
+      fullName: joi.string().min(2).max(100).trim().required(),
       email: generalFields.email.required(),
       password: generalFields.password.required(),
       phone: generalFields.phone.optional(),
@@ -75,8 +74,6 @@ export const updateStudent = {
     .object()
     .keys({
       fullName: joi.string().min(2).max(100).trim().optional(),
-      firstName: joi.string().min(2).max(50).trim().optional(),
-      lastName: joi.string().min(2).max(50).trim().optional(),
       email: generalFields.email.optional(),
       password: generalFields.password.optional(),
       phone: generalFields.phone.optional(),

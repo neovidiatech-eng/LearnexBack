@@ -13,8 +13,7 @@ import ExcelJS from "exceljs";
 // ─── Shared Prisma select for Staff user responses ───────────────────────────
 const staffUserSelect = {
   id: true,
-  firstName: true,
-  lastName: true,
+  fullName: true,
   email: true,
   phone: true,
   country: true,
@@ -94,8 +93,7 @@ export const getAllStaffService = async ({
     ...(search
       ? {
           OR: [
-            { firstName: { contains: search, mode: "insensitive" } },
-            { lastName: { contains: search, mode: "insensitive" } },
+            { fullName: { contains: search, mode: "insensitive" } },
             { email: { contains: search, mode: "insensitive" } },
           ],
         }
@@ -141,8 +139,7 @@ export const getStaffByIdService = async (staffId) => {
 // ═════════════════════════════════════════════════════════════════════════════
 export const createStaffService = async (body) => {
   const {
-    firstName,
-    lastName,
+    fullName,
     email,
     password,
     phone,
@@ -175,8 +172,7 @@ export const createStaffService = async (body) => {
   const user = await DBService.create({
     model: "user",
     data: {
-      firstName,
-      lastName,
+      fullName,
       email: email.toLowerCase(),
       password: hashPassword,
       phone: encPhone,
@@ -184,7 +180,7 @@ export const createStaffService = async (body) => {
       roleId: validRoleId,
       status: status || userStatusEnum.ACTIVE,
       provider: authProviderEnum.SYSTEM,
-      confirmEmail: new Date(), // Staff created by admin → auto-confirmed
+      confirmEmail: true, // Staff created by admin → auto-confirmed
     },
     select: staffUserSelect,
   });
@@ -196,7 +192,7 @@ export const createStaffService = async (body) => {
 // UPDATE STAFF
 // ═════════════════════════════════════════════════════════════════════════════
 export const updateStaffService = async (staffId, body) => {
-  const { firstName, lastName, email, password, phone, country, status, roleId } =
+  const { fullName, email, password, phone, country, status, roleId } =
     body;
 
   // 1. Verify target user is Staff scope
@@ -242,8 +238,7 @@ export const updateStaffService = async (staffId, body) => {
     : undefined;
 
   const updateData = {
-    ...(firstName && { firstName }),
-    ...(lastName && { lastName }),
+    ...(fullName && { fullName }),
     ...(email && { email: email.toLowerCase() }),
     ...(hashPassword && { password: hashPassword }),
     ...(encPhone !== undefined && phone !== undefined && { phone: encPhone }),
@@ -285,8 +280,7 @@ export const changeStaffStatusService = async (staffId, status) => {
     data: { status },
     select: {
       id: true,
-      firstName: true,
-      lastName: true,
+      fullName: true,
       email: true,
       status: true,
       updatedAt: true,
@@ -366,8 +360,7 @@ export const exportStaffToExcelService = async ({
     ...(search
       ? {
           OR: [
-            { firstName: { contains: search, mode: "insensitive" } },
-            { lastName: { contains: search, mode: "insensitive" } },
+            { fullName: { contains: search, mode: "insensitive" } },
             { email: { contains: search, mode: "insensitive" } },
           ],
         }
@@ -379,8 +372,7 @@ export const exportStaffToExcelService = async ({
     where,
     orderBy: { createdAt: "desc" },
     select: {
-      firstName: true,
-      lastName: true,
+      fullName: true,
       email: true,
       status: true,
       createdAt: true,
@@ -422,7 +414,7 @@ export const exportStaffToExcelService = async ({
       user.role?.roleTranslations?.[0]?.name || "N/A";
 
     worksheet.addRow({
-      name: `${user.firstName} ${user.lastName}`.trim(),
+      name: user.fullName || "N/A",
       email: user.email,
       role: roleName,
       status: user.status,

@@ -4,8 +4,6 @@ import { authorizeResource } from "../../../middleware/authorization.middleware.
 import { validation } from "../../../middleware/validation.middleware.js";
 import * as teacherValidation from "./teacher.validation.js";
 import * as teacherController from "./teacher.controller.js";
-import { fileValidation } from "../../../utils/multer/fileValidation.js";
-import { localFileUpload } from "../../../utils/multer/local.multer.js";
 const router = Router();
 
 router.post(
@@ -59,18 +57,6 @@ router.patch(
   authorizeResource("teachers"),
   validation(teacherValidation.assignCourses),
   teacherController.assignCourses,
-);
-
-router.patch(
-  "/:teacherId/cv",
-  authentication(),
-  authorizeResource("teachers"),
-  localFileUpload({
-    customPath: "teachers",
-    validation: fileValidation.image,
-  }).single("cvUrl"),
-  validation(teacherValidation.updateCv),
-  teacherController.updateCv,
 );
 
 router.delete(

@@ -329,11 +329,9 @@ Include the Bearer JWT token in the Authorization header:
       // Teacher DTOs
       TeacherSignupDTO: {
         type: "object",
-        required: ["email", "password", "phone", "subject"],
+        required: ["fullName", "email", "password", "phone", "subject"],
         properties: {
           fullName: { type: "string", example: "Dr. Ahmed Hassan" },
-          firstName: { type: "string", example: "Ahmed" },
-          lastName: { type: "string", example: "Hassan" },
           email: { type: "string", format: "email", example: "ahmed.hassan@learnex.com" },
           password: { type: "string", format: "password", example: "Teacher@123456" },
           phone: { type: "string", example: "+201001234567" },
@@ -475,10 +473,9 @@ Include the Bearer JWT token in the Authorization header:
       // Admin DTOs
       AdminStudentCreateDTO: {
         type: "object",
-        required: ["firstName", "lastName", "email", "password"],
+        required: ["fullName", "email", "password"],
         properties: {
-          firstName: { type: "string", example: "Nour" },
-          lastName: { type: "string", example: "Khaled" },
+          fullName: { type: "string", example: "Nour Khaled" },
           email: { type: "string", format: "email", example: "nour.khaled@learnex.com" },
           password: { type: "string", format: "password", example: "Student@123456" },
           phone: { type: "string", example: "+201445678901" },
@@ -495,10 +492,9 @@ Include the Bearer JWT token in the Authorization header:
       },
       AdminTeacherCreateDTO: {
         type: "object",
-        required: ["firstName", "lastName", "email", "phone", "subject", "experienceYears"],
+        required: ["fullName", "email", "phone", "subject", "experienceYears"],
         properties: {
-          firstName: { type: "string", example: "Sara" },
-          lastName: { type: "string", example: "Ibrahim" },
+          fullName: { type: "string", example: "Sara Ibrahim" },
           email: { type: "string", format: "email", example: "sara.ibrahim@learnex.com" },
           password: { type: "string", format: "password", example: "Teacher@123456" },
           phone: { type: "string", example: "+201112345678" },
@@ -570,10 +566,9 @@ Include the Bearer JWT token in the Authorization header:
       },
       AdminStaffCreateDTO: {
         type: "object",
-        required: ["firstName", "lastName", "email", "password", "roleId"],
+        required: ["fullName", "email", "password", "roleId"],
         properties: {
-          firstName: { type: "string", example: "Ali" },
-          lastName: { type: "string", example: "Kamel" },
+          fullName: { type: "string", example: "Ali Kamel" },
           email: { type: "string", format: "email", example: "staff.ali@learnex.com" },
           password: { type: "string", format: "password", example: "Staff@123456" },
           phone: { type: "string", example: "+201099887766" },
@@ -1036,36 +1031,6 @@ Include the Bearer JWT token in the Authorization header:
                 required: ["courseIds"],
                 properties: {
                   courseIds: { type: "array", items: { type: "string", format: "uuid" }, example: ["7d4f983a-86c3-42e1-88f6-5e58129df2be"] },
-                },
-              },
-            },
-          },
-        },
-        responses: {
-          ...standardResponses[200]({ $ref: "#/components/schemas/SuccessMessageResponse" }),
-          400: standardResponses[400],
-          401: standardResponses[401],
-          403: standardResponses[403],
-          404: standardResponses[404],
-          500: standardResponses[500],
-        },
-      },
-    },
-    "/api/v1/admin/teachers/{teacherId}/cv": {
-      patch: {
-        summary: "Upload Teacher CV",
-        tags: ["Admin - Teachers"],
-        security: bearerSecurity,
-        parameters: [uuidParam("teacherId", "Teacher ID")],
-        requestBody: {
-          required: true,
-          content: {
-            "multipart/form-data": {
-              schema: {
-                type: "object",
-                required: ["cvUrl"],
-                properties: {
-                  cvUrl: { type: "string", format: "binary" },
                 },
               },
             },
