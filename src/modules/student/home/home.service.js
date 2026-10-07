@@ -12,12 +12,18 @@ import { coursesType } from "../../../utils/Enums/teacherCourse.enum.js";
  * - Dynamic / Promo Banners
  */
 export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) => {
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const endOfToday = new Date();
+  endOfToday.setHours(23, 59, 59, 999);
+
   const [
     categories,
     featuredCoursesRaw,
     topRatedCoursesRaw,
     instructorsRaw,
     cart,
+    todaySessionsRaw,
   ] = await Promise.all([
     db.findMany({
       model: "category",
@@ -105,6 +111,28 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
       where: { userId },
       select: { totalItems: true },
     }),
+
+    db.findMany({
+      model: "course",
+      where: {
+        status: "PUBLISHED",
+        scheduledAt: {
+          gte: startOfToday,
+          lte: endOfToday,
+        },
+      },
+      take: 5,
+      include: {
+        translations: { where: { locale } },
+        instructor: {
+          select: {
+            id: true,
+            fullName: true,
+            profilePhoto: true,
+          },
+        },
+      },
+    }),
   ]);
 
   const allCourseIds = Array.from(
@@ -141,6 +169,29 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
   const featuredCourses = featuredCoursesRaw.map(mapCourse);
   const topRatedCourses = topRatedCoursesRaw.map(mapCourse);
 
+  const todaySessions = (todaySessionsRaw || []).map((c) => {
+    const trans = c.translations?.[0];
+    const sessionDate = c.scheduledAt ? new Date(c.scheduledAt) : null;
+    const now = Date.now();
+    const isLive = sessionDate ? Math.abs(now - sessionDate.getTime()) < 3600000 : false;
+    return {
+      id: c.id,
+      title: trans?.title || c.title || "",
+      instructorName: c.instructor?.fullName || "",
+      instructorPhoto: c.instructor?.profilePhoto || null,
+      imageUrl: c.thumbnail || null,
+      time: sessionDate
+        ? sessionDate.toLocaleTimeString(locale === "ar" ? "ar-EG" : "en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : "",
+      scheduledAt: c.scheduledAt,
+      isLive,
+      sessionUrl: c.previewVideoUrl || null,
+    };
+  });
+
   const banners = [
     {
       id: "b1",
@@ -175,5 +226,6 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
     topRatedCourses,
     instructors: instructorsRaw,
     cartCount: cart?.totalItems ?? 0,
+    todaySessions,
   };
 };
