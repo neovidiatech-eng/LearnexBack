@@ -67,18 +67,6 @@ export const assignCourses = asyncHandler(async (req, res, next) => {
   });
 });
 
-export const updateCv = asyncHandler(async (req, res, next) => {
-  const result = await teacherService.updateTeacherCvService(
-    req.params.teacherId,
-    req.file,
-  );
-  return successResponse({
-    res,
-    message: "TEACHER_CV_UPDATED_SUCCESSFULLY",
-    data: result,
-  });
-});
-
 export const deleteTeacher = asyncHandler(async (req, res, next) => {
   await teacherService.deleteTeacherService(req.params.teacherId);
   return successResponse({

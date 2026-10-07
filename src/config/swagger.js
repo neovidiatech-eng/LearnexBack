@@ -1046,36 +1046,6 @@ Include the Bearer JWT token in the Authorization header:
         },
       },
     },
-    "/api/v1/admin/teachers/{teacherId}/cv": {
-      patch: {
-        summary: "Upload Teacher CV",
-        tags: ["Admin - Teachers"],
-        security: bearerSecurity,
-        parameters: [uuidParam("teacherId", "Teacher ID")],
-        requestBody: {
-          required: true,
-          content: {
-            "multipart/form-data": {
-              schema: {
-                type: "object",
-                required: ["cvUrl"],
-                properties: {
-                  cvUrl: { type: "string", format: "binary" },
-                },
-              },
-            },
-          },
-        },
-        responses: {
-          ...standardResponses[200]({ $ref: "#/components/schemas/SuccessMessageResponse" }),
-          400: standardResponses[400],
-          401: standardResponses[401],
-          403: standardResponses[403],
-          404: standardResponses[404],
-          500: standardResponses[500],
-        },
-      },
-    },
     "/api/v1/admin/teachers/requests/{teacherId}/approve": {
       patch: {
         summary: "Approve Teacher Application",

@@ -97,11 +97,6 @@ export const assignCourses = {
     .options({ allowUnknown: false }),
 };
 
-export const updateCv = {
-  params: getTeacherById.params,
-  file: joi.object(generalFields.file).required(),
-};
-
 //
 export const getTeacherRequests = {
   query: joi

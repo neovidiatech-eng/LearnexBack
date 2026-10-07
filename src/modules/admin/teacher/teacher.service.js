@@ -464,38 +464,6 @@ export const assignCoursesToTeacherService = async (
   };
 };
 
-export const updateTeacherCvService = async (teacherId, file) => {
-  const teacher = await dbService.findFirst({
-    model: "teacher",
-    where: {
-      OR: [{ id: teacherId }, { userId: teacherId }],
-    },
-  });
-
-  if (!teacher) {
-    const error = new Error("TEACHER_NOT_FOUND");
-    error.cause = 404;
-    throw error;
-  }
-
-  const updatedTeacher = await dbService.updateOne({
-    model: "teacher",
-    where: { id: teacher.id },
-    data: {
-      ...(file && {
-        cvUrl: file.relativeDestination,
-      }),
-    },
-    select: {
-      id: true,
-      cvUrl: true,
-      updatedAt: true,
-    },
-  });
-
-  return updatedTeacher;
-};
-
 export const deleteTeacherService = async (teacherId) => {
   const teacher = await dbService.findFirst({
     model: "teacher",
