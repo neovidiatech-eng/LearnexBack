@@ -5,9 +5,7 @@ export const teacherSignup = {
   body: joi
     .object()
     .keys({
-      fullName: joi.string().min(2).max(100).trim().optional(),
-      firstName: joi.string().min(2).max(50).trim().optional(),
-      lastName: joi.string().min(2).max(50).trim().optional(),
+      fullName: joi.string().min(2).max(100).trim().required(),
       email: generalFields.email.required(),
       password: generalFields.password.required(),
       phone: generalFields.phone.required(),

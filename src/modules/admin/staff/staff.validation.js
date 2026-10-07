@@ -29,8 +29,7 @@ export const createStaff = {
   body: joi
     .object()
     .keys({
-      firstName: joi.string().min(2).max(50).trim().required(),
-      lastName: joi.string().min(2).max(50).trim().required(),
+      fullName: joi.string().min(2).max(100).trim().required(),
       email: generalFields.email.required(),
       password: generalFields.password.required(),
       phone: generalFields.phone.optional(),
@@ -56,8 +55,7 @@ export const updateStaff = {
   body: joi
     .object()
     .keys({
-      firstName: joi.string().min(2).max(50).trim(),
-      lastName: joi.string().min(2).max(50).trim(),
+      fullName: joi.string().min(2).max(100).trim().optional(),
       email: generalFields.email,
       password: generalFields.password,
       phone: generalFields.phone,

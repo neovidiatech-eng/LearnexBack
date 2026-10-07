@@ -3,8 +3,7 @@ import bcrypt from "bcryptjs";
 const teachersData = [
   {
     email: "ahmed.hassan@learnex.com",
-    firstName: "Ahmed",
-    lastName: "Hassan",
+    fullName: "Ahmed Hassan",
     phone: "+201001234567",
     country: "EG",
     subject: "Web Development",
@@ -14,8 +13,7 @@ const teachersData = [
   },
   {
     email: "sara.ibrahim@learnex.com",
-    firstName: "Sara",
-    lastName: "Ibrahim",
+    fullName: "Sara Ibrahim",
     phone: "+201112345678",
     country: "EG",
     subject: "Data Science",
@@ -25,8 +23,7 @@ const teachersData = [
   },
   {
     email: "omar.ali@learnex.com",
-    firstName: "Omar",
-    lastName: "Ali",
+    fullName: "Omar Ali",
     phone: "+201223456789",
     country: "EG",
     subject: "Mobile Development",
@@ -50,7 +47,7 @@ export async function seedTeachers(prisma, roles) {
       create: {
         email: t.email,
         password: hashedPassword,
-        fullName: `${t.firstName} ${t.lastName}`,
+        fullName: t.fullName,
         phone: t.phone,
         country: t.country,
         status: "ACTIVE",

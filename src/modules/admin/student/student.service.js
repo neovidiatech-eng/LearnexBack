@@ -156,8 +156,6 @@ export const getStudentByIdService = async (studentId) => {
 export const updateStudentService = async (body, studentId) => {
   const {
     fullName,
-    firstName,
-    lastName,
     email,
     password,
     phone,
@@ -218,11 +216,6 @@ export const updateStudentService = async (body, studentId) => {
   const encPhone = phone
     ? await generateEncryption({ plainText: phone })
     : undefined;
-  const resolvedFullName =
-    fullName ||
-    (firstName && lastName
-      ? `${firstName} ${lastName}`.trim()
-      : firstName || lastName);
 
   const student = await DBService.updateOne({
     model: "student",
@@ -234,7 +227,7 @@ export const updateStudentService = async (body, studentId) => {
       ...(notes !== undefined && { notes }),
       user: {
         update: {
-          ...(resolvedFullName && { fullName: resolvedFullName }),
+          ...(fullName && { fullName }),
           ...(email && { email: email.toLowerCase() }),
           ...(hashPassword && { password: hashPassword }),
           ...(encPhone && { phone: encPhone }),
@@ -350,8 +343,6 @@ export const deleteStudentService = async (studentId) => {
 export const createStudentsService = async (body) => {
   const {
     fullName,
-    firstName,
-    lastName,
     email,
     password,
     phone,
@@ -405,12 +396,6 @@ export const createStudentsService = async (body) => {
     select: { id: true },
   });
 
-  const resolvedFullName =
-    fullName ||
-    (firstName && lastName
-      ? `${firstName} ${lastName}`.trim()
-      : firstName || lastName || "Student");
-
   const student = await DBService.create({
     model: "student",
     data: {
@@ -418,7 +403,7 @@ export const createStudentsService = async (body) => {
       notes,
       user: {
         create: {
-          fullName: resolvedFullName,
+          fullName,
           email: email.toLowerCase(),
           password: hashPassword,
           phone: encPhone,
