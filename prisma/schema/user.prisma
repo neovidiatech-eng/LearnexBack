@@ -81,24 +81,20 @@ model Teacher {
 }
 
 model TeacherCertificate {
-  id        String  @id @default(uuid())
-  teacherId String
-  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-
-  type      String @default("ACADEMIC")
-  title     String
-  issuer    String
-  issueYear Int
-
-  fileUrl  String
-  fileType String
-  fileSize String?
-
-  status          String  @default("PENDING")
-  rejectionReason String? @db.Text
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String   @id @default(uuid())
+  teacherId       String
+  teacher         Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  type            String   @default("ACADEMIC")
+  title           String
+  issuer          String
+  issueYear       Int
+  fileUrl         String
+  fileType        String
+  fileSize        String?
+  status          String   @default("PENDING")
+  rejectionReason String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([teacherId])
   @@index([type])
@@ -107,19 +103,15 @@ model TeacherCertificate {
 }
 
 model TeacherReview {
-  id       String  @id @default(uuid())
-  rating   Int
-  comment  String? @db.Text
-  isHidden Boolean @default(false)
-
+  id        String   @id @default(uuid())
+  rating    Int
+  comment   String?  @db.Text
+  isHidden  Boolean  @default(false)
   studentId String
-  student   User   @relation("StudentTeacherReviews", fields: [studentId], references: [id], onDelete: Cascade)
-
+  student   User     @relation("StudentTeacherReviews", fields: [studentId], references: [id], onDelete: Cascade)
   teacherId String
-  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-
-  bookingId String? @unique
-
+  teacher   Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  bookingId String?  @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

@@ -7,7 +7,7 @@ import redis from "../../../config/redis.config.js";
 export const toggleFavouriteService = async (
   userId,
   courseId,
-  itemType = coursesType.COURSE
+  itemType = coursesType.COURSE,
 ) => {
   const student = await db.findFirst({ model: "student", where: { userId } });
   if (!student) {
@@ -121,7 +121,7 @@ export const getAllFavoritesService = async (userId, query = {}) => {
 
         if (search) {
           const matchTitle = course.translations?.some((t) =>
-            t.title?.toLowerCase().includes(search.toLowerCase())
+            t.title?.toLowerCase().includes(search.toLowerCase()),
           );
           if (!matchTitle) return null;
         }
@@ -151,7 +151,9 @@ export const getAllFavoritesService = async (userId, query = {}) => {
         if (!course) return null;
 
         if (search) {
-          const matchName = course.name?.toLowerCase().includes(search.toLowerCase());
+          const matchName = course.name
+            ?.toLowerCase()
+            .includes(search.toLowerCase());
           if (!matchName) return null;
         }
 
@@ -164,7 +166,7 @@ export const getAllFavoritesService = async (userId, query = {}) => {
         };
       }
       return fav;
-    })
+    }),
   );
 
   const filtered = enrichedItems.filter(Boolean);
@@ -173,7 +175,7 @@ export const getAllFavoritesService = async (userId, query = {}) => {
   const total = filtered.length;
   const paginated = filtered.slice(
     (pageNum - 1) * limitNum,
-    pageNum * limitNum
+    pageNum * limitNum,
   );
 
   return {
@@ -286,7 +288,11 @@ export const getEnrolledCoursesService = async (userId, query = {}) => {
         include: {
           translations: { where: { locale } },
           category: {
-            select: { id: true, slug: true, translations: { where: { locale } } },
+            select: {
+              id: true,
+              slug: true,
+              translations: { where: { locale } },
+            },
           },
           instructor: {
             select: { id: true, fullName: true, profilePhoto: true },
@@ -325,7 +331,7 @@ export const getCourseCatalogService = async (userId, query = {}) => {
     ...(categoryId ? { categoryId } : {}),
     ...(level ? { level } : {}),
     ...(enrollmentType ? { enrollmentType } : {}),
-    ...((minPrice !== undefined || maxPrice !== undefined)
+    ...(minPrice !== undefined || maxPrice !== undefined
       ? {
           originalPrice: {
             ...(minPrice !== undefined ? { gte: Number(minPrice) } : {}),
@@ -567,7 +573,10 @@ export const completeLessonService = async (userId, courseId, lessonId) => {
     completedLessonIds = [lessonId];
   }
 
-  const progressPercent = Math.min(100, Math.round((completedCount / total) * 100));
+  const progressPercent = Math.min(
+    100,
+    Math.round((completedCount / total) * 100),
+  );
   const isCompleted = progressPercent >= 100;
 
   const updatedEnrollment = await db.updateOne({
@@ -587,174 +596,153 @@ export const completeLessonService = async (userId, courseId, lessonId) => {
   };
 };
 
-/**
- * POST /student/courses/:courseId/reviews
- * Add or update student review and recalculate course average rating.
- */
-export const addCourseReviewService = async (userId, courseId, data) => {
-  const { rating, comment } = data;
+// /**
+//  * POST /student/courses/:courseId/reviews
+//  * Add or update student review and recalculate course average rating.
+//  */
+// export const addCourseReviewService = async (userId, courseId, body) => {
+//   const { rating, comment } = body;
 
-  const enrollment = await db.findFirst({
-    model: "courseEnrollment",
-    where: { studentId: userId, courseId },
-  });
+//   const enrollment = await db.findFirst({
+//     model: "courseEnrollment",
+//     where: { studentId: userId, courseId },
+//   });
 
-  if (!enrollment) {
-    const error = new Error("ENROLLMENT_REQUIRED_TO_REVIEW");
-    error.cause = 403;
-    throw error;
-  }
+//   if (!enrollment) {
+//     const error = new Error("ENROLLMENT_REQUIRED_TO_REVIEW");
+//     error.cause = 403;
+//     throw error;
+//   }
 
-  const existingReview = await db.findFirst({
-    model: "courseReview",
-    where: { studentId: userId, courseId },
-  });
+//   const review = await db.upsertOne({
+//     model: "courseReview",
+//     where: {
+//       studentId_courseId: {
+//         studentId: userId,
+//         courseId,
+//       },
+//     },
+//     update: { rating: Number(rating), comment },
+//     create: { studentId: userId, courseId, rating: Number(rating), comment },
+//   });
 
-  let review;
-  if (existingReview) {
-    review = await db.updateOne({
-      model: "courseReview",
-      where: { id: existingReview.id },
-      data: {
-        rating: Number(rating),
-        comment,
-      },
-    });
-  } else {
-    review = await db.create({
-      model: "courseReview",
-      data: {
-        studentId: userId,
-        courseId,
-        rating: Number(rating),
-        comment,
-      },
-    });
-  }
+//   const { avgRating, reviewsCount } = await recalculateReview({
+//     model: "courseReview",
+//     where: { courseId, isHidden: false },
+//     parentModel: "course",
+//     parentId: courseId,
+//   });
+//   return {
+//     review,
+//     avgRating,
+//     reviewsCount,
+//   };
+// };
 
-  const allReviews = await db.findMany({
-    model: "courseReview",
-    where: { courseId },
-    select: { rating: true },
-  });
+// /**
+//  * GET /student/courses/:courseId/reviews
+//  * Get paginated course reviews with rating breakdown.
+//  */
+// export const getCourseReviewsService = async (userId, courseId, query = {}) => {
+//   const { page = 1, limit = 10 } = query;
 
-  const reviewsCount = allReviews.length;
-  const avgRating = reviewsCount > 0
-    ? Number((allReviews.reduce((sum, r) => sum + r.rating, 0) / reviewsCount).toFixed(2))
-    : 0.0;
+//   const result = await db.findManyWithPaginationAndCount({
+//     model: "courseReview",
+//     where: { courseId },
+//     page: Number(page),
+//     limit: Number(limit),
+//     orderBy: { createdAt: "desc" },
+//     include: {
+//       student: {
+//         select: {
+//           id: true,
+//           fullName: true,
+//           profilePhoto: true,
+//         },
+//       },
+//     },
+//   });
 
-  await db.updateOne({
-    model: "course",
-    where: { id: courseId },
-    data: { avgRating, reviewsCount },
-  });
+//   const allRatings = await db.findMany({
+//     model: "courseReview",
+//     where: { courseId },
+//     select: { rating: true },
+//   });
 
-  return {
-    review,
-    avgRating,
-    reviewsCount,
-  };
-};
+//   const total = allRatings.length;
+//   const starCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+//   allRatings.forEach((r) => {
+//     if (starCounts[r.rating] !== undefined) starCounts[r.rating]++;
+//   });
 
-/**
- * GET /student/courses/:courseId/reviews
- * Get paginated course reviews with rating breakdown.
- */
-export const getCourseReviewsService = async (userId, courseId, query = {}) => {
-  const { page = 1, limit = 10 } = query;
+//   const distribution = {
+//     5: total ? Number((starCounts[5] / total).toFixed(2)) : 0,
+//     4: total ? Number((starCounts[4] / total).toFixed(2)) : 0,
+//     3: total ? Number((starCounts[3] / total).toFixed(2)) : 0,
+//     2: total ? Number((starCounts[2] / total).toFixed(2)) : 0,
+//     1: total ? Number((starCounts[1] / total).toFixed(2)) : 0,
+//   };
 
-  const result = await db.findManyWithPaginationAndCount({
-    model: "courseReview",
-    where: { courseId },
-    page: Number(page),
-    limit: Number(limit),
-    orderBy: { createdAt: "desc" },
-    include: {
-      student: {
-        select: {
-          id: true,
-          fullName: true,
-          profilePhoto: true,
-        },
-      },
-    },
-  });
+//   const enrichedReviews = result.items.map((r) => ({
+//     ...r,
+//     isMine: r.studentId === userId,
+//   }));
 
-  const allRatings = await db.findMany({
-    model: "courseReview",
-    where: { courseId },
-    select: { rating: true },
-  });
+//   return {
+//     reviews: enrichedReviews,
+//     pagination: result.pagination,
+//     totalReviews: total,
+//     distribution,
+//     starCounts,
+//   };
+// };
 
-  const total = allRatings.length;
-  const starCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-  allRatings.forEach((r) => {
-    if (starCounts[r.rating] !== undefined) starCounts[r.rating]++;
-  });
+// /**
+//  * DELETE /student/courses/:courseId/reviews
+//  * Delete student's review and recalculate course average rating.
+//  */
+// export const deleteCourseReviewService = async (userId, courseId) => {
+//   const review = await db.findFirst({
+//     model: "courseReview",
+//     where: { studentId: userId, courseId },
+//   });
 
-  const distribution = {
-    5: total ? Number((starCounts[5] / total).toFixed(2)) : 0,
-    4: total ? Number((starCounts[4] / total).toFixed(2)) : 0,
-    3: total ? Number((starCounts[3] / total).toFixed(2)) : 0,
-    2: total ? Number((starCounts[2] / total).toFixed(2)) : 0,
-    1: total ? Number((starCounts[1] / total).toFixed(2)) : 0,
-  };
+//   if (!review) {
+//     const error = new Error("REVIEW_NOT_FOUND");
+//     error.cause = 404;
+//     throw error;
+//   }
 
-  const enrichedReviews = result.items.map((r) => ({
-    ...r,
-    isMine: r.studentId === userId,
-  }));
+//   await db.deleteOne({
+//     model: "courseReview",
+//     where: { id: review.id },
+//   });
 
-  return {
-    reviews: enrichedReviews,
-    pagination: result.pagination,
-    totalReviews: total,
-    distribution,
-    starCounts,
-  };
-};
+//   const allReviews = await db.findMany({
+//     model: "courseReview",
+//     where: { courseId },
+//     select: { rating: true },
+//   });
 
-/**
- * DELETE /student/courses/:courseId/reviews
- * Delete student's review and recalculate course average rating.
- */
-export const deleteCourseReviewService = async (userId, courseId) => {
-  const review = await db.findFirst({
-    model: "courseReview",
-    where: { studentId: userId, courseId },
-  });
+//   const reviewsCount = allReviews.length;
+//   const avgRating =
+//     reviewsCount > 0
+//       ? Number(
+//           (
+//             allReviews.reduce((sum, r) => sum + r.rating, 0) / reviewsCount
+//           ).toFixed(2),
+//         )
+//       : 0.0;
 
-  if (!review) {
-    const error = new Error("REVIEW_NOT_FOUND");
-    error.cause = 404;
-    throw error;
-  }
+//   await db.updateOne({
+//     model: "course",
+//     where: { id: courseId },
+//     data: { avgRating, reviewsCount },
+//   });
 
-  await db.deleteOne({
-    model: "courseReview",
-    where: { id: review.id },
-  });
-
-  const allReviews = await db.findMany({
-    model: "courseReview",
-    where: { courseId },
-    select: { rating: true },
-  });
-
-  const reviewsCount = allReviews.length;
-  const avgRating = reviewsCount > 0
-    ? Number((allReviews.reduce((sum, r) => sum + r.rating, 0) / reviewsCount).toFixed(2))
-    : 0.0;
-
-  await db.updateOne({
-    model: "course",
-    where: { id: courseId },
-    data: { avgRating, reviewsCount },
-  });
-
-  return {
-    message: "REVIEW_DELETED_SUCCESSFULLY",
-    avgRating,
-    reviewsCount,
-  };
-};
+//   return {
+//     message: "REVIEW_DELETED_SUCCESSFULLY",
+//     avgRating,
+//     reviewsCount,
+//   };
+// };

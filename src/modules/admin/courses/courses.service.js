@@ -45,7 +45,7 @@ export const createCourseService = async (body, reqFiles) => {
       where: {
         id: instructorId,
         role: {
-          name: { equals: roleEnum.TEACHER, mode: "insensitive" },
+          name: { equals: baseRoleEnum.TEACHER, mode: "insensitive" },
         },
       },
     });
@@ -327,7 +327,7 @@ export const updateCourseService = async (body, params, reqFiles) => {
       model: "user",
       where: {
         id: instructorId,
-        role: { name: { equals: roleEnum.TEACHER, mode: "insensitive" } },
+        role: { name: { equals: baseRoleEnum.TEACHER, mode: "insensitive" } },
       },
     });
     if (!instructor) {
