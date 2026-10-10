@@ -71,6 +71,19 @@ export const getTeacherByIdService = async (teacherId) => {
     cvUrl: true,
     introVideoUrl: true,
     createdAt: true,
+    courses: {
+      where: { status: "APPROVED" },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        price: true,
+        totalHours: true,
+        wallPaper: true,
+        status: true,
+        createdAt: true,
+      },
+    },
     user: {
       select: {
         id: true,
@@ -81,8 +94,14 @@ export const getTeacherByIdService = async (teacherId) => {
         status: true,
         profilePhoto: true,
         courses: {
+          where: { status: "PUBLISHED" },
           select: {
             id: true,
+            thumbnail: true,
+            originalPrice: true,
+            salePrice: true,
+            durationHours: true,
+            totalLessonsCount: true,
             translations: true,
           },
         },
@@ -94,5 +113,12 @@ export const getTeacherByIdService = async (teacherId) => {
     where: { id: teacherId },
     select,
   });
-  return teacher
+
+  if (!teacher) {
+    const error = new Error("TEACHER_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+
+  return teacher;
 };

@@ -7,7 +7,7 @@ import { tokenTypeEnum } from "../Enums/token.enum.js";
 export const generateToken = async ({
   payload = {},
   signature = process.env.ACCESS_TOKEN_SIGNATURE,
-  options = { expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRES_IN) },
+  options = { expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRES_IN) || 60 * 60 * 24 * 7 },
 } = {}) => {
   return jwt.sign(payload, signature, options);
 };
@@ -65,17 +65,17 @@ export const decodedToken = async ({
     include:
       model === "user"
         ? {
-            role: {
-              include: {
-                rolePermissions: {
-                  include: {
-                    permission: true,
-                  },
+          role: {
+            include: {
+              rolePermissions: {
+                include: {
+                  permission: true,
                 },
-                roleTranslations: true,
               },
+              roleTranslations: true,
             },
-          }
+          },
+        }
         : undefined,
   });
   if (!user) {
@@ -90,7 +90,7 @@ export const decodedToken = async ({
 };
 
 export const generateLoginCredentials = async ({ user, role }) => {
-  const userId = user.id || user._id; 
+  const userId = user.id || user._id;
 
   const rawRole =
     (typeof role === "string" ? role : null) ||
@@ -103,14 +103,16 @@ export const generateLoginCredentials = async ({ user, role }) => {
 
   const access_token = await generateToken({
     payload: { id: userId, role: userRole },
-    options: { expiresIn: 60 * 30 },
+    options: {
+      expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRES_IN) || 60 * 60 * 24 * 7,
+    },
     signature: process.env.ACCESS_TOKEN_SIGNATURE,
   });
   const refresh_token = await generateToken({
     payload: { id: userId, role: userRole },
     signature: process.env.REFRESH_TOKEN_SIGNATURE,
     options: {
-      expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRES_IN),
+      expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRES_IN) || 60 * 60 * 24 * 365,
     },
   });
   return { access_token, refresh_token };

@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/response.js";
 import {
   decodedToken,
-  
+
 } from "../utils/security/token.security.js";
 import { tokenTypeEnum } from "../utils/Enums/token.enum.js";
 export const authentication = ({

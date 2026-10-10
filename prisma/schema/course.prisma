@@ -51,7 +51,6 @@ model Course {
   instructorId       String
   instructor         User                @relation("TutorCourses", fields: [instructorId], references: [id], onDelete: Cascade)
   sections           CourseSection[]
-  favorites          CourseFavorite[]
   enrollments        CourseEnrollment[]
   reviews            CourseReview[]
   translations       CourseTranslation[]
@@ -154,6 +153,7 @@ model CourseReview {
   id        String   @id @default(uuid())
   rating    Int
   comment   String   @db.Text
+  isHidden  Boolean  @default(false)
   studentId String
   student   User     @relation("StudentCourseReviews", fields: [studentId], references: [id], onDelete: Cascade)
   courseId  String
@@ -163,6 +163,8 @@ model CourseReview {
 
   @@unique([studentId, courseId])
   @@index([courseId])
+  @@index([studentId])
+  @@index([isHidden])
   @@map("course_reviews")
 }
 
@@ -231,18 +233,3 @@ model OfferTranslation {
   @@map("offer_translations")
 }
 
-model CourseFavorite {
-  id          String   @id @default(uuid())
-  studentId   String
-  student     Student  @relation("StudentFavorites", fields: [studentId], references: [id], onDelete: Cascade)
-  courseId    String
-  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  isFavourite Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@unique([studentId, courseId])
-  @@index([studentId, isFavourite])
-  @@index([courseId])
-  @@map("course_favorites")
-}

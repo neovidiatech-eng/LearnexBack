@@ -10,8 +10,10 @@ import { seedCategories } from "./seeders/categories.seed.js";
 import { seedTeachers } from "./seeders/teachers.seed.js";
 import { seedStudents } from "./seeders/students.seed.js";
 import { seedCourses } from "./seeders/courses.seed.js";
+import { seedTeacherCourses } from "./seeders/teacherCourses.seed.js";
 import { seedEnrollments } from "./seeders/enrollments.seed.js";
 import { seedCarts } from "./seeders/cart.seed.js";
+import { seedSaved } from "./seeders/saved.seed.js";
 import { seedActivityLogs } from "./seeders/activityLogs.seed.js";
 import { seedNotifications } from "./seeders/notifications.seed.js";
 import { seedCms } from "./seeders/cms.seed.js";
@@ -47,13 +49,19 @@ async function main() {
   // 7. Courses (depends on teachers + categories)
   const courses = await seedCourses(prisma, teachers, categories);
 
+  // 7.1. Teacher-Created Courses (depends on teachers)
+  const teacherCourses = await seedTeacherCourses(prisma, teachers);
+
   // 8. Enrollments (depends on students + courses)
   await seedEnrollments(prisma, students, courses);
 
   // 9. Carts (depends on students + courses)
   await seedCarts(prisma, students, courses);
 
-  // 10. Activity Logs (independent)
+  // 10. Saved items (depends on students + courses)
+  await seedSaved(prisma, students, courses);
+
+  // 11. Activity Logs (independent)
   await seedActivityLogs(prisma);
 
   // 11. Notifications (depends on students + teachers + admin)

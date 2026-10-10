@@ -254,7 +254,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"firstName\": \"Ahmed\",\n  \"lastName\": \"Hassan\",\n  \"email\": \"ahmed.hassan@example.com\",\n  \"password\": \"Password@123!\",\n  \"phone\": \"01011112222\",\n  \"country\": \"Egypt\",\n  \"dateOfBirth\": \"2000-01-15T00:00:00.000Z\",\n  \"status\": \"ACTIVE\",\n  \"notes\": \"New enrolled student\"\n}"
+							"raw": "{\n  \"fullName\": \"Ahmed Hassan\",\n  \"email\": \"ahmed.hassan@example.com\",\n  \"password\": \"Password@123!\",\n  \"phone\": \"01011112222\",\n  \"country\": \"Egypt\",\n  \"dateOfBirth\": \"2000-01-15T00:00:00.000Z\",\n  \"status\": \"ACTIVE\",\n  \"notes\": \"New enrolled student\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/admin/students",
@@ -322,7 +322,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"firstName\": \"Ahmed\",\n  \"lastName\": \"Ali\",\n  \"email\": \"ahmed.hassan@example.com\",\n  \"password\": \"Password@123!\",\n  \"phone\": \"01011112222\",\n  \"country\": \"Egypt\"\n}"
+							"raw": "{\n  \"fullName\": \"Ahmed Ali\",\n  \"email\": \"ahmed.hassan@example.com\",\n  \"password\": \"Password@123!\",\n  \"phone\": \"01011112222\",\n  \"country\": \"Egypt\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/admin/students/:studentId",
@@ -382,7 +382,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"firstName\": \"Mohamed\",\n  \"lastName\": \"Mahmoud\",\n  \"email\": \"mohamed.teacher@example.com\",\n  \"password\": \"TeacherPass123!\",\n  \"phone\": \"01234567890\",\n  \"subject\": \"Mathematics\",\n  \"experienceYears\": 7,\n  \"status\": \"ACTIVE\",\n  \"bio\": \"Senior Math Teacher with over 7 years of experience\",\n  \"linkedinUrl\": \"https://linkedin.com/in/mohamed-math\",\n  \"country\": \"Egypt\"\n}"
+							"raw": "{\n  \"fullName\": \"Mohamed Mahmoud\",\n  \"email\": \"mohamed.teacher@example.com\",\n  \"password\": \"TeacherPass123!\",\n  \"phone\": \"01234567890\",\n  \"subject\": \"Mathematics\",\n  \"experienceYears\": 7,\n  \"status\": \"ACTIVE\",\n  \"bio\": \"Senior Math Teacher with over 7 years of experience\",\n  \"linkedinUrl\": \"https://linkedin.com/in/mohamed-math\",\n  \"country\": \"Egypt\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/admin/teachers",
@@ -450,7 +450,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"firstName\": \"Mohamed\",\n  \"lastName\": \"Mahmoud\",\n  \"experienceYears\": 8,\n  \"subject\": \"Advanced Mathematics\"\n}"
+							"raw": "{\n  \"fullName\": \"Mohamed Mahmoud\",\n  \"experienceYears\": 8,\n  \"subject\": \"Advanced Mathematics\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/admin/teachers/:teacherId",

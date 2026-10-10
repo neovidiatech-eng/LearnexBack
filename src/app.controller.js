@@ -53,6 +53,9 @@ const bootstrap = async () => {
 
   app.use(express.json());
   app.use("/uploads", express.static(path.resolve("./uploads")));
+  app.use("/uploads", (req, res) => {
+    return res.status(404).json({ message: "FILE_NOT_FOUND" });
+  });
   app.use(i18nMiddleware);
   
 
@@ -75,7 +78,7 @@ const bootstrap = async () => {
   app.use(globalErrorHandling);
 
   return app.listen(port, () => {
-    console.log(`Server is running on port ${port} 💕`);
+    console.log(`Server is running on port ${port} `);
     console.log(`Swagger Docs available at http://localhost:${port}/api-docs`);
   });
 };

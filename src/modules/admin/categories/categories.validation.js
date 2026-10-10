@@ -37,6 +37,8 @@ export const createCategory = {
       description: joi.string().min(2).max(1000).trim().required(),
       slug: joi.string().trim(),
       locale: joi.string().trim(),
+      coursesCount: joi.number().integer().min(0).optional(),
+      studentsCount: joi.number().integer().min(0).optional(),
     })
     .required()
     .options({ allowUnknown: false }),
@@ -64,12 +66,15 @@ export const editCategory = {
       description: joi.string().min(2).max(1000).trim(),
       slug: joi.string().trim(),
       locale: joi.string().trim(),
+      coursesCount: joi.number().integer().min(0).optional(),
+      studentsCount: joi.number().integer().min(0).optional(),
     })
     .min(1)
     .required()
     .options({ allowUnknown: false }),
   file: joi.object(generalFields.file).unknown(true).optional(),
 };
+
 
 export const deleteCategory = {
   params: joi

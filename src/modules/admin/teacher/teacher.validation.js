@@ -29,12 +29,11 @@ export const createTeacher = {
   body: joi
     .object()
     .keys({
-      firstName: joi.string().min(2).max(50).trim().required(),
-      lastName: joi.string().min(2).max(50).trim().required(),
+      fullName: joi.string().min(2).max(100).trim().required(),
       email: generalFields.email.required(),
       password: generalFields.password.optional(), 
       phone: generalFields.phone.required(),
-      subject: joi.string().min(2).max(100).trim().required(),
+      subject: joi.string().min(2).max(100).trim().optional(),
       experienceYears: joi.number().integer().min(0).max(70).required(),
       status: joi
         .string()
@@ -54,8 +53,7 @@ export const updateTeacher = {
   body: joi
     .object()
     .keys({
-      firstName: joi.string().min(2).max(50).trim().optional(),
-      lastName: joi.string().min(2).max(50).trim().optional(),
+      fullName: joi.string().min(2).max(100).trim().optional(),
       email: generalFields.email.optional(),
       password: generalFields.password.optional(),
       phone: generalFields.phone.optional(),
@@ -68,6 +66,7 @@ export const updateTeacher = {
       bio: joi.string().max(2000).trim().allow("", null).optional(),
       linkedinUrl: joi.string().uri().allow("", null).optional(),
       country: joi.string().min(2).max(100).trim().optional(),
+      courseIds: joi.array().items(generalFields.id).optional(),
     })
     .required()
     .options({ allowUnknown: false }),
@@ -96,11 +95,6 @@ export const assignCourses = {
     })
     .required()
     .options({ allowUnknown: false }),
-};
-
-export const updateCv = {
-  params: getTeacherById.params,
-  file: joi.object(generalFields.file).required(),
 };
 
 //

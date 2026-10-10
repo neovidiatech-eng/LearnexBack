@@ -63,7 +63,7 @@ export const getCourses = asyncHandler(async (req, res, next) => {
 
   const courses = await teacherCourseService.getCourses({
     teacherId,
-    role: req.user.role,
+    role: req.user.role.slug.toLowerCase(),
     search,
     page,
     limit,

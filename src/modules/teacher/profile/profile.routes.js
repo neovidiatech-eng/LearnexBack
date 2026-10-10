@@ -2,10 +2,14 @@ import { Router } from "express";
 import * as profileController from "./profile.controller.js";
 import * as profileValidation from "./profile.validation.js";
 import { authentication } from "../../../middleware/authentication.middleware.js";
-import { authorizeResource } from "../../../middleware/authorization.middleware.js";
+import {
+  authorize,
+  authorizeResource,
+} from "../../../middleware/authorization.middleware.js";
 import { validation } from "../../../middleware/validation.middleware.js";
 import { localFileUpload } from "../../../utils/multer/local.multer.js";
 import { fileValidation } from "../../../utils/multer/fileValidation.js";
+import { PERMISSIONS_V2 } from "../../../Constants/permissions.constants.js";
 
 const router = Router();
 
@@ -23,6 +27,7 @@ router.patch(
   validation(profileValidation.updateProfile),
   profileController.updateProfile,
 );
+
 router.patch(
   "/session-pricing",
   authentication(),
@@ -44,7 +49,6 @@ router.patch(
   profileController.updateImageProfile,
 );
 
-
 router.patch(
   "/visibility",
   authentication(),
@@ -53,11 +57,33 @@ router.patch(
   profileController.toggleVisibility,
 );
 
-
 router.delete(
   "/profile",
   authentication(),
   authorizeResource("teachers"),
   profileController.deleteProfile,
 );
+
+router.get(
+  "/workHours",
+  authentication(),
+  authorize(PERMISSIONS_V2.WORK_HOURS.READ),
+  profileController.getWorkHours,
+);
+
+router.patch(
+  "/workHours",
+  authentication(),
+  authorize(PERMISSIONS_V2.WORK_HOURS.UPDATE),
+  validation(profileValidation.updateWorkHours),
+  profileController.updateWorkHours,
+);
+
+router.get(
+  "/:teacherId",
+  authentication(),
+  authorizeResource("teachers"),
+  profileController.shareProfile,
+);
+
 export default router;

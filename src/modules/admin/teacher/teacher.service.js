@@ -2,7 +2,7 @@ import ExcelJS from "exceljs";
 import * as dbService from "../../../db/db.service.js";
 import { authProviderEnum } from "../../../utils/Enums/authProvider.enum.js";
 import { userStatusEnum } from "../../../utils/Enums/userStatus.enum.js";
-import { generateEncryption } from "../../../utils/security/encryption.security.js";
+import { decryptEncription, generateEncryption } from "../../../utils/security/encryption.security.js";
 import { generateHash } from "../../../utils/security/hash.security.js";
 import { baseRoleEnum } from "../../../utils/Enums/role.enum.js";
 import { emailEvent } from "../../../utils/events/email.event.js";
@@ -11,8 +11,6 @@ import { CertificateStatus } from "../../../utils/Enums/teacherCertificate.enum.
 export const createTeacherService = async (body) => {
   const {
     fullName,
-    firstName,
-    lastName,
     email,
     password,
     phone,
@@ -69,8 +67,6 @@ export const createTeacherService = async (body) => {
     select: { id: true },
   });
 
-  const resolvedFullName = fullName || (firstName && lastName ? `${firstName} ${lastName}`.trim() : firstName || lastName || "Teacher");
-
   const teacher = await dbService.create({
     model: "teacher",
     data: {
@@ -80,7 +76,7 @@ export const createTeacherService = async (body) => {
       linkedinUrl,
       user: {
         create: {
-          fullName: resolvedFullName,
+          fullName,
           email: email.toLowerCase(),
           password: hashPassword,
           phone: encPhone,
@@ -198,7 +194,13 @@ export const getAllTeachersService = async ({
     orderBy: { createdAt: "desc" },
     select,
   });
-
+for (const teacher of result.items) {
+    if (teacher.user?.phone) {
+      teacher.user.phone = await decryptEncription({
+        cipherText: teacher.user.phone,
+      });
+    }
+  }
   return {
     teachers: result.items,
     pagination: result.pagination,
@@ -253,15 +255,17 @@ export const getTeacherByIdService = async (teacherId) => {
     error.cause = 404;
     throw error;
   }
-
+ if (teacher.user?.phone) {
+   teacher.user.phone = await decryptEncription({
+     cipherText: teacher.user.phone,
+   });
+ }
   return teacher;
 };
 
 export const updateTeacherService = async (body, teacherId) => {
   const {
     fullName,
-    firstName,
-    lastName,
     email,
     password,
     phone,
@@ -271,6 +275,7 @@ export const updateTeacherService = async (body, teacherId) => {
     bio,
     linkedinUrl,
     country,
+    courseIds,
   } = body;
 
   const existingTeacher = await dbService.findFirst({
@@ -302,13 +307,30 @@ export const updateTeacherService = async (body, teacherId) => {
     }
   }
 
+  if (courseIds && courseIds.length) {
+    const courses = await dbService.findMany({
+      model: "course",
+      where: {
+        id: { in: courseIds },
+      },
+      select: {
+        id: true,
+      },
+    });
+    if (courses.length !== courseIds.length) {
+      const error = new Error("COURSES_NOT_FOUND");
+      error.cause = 404;
+      throw error;
+    }
+  }
+
   const hashPassword = password
     ? await generateHash({ plainText: password })
     : undefined;
+
   const encPhone = phone
     ? await generateEncryption({ plainText: phone })
     : undefined;
-  const resolvedFullName = fullName || (firstName && lastName ? `${firstName} ${lastName}`.trim() : firstName || lastName);
 
   const teacher = await dbService.updateOne({
     model: "teacher",
@@ -322,10 +344,10 @@ export const updateTeacherService = async (body, teacherId) => {
       ...(linkedinUrl !== undefined && { linkedinUrl }),
       user: {
         update: {
-          ...(resolvedFullName && { fullName: resolvedFullName }),
+          ...(fullName && { fullName }),
           ...(email && { email: email.toLowerCase() }),
           ...(hashPassword && { password: hashPassword }),
-          ...(encPhone && { phone: encPhone }),
+          ...(phone && { phone: encPhone }),
           ...(country && { country }),
           ...(status && { status }),
         },
@@ -351,6 +373,20 @@ export const updateTeacherService = async (body, teacherId) => {
       },
     },
   });
+
+  if (courseIds && courseIds.length) {
+    await dbService.updateMany({
+      model: "course",
+      where: { id: { in: courseIds } },
+      data: { instructorId: teacher.user.id },
+    });
+  }
+
+  if (teacher.user?.phone) {
+    teacher.user.phone = await decryptEncription({
+      cipherText: teacher.user.phone,
+    });
+  }
 
   return teacher;
 };
@@ -426,38 +462,6 @@ export const assignCoursesToTeacherService = async (
     message: "COURSES_ASSIGNED_SUCCESSFULLY",
     assignedCoursesCount: courseIds.length,
   };
-};
-
-export const updateTeacherCvService = async (teacherId, file) => {
-  const teacher = await dbService.findFirst({
-    model: "teacher",
-    where: {
-      OR: [{ id: teacherId }, { userId: teacherId }],
-    },
-  });
-
-  if (!teacher) {
-    const error = new Error("TEACHER_NOT_FOUND");
-    error.cause = 404;
-    throw error;
-  }
-
-  const updatedTeacher = await dbService.updateOne({
-    model: "teacher",
-    where: { id: teacher.id },
-    data: {
-      ...(file && {
-        cvUrl: file.relativeDestination,
-      }),
-    },
-    select: {
-      id: true,
-      cvUrl: true,
-      updatedAt: true,
-    },
-  });
-
-  return updatedTeacher;
 };
 
 export const deleteTeacherService = async (teacherId) => {

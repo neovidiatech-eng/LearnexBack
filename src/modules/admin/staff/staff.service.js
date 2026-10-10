@@ -13,8 +13,7 @@ import ExcelJS from "exceljs";
 // ─── Shared Prisma select for Staff user responses ───────────────────────────
 const staffUserSelect = {
   id: true,
-  firstName: true,
-  lastName: true,
+  fullName: true,
   email: true,
   phone: true,
   country: true,
@@ -25,10 +24,11 @@ const staffUserSelect = {
   role: {
     select: {
       id: true,
+      slug: true,
+      color: true,
       roleTranslations: {
         select: {
           name: true,
-          slug: true,
           lang: true,
         },
       },
@@ -39,9 +39,11 @@ const staffUserSelect = {
 // ─── Helper: verify a user belongs to Staff scope ────────────────────────────
 const verifyStaffScope = (user) => {
   if (!user) return false;
-  const roleSlugs =
-    user.role?.roleTranslations?.map((t) => t.slug.toLowerCase()) || [];
-  return !roleSlugs.some((slug) => EXCLUDED_STAFF_ROLE_SLUGS.includes(slug));
+  const roleSlug = user.role?.slug?.toLowerCase();
+  if (roleSlug && EXCLUDED_STAFF_ROLE_SLUGS.includes(roleSlug)) {
+    return false;
+  }
+  return true;
 };
 
 // ─── Helper: resolve a role ID from slug, rejecting excluded roles ───────────
@@ -60,8 +62,8 @@ const resolveStaffRoleId = async (roleId) => {
     throw error;
   }
 
-  const slugs = role.roleTranslations.map((t) => t.slug.toLowerCase());
-  if (slugs.some((s) => EXCLUDED_STAFF_ROLE_SLUGS.includes(s))) {
+  const roleSlug = role.slug?.toLowerCase();
+  if (roleSlug && EXCLUDED_STAFF_ROLE_SLUGS.includes(roleSlug)) {
     const error = new Error("INVALID_STAFF_ROLE");
     error.cause = 400;
     throw error;
@@ -94,8 +96,7 @@ export const getAllStaffService = async ({
     ...(search
       ? {
           OR: [
-            { firstName: { contains: search, mode: "insensitive" } },
-            { lastName: { contains: search, mode: "insensitive" } },
+            { fullName: { contains: search, mode: "insensitive" } },
             { email: { contains: search, mode: "insensitive" } },
           ],
         }
@@ -141,8 +142,7 @@ export const getStaffByIdService = async (staffId) => {
 // ═════════════════════════════════════════════════════════════════════════════
 export const createStaffService = async (body) => {
   const {
-    firstName,
-    lastName,
+    fullName,
     email,
     password,
     phone,
@@ -175,8 +175,7 @@ export const createStaffService = async (body) => {
   const user = await DBService.create({
     model: "user",
     data: {
-      firstName,
-      lastName,
+      fullName,
       email: email.toLowerCase(),
       password: hashPassword,
       phone: encPhone,
@@ -184,7 +183,7 @@ export const createStaffService = async (body) => {
       roleId: validRoleId,
       status: status || userStatusEnum.ACTIVE,
       provider: authProviderEnum.SYSTEM,
-      confirmEmail: new Date(), // Staff created by admin → auto-confirmed
+      confirmEmail: true, // Staff created by admin → auto-confirmed
     },
     select: staffUserSelect,
   });
@@ -196,7 +195,7 @@ export const createStaffService = async (body) => {
 // UPDATE STAFF
 // ═════════════════════════════════════════════════════════════════════════════
 export const updateStaffService = async (staffId, body) => {
-  const { firstName, lastName, email, password, phone, country, status, roleId } =
+  const { fullName, email, password, phone, country, status, roleId } =
     body;
 
   // 1. Verify target user is Staff scope
@@ -242,8 +241,7 @@ export const updateStaffService = async (staffId, body) => {
     : undefined;
 
   const updateData = {
-    ...(firstName && { firstName }),
-    ...(lastName && { lastName }),
+    ...(fullName && { fullName }),
     ...(email && { email: email.toLowerCase() }),
     ...(hashPassword && { password: hashPassword }),
     ...(encPhone !== undefined && phone !== undefined && { phone: encPhone }),
@@ -285,8 +283,7 @@ export const changeStaffStatusService = async (staffId, status) => {
     data: { status },
     select: {
       id: true,
-      firstName: true,
-      lastName: true,
+      fullName: true,
       email: true,
       status: true,
       updatedAt: true,
@@ -328,18 +325,15 @@ export const getStaffRolesService = async () => {
   const roles = await DBService.findMany({
     model: "role",
     where: {
-      roleTranslations: {
-        none: {
-          slug: { in: EXCLUDED_STAFF_ROLE_SLUGS },
-        },
-      },
+      slug: { notIn: EXCLUDED_STAFF_ROLE_SLUGS },
     },
     select: {
       id: true,
+      slug: true,
+      color: true,
       roleTranslations: {
         select: {
           name: true,
-          slug: true,
           lang: true,
         },
       },
@@ -366,8 +360,7 @@ export const exportStaffToExcelService = async ({
     ...(search
       ? {
           OR: [
-            { firstName: { contains: search, mode: "insensitive" } },
-            { lastName: { contains: search, mode: "insensitive" } },
+            { fullName: { contains: search, mode: "insensitive" } },
             { email: { contains: search, mode: "insensitive" } },
           ],
         }
@@ -379,8 +372,7 @@ export const exportStaffToExcelService = async ({
     where,
     orderBy: { createdAt: "desc" },
     select: {
-      firstName: true,
-      lastName: true,
+      fullName: true,
       email: true,
       status: true,
       createdAt: true,
@@ -422,7 +414,7 @@ export const exportStaffToExcelService = async ({
       user.role?.roleTranslations?.[0]?.name || "N/A";
 
     worksheet.addRow({
-      name: `${user.firstName} ${user.lastName}`.trim(),
+      name: user.fullName || "N/A",
       email: user.email,
       role: roleName,
       status: user.status,
