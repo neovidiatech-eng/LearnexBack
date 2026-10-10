@@ -11,19 +11,19 @@ export const getAllTeachersService = async ({
     ...(subject ? { subject: { contains: subject, mode: "insensitive" } } : {}),
     ...(search
       ? {
-          OR: [
-            { subject: { contains: search, mode: "insensitive" } },
-            {
-              user: {
-                OR: [
-                  { fullName: { contains: search, mode: "insensitive" } },
-                  { email: { contains: search, mode: "insensitive" } },
-                  { phone: { contains: search, mode: "insensitive" } },
-                ],
-              },
+        OR: [
+          { subject: { contains: search, mode: "insensitive" } },
+          {
+            user: {
+              OR: [
+                { fullName: { contains: search, mode: "insensitive" } },
+                { email: { contains: search, mode: "insensitive" } },
+                { phone: { contains: search, mode: "insensitive" } },
+              ],
             },
-          ],
-        }
+          },
+        ],
+      }
       : {}),
   };
 
@@ -122,3 +122,58 @@ export const getTeacherByIdService = async (teacherId) => {
 
   return teacher;
 };
+
+// export const addTeacherReviewService = async (userId, teacherId, body) => {
+//   const { rating, comment, bookingId } = body;
+
+//   const teacher = await db.findFirst({
+//     model: "teacher",
+//     where: { id: teacherId },
+//   });
+
+//   if (!teacher) {
+//     const error = new Error("TEACHER_NOT_FOUND");
+//     error.cause = 404;
+//     throw error;
+//   }
+
+//   if (teacher.userId === userId) {
+//     const error = new Error("CANNOT_REVIEW_YOURSELF");
+//     error.cause = 400;
+//     throw error;
+//   }
+
+//   const review = await db.upsertOne({
+//     model: "teacherReview",
+//     where: {
+//       studentId_teacherId: {
+//         studentId: userId,
+//         teacherId,
+//       },
+//     },
+//     update: {
+//       rating: Number(rating),
+//       comment,
+//       ...(bookingId && { bookingId }),
+//     },
+//     create: {
+//       studentId: userId,
+//       teacherId,
+//       rating: Number(rating),
+//       comment,
+//       bookingId: bookingId || null,
+//       isHidden: false,
+//     },
+//   });
+
+
+
+// const { avgRating, reviewsCount } = await recalculateReview({
+//   model: "teacherReview",
+//   where: { teacherId, isHidden: false },
+//   parentModel: "teacher",
+//   parentId: teacherId,
+// });
+
+//   return { review, avgRating, reviewsCount };
+// };

@@ -2,7 +2,7 @@ import * as DBService from "../../../db/db.service.js";
 import { authProviderEnum } from "../../../utils/Enums/authProvider.enum.js";
 import { userStatusEnum } from "../../../utils/Enums/userStatus.enum.js";
 import { generateHash } from "../../../utils/security/hash.security.js";
-import { generateEncryption } from "../../../utils/security/encryption.security.js";
+import { generateEncryption,decryptEncription } from "../../../utils/security/encryption.security.js";
 import {
   buildStaffScopeFilter,
   isExcludedStaffRole,
@@ -112,6 +112,14 @@ export const getAllStaffService = async ({
     select: staffUserSelect,
   });
 
+  for (const staffMember of result.items) {
+    if (staffMember.phone) {
+      staffMember.phone = await decryptEncription({
+        cipherText: staffMember.phone,
+      });
+    }
+  }
+
   return {
     staff: result.items,
     pagination: result.pagination,
@@ -132,6 +140,12 @@ export const getStaffByIdService = async (staffId) => {
     const error = new Error("STAFF_NOT_FOUND");
     error.cause = 404;
     throw error;
+  }
+
+  if (user.phone) {
+    user.phone = await decryptEncription({
+      cipherText: user.phone,
+    });
   }
 
   return user;
@@ -187,6 +201,12 @@ export const createStaffService = async (body) => {
     },
     select: staffUserSelect,
   });
+
+  if (user?.phone) {
+    user.phone = await decryptEncription({
+      cipherText: user.phone,
+    });
+  }
 
   return user;
 };
@@ -256,6 +276,12 @@ export const updateStaffService = async (staffId, body) => {
     data: updateData,
     select: staffUserSelect,
   });
+
+  if (updated?.phone) {
+    updated.phone = await decryptEncription({
+      cipherText: updated.phone,
+    });
+  }
 
   return updated;
 };
