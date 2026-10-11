@@ -9,6 +9,40 @@ import {
 } from "../../../utils/Enums/index.js";
 import { deleteFile } from "../../../utils/multer/file.utils.js";
 
+export const resolveInstructorUserId = async (instructorId) => {
+  if (!instructorId) return null;
+
+  const user = await DBService.findFirst({
+    model: "user",
+    where: {
+      id: instructorId,
+      OR: [
+        { role: { slug: baseRoleEnum.TEACHER } },
+        { teacher: { isNot: null } },
+      ],
+    },
+    select: { id: true },
+  });
+
+  if (user) {
+    return user.id;
+  }
+
+  const teacherProfile = await DBService.findFirst({
+    model: "teacher",
+    where: { id: instructorId },
+    select: { userId: true },
+  });
+
+  if (teacherProfile?.userId) {
+    return teacherProfile.userId;
+  }
+
+  const error = new Error("INSTRUCTOR_NOT_FOUND_OR_INVALID");
+  error.cause = 404;
+  throw error;
+};
+
 export const createCourseService = async (body, reqFiles) => {
   const {
     categoryId,
@@ -39,21 +73,9 @@ export const createCourseService = async (body, reqFiles) => {
     throw error;
   }
 
+  let resolvedInstructorId = null;
   if (instructorId) {
-    const instructor = await DBService.findFirst({
-      model: "user",
-      where: {
-        id: instructorId,
-        role: {
-          slug: baseRoleEnum.TEACHER,
-        },
-      },
-    });
-    if (!instructor) {
-      const error = new Error("INSTRUCTOR_NOT_FOUND_OR_INVALID");
-      error.cause = 404;
-      throw error;
-    }
+    resolvedInstructorId = await resolveInstructorUserId(instructorId);
   }
 
   const calculatedLessonsCount =
@@ -68,7 +90,7 @@ export const createCourseService = async (body, reqFiles) => {
     model: "course",
     data: {
       categoryId,
-      instructorId,
+      instructorId: resolvedInstructorId,
       level,
       thumbnail,
       language,
@@ -328,9 +350,21 @@ export const getAllCoursesService = async ({
   const take = Math.max(1, Number(limit));
   const skip = (p - 1) * take;
 
+  let adminInstructorId = instructorId;
+  if (instructorId) {
+    const teacherProfile = await DBService.findFirst({
+      model: "teacher",
+      where: { id: instructorId },
+      select: { userId: true },
+    });
+    if (teacherProfile?.userId) {
+      adminInstructorId = teacherProfile.userId;
+    }
+  }
+
   const adminWhere = {
     ...(categoryId ? { categoryId } : {}),
-    ...(instructorId ? { instructorId } : {}),
+    ...(adminInstructorId ? { instructorId: adminInstructorId } : {}),
     ...(level ? { level } : {}),
     ...(status ? { status } : {}),
     ...(enrollmentType ? { enrollmentType } : {}),
@@ -377,7 +411,6 @@ export const getAllCoursesService = async ({
       : {}),
   };
 
-  // 1. If only COURSE is requested
   if (type === coursesType.COURSE) {
     const result = await DBService.findManyWithPaginationAndCount({
       model: "course",
@@ -394,7 +427,6 @@ export const getAllCoursesService = async ({
     };
   }
 
-  // 2. If only TEACHER_COURSE is requested
   if (type === coursesType.TEACHER_COURSE) {
     const result = await DBService.findManyWithPaginationAndCount({
       model: "teacherCourse",
@@ -411,7 +443,6 @@ export const getAllCoursesService = async ({
     };
   }
 
-  // 3. If ALL is requested (default)
   const isTeacherStatus = ["PENDING", "APPROVED", "REJECTED"].includes(status);
   const isAdminStatus = Object.values(courseStatusEnum).includes(status);
 
@@ -468,7 +499,6 @@ export const getAllCoursesService = async ({
 };
 
 export const getCourseByIdService = async ({ courseId }) => {
-  // 1. Search in Course first
   const course = await DBService.findOne({
     model: "course",
     where: {
@@ -483,7 +513,6 @@ export const getCourseByIdService = async ({ courseId }) => {
     };
   }
 
-  // 2. Search in TeacherCourse
   const teacherCourse = await DBService.findOne({
     model: "teacherCourse",
     where: {
@@ -534,19 +563,9 @@ export const updateCourseService = async (body, params, reqFiles) => {
     throw error;
   }
 
-  if (instructorId) {
-    const instructor = await DBService.findFirst({
-      model: "user",
-      where: {
-        id: instructorId,
-        role: { slug: baseRoleEnum.TEACHER },
-      },
-    });
-    if (!instructor) {
-      const error = new Error("INSTRUCTOR_NOT_FOUND_OR_INVALID");
-      error.cause = 404;
-      throw error;
-    }
+  let resolvedInstructorId = undefined;
+  if (instructorId !== undefined) {
+    resolvedInstructorId = await resolveInstructorUserId(instructorId);
   }
 
   const calculatedLessonsCount =
@@ -564,7 +583,7 @@ export const updateCourseService = async (body, params, reqFiles) => {
     where: { id: courseId },
     data: {
       ...(categoryId !== undefined && { categoryId }),
-      ...(instructorId !== undefined && { instructorId }),
+      ...(resolvedInstructorId !== undefined && { instructorId: resolvedInstructorId }),
       ...(level !== undefined && { level }),
       ...(newThumbnail && { thumbnail: newThumbnail }),
       ...(newPreviewVideo && { previewVideoUrl: newPreviewVideo }),
