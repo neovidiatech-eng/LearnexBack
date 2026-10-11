@@ -6,6 +6,7 @@ import {
 
 export const createOfferService = async (body) => {
   const {
+    courseId,
     target,
     offerType,
     discount,
@@ -14,6 +15,18 @@ export const createOfferService = async (body) => {
     status,
     translations = [],
   } = body;
+
+  if (courseId) {
+    const course = await dbService.findOne({
+      model: "course",
+      where: { id: courseId },
+    });
+    if (!course) {
+      const error = new Error("COURSE_NOT_FOUND");
+      error.cause = 404;
+      throw error;
+    }
+  }
 
   for (const t of translations) {
     const existingTranslation = await dbService.findFirst({
@@ -62,6 +75,8 @@ export const createOfferService = async (body) => {
   const offer = await dbService.create({
     model: "offer",
     data: {
+      courseId: courseId || null,
+      teacherCourseId: null,
       target: target?.trim() || "All Users",
       offerType,
       discount,
@@ -78,6 +93,15 @@ export const createOfferService = async (body) => {
     },
     include: {
       translations: true,
+      course: {
+        select: {
+          id: true,
+          thumbnail: true,
+          originalPrice: true,
+          salePrice: true,
+          translations: { select: { locale: true, title: true } },
+        },
+      },
     },
   });
 
@@ -85,6 +109,7 @@ export const createOfferService = async (body) => {
 };
 
 export const getAllOffersService = async ({
+  courseId,
   page = 1,
   limit = 10,
   search = "",
@@ -96,6 +121,8 @@ export const getAllOffersService = async ({
   sortType = "desc",
 } = {}) => {
   const where = {
+    teacherCourseId: null, // Admin only views platform course / general offers
+    ...(courseId ? { courseId } : {}),
     ...(status ? { status } : {}),
     ...(offerType ? { offerType } : {}),
     ...(target ? { target: { contains: target, mode: "insensitive" } } : {}),
@@ -133,6 +160,15 @@ export const getAllOffersService = async ({
     limit,
     orderBy,
     include: {
+      course: {
+        select: {
+          id: true,
+          thumbnail: true,
+          originalPrice: true,
+          salePrice: true,
+          translations: { select: { locale: true, title: true } },
+        },
+      },
       translations: {
         where: locale ? { locale } : undefined,
       },
@@ -148,8 +184,17 @@ export const getAllOffersService = async ({
 export const getOfferByIdService = async (offerId, locale) => {
   const offer = await dbService.findFirst({
     model: "offer",
-    where: { id: offerId },
+    where: { id: offerId, teacherCourseId: null },
     include: {
+      course: {
+        select: {
+          id: true,
+          thumbnail: true,
+          originalPrice: true,
+          salePrice: true,
+          translations: { select: { locale: true, title: true } },
+        },
+      },
       translations: {
         where: locale ? { locale } : undefined,
       },
@@ -167,6 +212,7 @@ export const getOfferByIdService = async (offerId, locale) => {
 
 export const updateOfferService = async (offerId, body) => {
   const {
+    courseId,
     target,
     offerType,
     discount,
@@ -178,7 +224,7 @@ export const updateOfferService = async (offerId, body) => {
 
   const offer = await dbService.findFirst({
     model: "offer",
-    where: { id: offerId },
+    where: { id: offerId, teacherCourseId: null },
     include: {
       translations: true,
     },
@@ -188,6 +234,18 @@ export const updateOfferService = async (offerId, body) => {
     const error = new Error("OFFER_NOT_FOUND");
     error.cause = 404;
     throw error;
+  }
+
+  if (courseId !== undefined && courseId !== null) {
+    const course = await dbService.findOne({
+      model: "course",
+      where: { id: courseId },
+    });
+    if (!course) {
+      const error = new Error("COURSE_NOT_FOUND");
+      error.cause = 404;
+      throw error;
+    }
   }
 
   const finalStart = startDate ? new Date(startDate) : offer.startDate;
@@ -237,6 +295,7 @@ export const updateOfferService = async (offerId, body) => {
     model: "offer",
     where: { id: offerId },
     data: {
+      ...(courseId !== undefined && { courseId }),
       ...(target !== undefined && { target: target.trim() }),
       ...(offerType !== undefined && { offerType }),
       ...(discount !== undefined && { discount }),
@@ -269,6 +328,15 @@ export const updateOfferService = async (offerId, body) => {
     },
     include: {
       translations: true,
+      course: {
+        select: {
+          id: true,
+          thumbnail: true,
+          originalPrice: true,
+          salePrice: true,
+          translations: { select: { locale: true, title: true } },
+        },
+      },
     },
   });
 

@@ -97,6 +97,7 @@ export const PERMISSIONS_V2 = {
   // Reviews Management
   REVIEWS: {
     READ: "reviews:read",
+    UPDATE: "reviews:update",
     DELETE: "reviews:delete",
   },
 

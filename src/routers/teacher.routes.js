@@ -7,6 +7,7 @@ import teacherProfileRouter from "../modules/teacher/profile/profile.routes.js";
 import teacherCertificateRouter from "../modules/teacher/certificates/certificate.routes.js";
 import teacherQuizRouter from "../modules/teacher/courses/quizes/quiz.routes.js"
 import teacherReviewsRouter from "../modules/teacher/reviews/reviews.routes.js";
+import teacherOfferRouter from "../modules/teacher/offers/offers.routes.js";
 
 const router = Router();
 router.use("/auth", teacherAuthRouter);
@@ -17,5 +18,6 @@ router.use("/items", teacherItemsRouter);
 router.use("/me", teacherProfileRouter);
 router.use("/certificates", teacherCertificateRouter);
 router.use("/reviews", teacherReviewsRouter);
+router.use("/offers", teacherOfferRouter);
 
 export default router;

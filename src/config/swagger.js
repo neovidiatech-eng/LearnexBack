@@ -659,6 +659,38 @@ Include the Bearer JWT token in the Authorization header:
           },
         },
       },
+      TeacherOfferCreateDTO: {
+        type: "object",
+        required: ["courseId", "startDate", "endDate", "translations"],
+        properties: {
+          courseId: { type: "string", format: "uuid", example: "t1a2b3c4-d5e6-7f8a-9b0c-1d2e3f4a5b6c", description: "Teacher Course ID (must be owned by the teacher)" },
+          target: { type: "string", default: "All Users", example: "All Students" },
+          offerType: { type: "string", enum: ["PERCENTAGE", "FIXED"], default: "PERCENTAGE" },
+          discount: { type: "number", example: 20.00 },
+          startDate: { type: "string", format: "date-time", example: "2026-01-01T00:00:00.000Z" },
+          endDate: { type: "string", format: "date-time", example: "2026-12-31T23:59:59.000Z" },
+          status: { type: "string", enum: ["ACTIVE", "INACTIVE", "SCHEDULED", "EXPIRED"], default: "ACTIVE" },
+          translations: {
+            type: "array",
+            items: {
+              type: "object",
+              required: ["locale", "name", "offerDesc"],
+              properties: {
+                locale: { type: "string", enum: ["ar", "en", "fr"], example: "en" },
+                name: { type: "string", example: "Special Course Discount" },
+                offerDesc: { type: "string", example: "Limited time discount on my masterclass." },
+              },
+            },
+          },
+        },
+      },
+      AdminReviewVisibilityDTO: {
+        type: "object",
+        properties: {
+          isHidden: { type: "boolean", example: true, description: "True to hide review, false to show. If omitted, toggles current value." },
+          type: { type: "string", enum: ["COURSE", "TEACHER"], example: "COURSE", description: "Review type (optional)" },
+        },
+      },
       AdminCouponCreateDTO: {
         type: "object",
         required: ["name", "code", "discountType", "discountValue", "startDate", "expirationDate", "usageLimit"],
@@ -708,6 +740,9 @@ Include the Bearer JWT token in the Authorization header:
     { name: "Admin - Roles & Permissions", description: "RBAC roles, permission sets, and localized titles" },
     { name: "Admin - Coupons", description: "Discount vouchers, redemption limits, and status toggles" },
     { name: "Admin - Offers", description: "Promotional offers, percentage discounts, and validity schedules" },
+    { name: "Admin - Reviews", description: "Admin reviews management, visibility toggle (isHidden), and statistics" },
+    { name: "Teacher - Reviews", description: "Teacher session and course reviews overview" },
+    { name: "Teacher - Offers", description: "Teacher personal course promotional offers" },
     { name: "Admin - Activity Logs", description: "Audit trail, security metrics, and real-time activity tracking" },
     { name: "Admin - Settings & CMS", description: "App metadata, logo branding, and static CMS pages" },
 
@@ -1974,6 +2009,162 @@ Include the Bearer JWT token in the Authorization header:
     // ═══════════════════════════════════════════════════════════
     // ADMIN COUPONS
     // ═══════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════
+    // ADMIN REVIEWS
+    // ═══════════════════════════════════════════════════════════
+    "/api/v1/admin/reviews": {
+      get: {
+        summary: "Get All Reviews (Courses & Teachers)",
+        tags: ["Admin - Reviews"],
+        security: bearerSecurity,
+        parameters: [
+          ...paginationQueryParams,
+          {
+            in: "query",
+            name: "type",
+            schema: { type: "string", enum: ["COURSE", "TEACHER"] },
+            description: "Filter reviews by type (COURSE or TEACHER). If omitted, returns both.",
+            example: "COURSE",
+          },
+          {
+            in: "query",
+            name: "isHidden",
+            schema: { type: "boolean" },
+            description: "Filter by hidden status (true for hidden, false for visible)",
+            example: false,
+          },
+          {
+            in: "query",
+            name: "rating",
+            schema: { type: "integer", minimum: 1, maximum: 5 },
+            description: "Filter by star rating",
+            example: 5,
+          },
+          {
+            in: "query",
+            name: "courseId",
+            schema: { type: "string", format: "uuid" },
+            description: "Filter by specific course ID",
+          },
+          {
+            in: "query",
+            name: "teacherId",
+            schema: { type: "string", format: "uuid" },
+            description: "Filter by specific teacher ID",
+          },
+        ],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/admin/reviews/stats": {
+      get: {
+        summary: "Get Reviews Dashboard Statistics",
+        tags: ["Admin - Reviews"],
+        security: bearerSecurity,
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/admin/reviews/{reviewId}": {
+      get: {
+        summary: "Get Review Details (For Modal)",
+        tags: ["Admin - Reviews"],
+        security: bearerSecurity,
+        parameters: [
+          uuidParam("reviewId", "Review UUID"),
+          {
+            in: "query",
+            name: "type",
+            schema: { type: "string", enum: ["COURSE", "TEACHER"] },
+            description: "Optional review type",
+            example: "COURSE",
+          },
+        ],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+      delete: {
+        summary: "Delete Review Permanently",
+        tags: ["Admin - Reviews"],
+        security: bearerSecurity,
+        parameters: [
+          uuidParam("reviewId", "Review UUID"),
+          {
+            in: "query",
+            name: "type",
+            schema: { type: "string", enum: ["COURSE", "TEACHER"] },
+            description: "Optional review type",
+          },
+        ],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/SuccessMessageResponse" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/admin/reviews/{reviewId}/status": {
+      patch: {
+        summary: "Toggle or Update Review Visibility (isHidden)",
+        tags: ["Admin - Reviews"],
+        security: bearerSecurity,
+        parameters: [uuidParam("reviewId", "Review UUID")],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/AdminReviewVisibilityDTO" },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/admin/reviews/{reviewId}/visibility": {
+      patch: {
+        summary: "Toggle or Update Review Visibility Alias (isHidden)",
+        tags: ["Admin - Reviews"],
+        security: bearerSecurity,
+        parameters: [uuidParam("reviewId", "Review UUID")],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/AdminReviewVisibilityDTO" },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
     "/api/v1/admin/coupons": {
       post: {
         summary: "Create Coupon",
@@ -3018,6 +3209,161 @@ Include the Bearer JWT token in the Authorization header:
     },
 
     // ═══════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════
+    // TEACHER REVIEWS
+    // ═══════════════════════════════════════════════════════════
+    "/api/v1/teacher/reviews": {
+      get: {
+        summary: "Get Authenticated Teacher Reviews (Courses & Sessions)",
+        tags: ["Teacher - Reviews"],
+        security: bearerSecurity,
+        parameters: [
+          ...paginationQueryParams,
+        ],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // TEACHER OFFERS
+    // ═══════════════════════════════════════════════════════════
+    "/api/v1/teacher/offers": {
+      post: {
+        summary: "Create Offer on Teacher Course",
+        tags: ["Teacher - Offers"],
+        security: bearerSecurity,
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/TeacherOfferCreateDTO" },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[201]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          409: standardResponses[409],
+          500: standardResponses[500],
+        },
+      },
+      get: {
+        summary: "Get All Teacher Offers",
+        tags: ["Teacher - Offers"],
+        security: bearerSecurity,
+        parameters: [
+          ...paginationQueryParams,
+          {
+            in: "query",
+            name: "courseId",
+            schema: { type: "string", format: "uuid" },
+            description: "Filter offers by specific Teacher Course ID",
+          },
+          {
+            in: "query",
+            name: "status",
+            schema: { type: "string", enum: ["ACTIVE", "INACTIVE", "SCHEDULED", "EXPIRED"] },
+            description: "Filter offers by status",
+          },
+          localeQueryParam,
+        ],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/teacher/offers/{offerId}": {
+      get: {
+        summary: "Get Teacher Offer Details by ID",
+        tags: ["Teacher - Offers"],
+        security: bearerSecurity,
+        parameters: [uuidParam("offerId", "Offer UUID"), localeQueryParam],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+      patch: {
+        summary: "Update Teacher Offer",
+        tags: ["Teacher - Offers"],
+        security: bearerSecurity,
+        parameters: [uuidParam("offerId", "Offer UUID")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/TeacherOfferCreateDTO" },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          409: standardResponses[409],
+          500: standardResponses[500],
+        },
+      },
+      delete: {
+        summary: "Delete Teacher Offer",
+        tags: ["Teacher - Offers"],
+        security: bearerSecurity,
+        parameters: [uuidParam("offerId", "Offer UUID")],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/SuccessMessageResponse" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/teacher/offers/{offerId}/status": {
+      patch: {
+        summary: "Change Teacher Offer Status",
+        tags: ["Teacher - Offers"],
+        security: bearerSecurity,
+        parameters: [uuidParam("offerId", "Offer UUID")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["status"],
+                properties: {
+                  status: { type: "string", enum: ["ACTIVE", "INACTIVE", "SCHEDULED", "EXPIRED"], example: "ACTIVE" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
     // STUDENT AUTH
     // ═══════════════════════════════════════════════════════════
     "/api/v1/student/auth/signup": {
