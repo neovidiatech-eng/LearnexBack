@@ -68,28 +68,3 @@ export const completeLesson = {
   }),
 };
 
-export const addCourseReview = {
-  params: joi.object({
-    courseId: joi.string().uuid().required(),
-  }),
-  body: joi.object({
-    rating: joi.number().integer().min(1).max(5).required(),
-    comment: joi.string().trim().min(2).max(2000).required(),
-  }),
-};
-
-export const getCourseReviews = {
-  params: joi.object({
-    courseId: joi.string().uuid().required(),
-  }),
-  query: joi.object({
-    page: joi.number().integer().min(1).default(1),
-    limit: joi.number().integer().min(1).max(100).default(10),
-  }),
-};
-
-export const deleteCourseReview = {
-  params: joi.object({
-    courseId: joi.string().uuid().required(),
-  }),
-};

@@ -142,14 +142,21 @@ export const updateCourseStatus = {
     .object({
       status: joi
         .string()
-        .valid(...Object.values(courseStatusEnum))
+        .valid(
+          ...Object.values(courseStatusEnum),
+          "PENDING",
+          "APPROVED",
+          "REJECTED"
+        )
         .required(),
+      rejectionReason: joi.string().allow("", null).optional(),
     })
     .required(),
 };
 
 export const getAllCourses = {
   query: joi.object({
+    type: joi.string().valid("ALL", "COURSE", "TEACHER_COURSE").optional(),
     search: joi.string().trim().optional(),
     categoryId: generalFields.id.optional(),
     instructorId: generalFields.id.optional(),
@@ -159,7 +166,12 @@ export const getAllCourses = {
       .optional(),
     status: joi
       .string()
-      .valid(...Object.values(courseStatusEnum))
+      .valid(
+        ...Object.values(courseStatusEnum),
+        "PENDING",
+        "APPROVED",
+        "REJECTED"
+      )
       .optional(),
     enrollmentType: joi
       .string()

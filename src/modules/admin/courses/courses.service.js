@@ -45,7 +45,7 @@ export const createCourseService = async (body, reqFiles) => {
       where: {
         id: instructorId,
         role: {
-          name: { equals: baseRoleEnum.TEACHER, mode: "insensitive" },
+          slug: baseRoleEnum.TEACHER,
         },
       },
     });
@@ -128,7 +128,191 @@ export const createCourseService = async (body, reqFiles) => {
   };
 };
 
+const adminCourseInclude = {
+  translations: true,
+  category: {
+    select: { id: true, slug: true, translations: true },
+  },
+  instructor: {
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      profilePhoto: true,
+    },
+  },
+  sections: {
+    orderBy: { order: "asc" },
+    include: {
+      translations: true,
+      lessons: {
+        orderBy: { order: "asc" },
+        include: {
+          translations: true,
+        },
+      },
+    },
+  },
+  _count: {
+    select: {
+      sections: true,
+      enrollments: true,
+      reviews: true,
+    },
+  },
+};
+
+const teacherCourseInclude = {
+  teacher: {
+    include: {
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          phone: true,
+          profilePhoto: true,
+        },
+      },
+    },
+  },
+  sections: {
+    orderBy: { order: "asc" },
+    include: {
+      items: { orderBy: { order: "asc" } },
+      quiz: true,
+    },
+  },
+};
+
+const formatAdminCourse = (course) => {
+  const primaryTranslation = course.translations?.[0];
+  return {
+    ...course,
+    type: coursesType.COURSE,
+    title: primaryTranslation?.title || null,
+  };
+};
+
+const formatTeacherCourse = (tc) => ({
+  id: tc.id,
+  type: coursesType.TEACHER_COURSE,
+  title: tc.name,
+  name: tc.name,
+  description: tc.description,
+  thumbnail: tc.wallPaper,
+  wallPaper: tc.wallPaper,
+  previewVideoUrl: null,
+  level: "ALL_LEVELS",
+  status: tc.status,
+  rejectionReason: tc.rejectionReason,
+  enrollmentType: "PAID",
+  language: "arabic",
+  originalPrice: Number(tc.price) || 0,
+  salePrice: null,
+  currency: "EGP",
+  durationHours: tc.totalHours || 0,
+  totalLessonsCount:
+    tc.sections?.reduce((sum, s) => sum + (s.items?.length || 0), 0) || 0,
+  totalStudentsCount: 0,
+  totalRevenue: 0,
+  avgRating: 0,
+  reviewsCount: 0,
+  completionRate: 0,
+  tags: [],
+  hasCertificate: false,
+  scheduledAt: null,
+  categoryId: null,
+  category: null,
+  instructorId: tc.teacher?.userId || tc.teacherId,
+  instructor: tc.teacher?.user
+    ? {
+        id: tc.teacher.user.id,
+        fullName: tc.teacher.user.fullName,
+        email: tc.teacher.user.email,
+        phone: tc.teacher.user.phone,
+        profilePhoto: tc.teacher.user.profilePhoto,
+      }
+    : null,
+  sections: (tc.sections || []).map((sec) => ({
+    id: sec.id,
+    order: sec.order,
+    title: sec.name,
+    name: sec.name,
+    lessons: (sec.items || []).map((item) => ({
+      id: item.id,
+      order: item.order,
+      title: item.title,
+      description: item.description,
+      type: item.materialType,
+      contentUrl: item.materialLink,
+    })),
+    quiz: sec.quiz || null,
+  })),
+  createdAt: tc.createdAt,
+  updatedAt: tc.updatedAt,
+});
+
+const getCourseOrderBy = (sort) => {
+  switch (sort) {
+    case "oldest":
+      return { createdAt: "asc" };
+    case "price_asc":
+      return { originalPrice: "asc" };
+    case "price_desc":
+      return { originalPrice: "desc" };
+    case "rating":
+      return { avgRating: "desc" };
+    case "students":
+      return { totalStudentsCount: "desc" };
+    case "newest":
+    default:
+      return { createdAt: "desc" };
+  }
+};
+
+const getTeacherCourseOrderBy = (sort) => {
+  switch (sort) {
+    case "oldest":
+      return { createdAt: "asc" };
+    case "price_asc":
+      return { price: "asc" };
+    case "price_desc":
+      return { price: "desc" };
+    case "newest":
+    default:
+      return { createdAt: "desc" };
+  }
+};
+
+const sortUnifiedCourses = (items, sort = "newest") => {
+  switch (sort) {
+    case "oldest":
+      items.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      break;
+    case "price_asc":
+      items.sort((a, b) => (a.originalPrice || 0) - (b.originalPrice || 0));
+      break;
+    case "price_desc":
+      items.sort((a, b) => (b.originalPrice || 0) - (a.originalPrice || 0));
+      break;
+    case "rating":
+      items.sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0));
+      break;
+    case "students":
+      items.sort(
+        (a, b) => (b.totalStudentsCount || 0) - (a.totalStudentsCount || 0)
+      );
+      break;
+    case "newest":
+    default:
+      items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      break;
+  }
+};
+
 export const getAllCoursesService = async ({
+  type = "ALL",
   search = "",
   categoryId,
   instructorId,
@@ -140,7 +324,11 @@ export const getAllCoursesService = async ({
   limit = 10,
   sort = "newest",
 } = {}) => {
-  const where = {
+  const p = Math.max(1, Number(page));
+  const take = Math.max(1, Number(limit));
+  const skip = (p - 1) * take;
+
+  const adminWhere = {
     ...(categoryId ? { categoryId } : {}),
     ...(instructorId ? { instructorId } : {}),
     ...(level ? { level } : {}),
@@ -169,126 +357,150 @@ export const getAllCoursesService = async ({
       : {}),
   };
 
-  let orderBy = { createdAt: "desc" };
-  switch (sort) {
-    case "oldest":
-      orderBy = { createdAt: "asc" };
-      break;
-    case "price_asc":
-      orderBy = { originalPrice: "asc" };
-      break;
-    case "price_desc":
-      orderBy = { originalPrice: "desc" };
-      break;
-    case "rating":
-      orderBy = { avgRating: "desc" };
-      break;
-    case "students":
-      orderBy = { totalStudentsCount: "desc" };
-      break;
-    case "newest":
-    default:
-      orderBy = { createdAt: "desc" };
-      break;
+  const teacherWhere = {
+    ...(status ? { status } : {}),
+    ...(instructorId
+      ? {
+          OR: [
+            { teacherId: instructorId },
+            { teacher: { userId: instructorId } },
+          ],
+        }
+      : {}),
+    ...(search
+      ? {
+          OR: [
+            { name: { contains: search, mode: "insensitive" } },
+            { description: { contains: search, mode: "insensitive" } },
+          ],
+        }
+      : {}),
+  };
+
+  // 1. If only COURSE is requested
+  if (type === coursesType.COURSE) {
+    const result = await DBService.findManyWithPaginationAndCount({
+      model: "course",
+      where: adminWhere,
+      page: p,
+      limit: take,
+      orderBy: getCourseOrderBy(sort),
+      include: adminCourseInclude,
+    });
+
+    return {
+      courses: result.items.map(formatAdminCourse),
+      pagination: result.pagination,
+    };
   }
 
-  const result = await DBService.findManyWithPaginationAndCount({
-    model: "course",
-    where,
-    page,
-    limit,
-    orderBy,
-    include: {
-      translations: true,
-      category: {
-        select: { id: true, slug: true, translations: true },
-      },
-      instructor: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-          profilePhoto: true,
-        },
-      },
-      sections: {
-        orderBy: { order: "asc" },
-        include: {
-          translations: true,
-          lessons: {
-            orderBy: { order: "asc" },
-            include: {
-              translations: true,
-            },
-          },
-        },
-      },
-      _count: {
-        select: {
-          sections: true,
-          enrollments: true,
-          reviews: true,
-        },
-      },
-    },
-  });
+  // 2. If only TEACHER_COURSE is requested
+  if (type === coursesType.TEACHER_COURSE) {
+    const result = await DBService.findManyWithPaginationAndCount({
+      model: "teacherCourse",
+      where: teacherWhere,
+      page: p,
+      limit: take,
+      orderBy: getTeacherCourseOrderBy(sort),
+      include: teacherCourseInclude,
+    });
+
+    return {
+      courses: result.items.map(formatTeacherCourse),
+      pagination: result.pagination,
+    };
+  }
+
+  // 3. If ALL is requested (default)
+  const isTeacherStatus = ["PENDING", "APPROVED", "REJECTED"].includes(status);
+  const isAdminStatus = Object.values(courseStatusEnum).includes(status);
+
+  const [adminResult, teacherResult] = await Promise.all([
+    isTeacherStatus
+      ? { items: [], count: 0 }
+      : DBService.findMany({
+          model: "course",
+          where: adminWhere,
+          include: adminCourseInclude,
+        }).then(async (items) => {
+          const count = await DBService.count({
+            model: "course",
+            where: adminWhere,
+          });
+          return { items, count };
+        }),
+    isAdminStatus || categoryId || level || enrollmentType || language
+      ? { items: [], count: 0 }
+      : DBService.findMany({
+          model: "teacherCourse",
+          where: teacherWhere,
+          include: teacherCourseInclude,
+        }).then(async (items) => {
+          const count = await DBService.count({
+            model: "teacherCourse",
+            where: teacherWhere,
+          });
+          return { items, count };
+        }),
+  ]);
+
+  const allFormatted = [
+    ...adminResult.items.map(formatAdminCourse),
+    ...teacherResult.items.map(formatTeacherCourse),
+  ];
+
+  sortUnifiedCourses(allFormatted, sort);
+
+  const totalItems = allFormatted.length;
+  const paginatedItems = allFormatted.slice(skip, skip + take);
+  const totalPages = Math.ceil(totalItems / take) || 1;
 
   return {
-    courses: result.items.map((course) => ({
-      ...course,
-      type: coursesType.COURSE,
-    })),
-    pagination: result.pagination,
+    courses: paginatedItems,
+    pagination: {
+      page: p,
+      limit: take,
+      totalItems,
+      totalPages,
+      hasNextPage: p < totalPages,
+    },
   };
 };
 
 export const getCourseByIdService = async ({ courseId }) => {
+  // 1. Search in Course first
   const course = await DBService.findOne({
     model: "course",
     where: {
       id: courseId,
     },
-    include: {
-      translations: true,
-      category: {
-        select: { id: true, slug: true, translations: true },
-      },
-      instructor: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-          phone: true,
-          profilePhoto: true,
-        },
-      },
-      sections: {
-        orderBy: { order: "asc" },
-        include: {
-          translations: true,
-          lessons: {
-            orderBy: { order: "asc" },
-            include: {
-              translations: true,
-            },
-          },
-        },
-      },
-    },
+    include: adminCourseInclude,
   });
 
-  if (!course) {
-    const error = new Error("COURSE_NOT_FOUND");
-    error.cause = 404;
-    throw error;
+  if (course) {
+    return {
+      course: formatAdminCourse(course),
+    };
   }
 
-  return {
-    course: {
-      ...course,
-      type: coursesType.COURSE,
+  // 2. Search in TeacherCourse
+  const teacherCourse = await DBService.findOne({
+    model: "teacherCourse",
+    where: {
+      id: courseId,
     },
-  };
+    include: teacherCourseInclude,
+  });
+
+  if (teacherCourse) {
+    return {
+      course: formatTeacherCourse(teacherCourse),
+    };
+  }
+
+  const error = new Error("COURSE_NOT_FOUND");
+  error.cause = 404;
+  throw error;
 };
 
 export const updateCourseService = async (body, params, reqFiles) => {
@@ -327,7 +539,7 @@ export const updateCourseService = async (body, params, reqFiles) => {
       model: "user",
       where: {
         id: instructorId,
-        role: { name: { equals: baseRoleEnum.TEACHER, mode: "insensitive" } },
+        role: { slug: baseRoleEnum.TEACHER },
       },
     });
     if (!instructor) {
@@ -474,48 +686,70 @@ export const updateCourseService = async (body, params, reqFiles) => {
     },
   };
 };
+
 export const updateCourseStatusService = async (body, params) => {
-  const { status } = body;
+  const { status, rejectionReason } = body;
   const { courseId } = params;
 
-  if (!Object.values(courseStatusEnum).includes(status)) {
-    const error = new Error("INVALID_COURSE_STATUS");
-    error.cause = 400;
-    throw error;
-  }
-
-  const existingCourse = await DBService.findFirst({
+  const adminCourse = await DBService.findFirst({
     model: "course",
     where: { id: courseId },
   });
 
-  if (!existingCourse) {
-    const error = new Error("COURSE_NOT_FOUND");
-    error.cause = 404;
-    throw error;
+  if (adminCourse) {
+    const updated = await DBService.updateOne({
+      model: "course",
+      where: { id: courseId },
+      data: { status },
+      select: {
+        id: true,
+        status: true,
+        updatedAt: true,
+      },
+    });
+
+    return {
+      course: {
+        ...updated,
+        type: coursesType.COURSE,
+      },
+    };
   }
 
-  const course = await DBService.updateOne({
-    model: "course",
-    where: {
-      id: courseId,
-    },
-    data: {
-      status,
-    },
-    select: {
-      id: true,
-      status: true,
-      updatedAt: true,
-    },
+  const teacherCourse = await DBService.findFirst({
+    model: "teacherCourse",
+    where: { id: courseId },
   });
 
-  return {
-    course: {
-      ...course,
-      type: coursesType.COURSE,
-    },
-  };
+  if (teacherCourse) {
+    const updated = await DBService.updateOne({
+      model: "teacherCourse",
+      where: { id: courseId },
+      data: {
+        status,
+        ...(rejectionReason !== undefined
+          ? { rejectionReason: status === "REJECTED" ? rejectionReason : null }
+          : {}),
+      },
+      select: {
+        id: true,
+        status: true,
+        rejectionReason: true,
+        updatedAt: true,
+      },
+    });
+
+    return {
+      course: {
+        ...updated,
+        type: coursesType.TEACHER_COURSE,
+      },
+    };
+  }
+
+  const error = new Error("COURSE_NOT_FOUND");
+  error.cause = 404;
+  throw error;
 };
 
 export const deleteCourseService = async ({ courseId }) => {
@@ -524,26 +758,43 @@ export const deleteCourseService = async ({ courseId }) => {
     where: { id: courseId },
   });
 
-  if (!existingCourse) {
-    const error = new Error("COURSE_NOT_FOUND");
-    error.cause = 404;
-    throw error;
-  }
-  if (existingCourse.thumbnail) {
-    deleteFile(existingCourse.thumbnail);
-  }
-  if (existingCourse.previewVideoUrl) {
-    deleteFile(existingCourse.previewVideoUrl);
+  if (existingCourse) {
+    if (existingCourse.thumbnail) {
+      deleteFile(existingCourse.thumbnail);
+    }
+    if (existingCourse.previewVideoUrl) {
+      deleteFile(existingCourse.previewVideoUrl);
+    }
+
+    await DBService.deleteOne({
+      model: "course",
+      where: { id: courseId },
+    });
+
+    return { success: true };
   }
 
-  await DBService.deleteOne({
-    model: "course",
-    where: {
-      id: courseId,
-    },
+  const existingTeacherCourse = await DBService.findFirst({
+    model: "teacherCourse",
+    where: { id: courseId },
   });
 
-  return { success: true };
+  if (existingTeacherCourse) {
+    if (existingTeacherCourse.wallPaper) {
+      deleteFile(existingTeacherCourse.wallPaper);
+    }
+
+    await DBService.deleteOne({
+      model: "teacherCourse",
+      where: { id: courseId },
+    });
+
+    return { success: true };
+  }
+
+  const error = new Error("COURSE_NOT_FOUND");
+  error.cause = 404;
+  throw error;
 };
 
 export const deleteSectionService = async ({ sectionId }) => {
