@@ -839,7 +839,7 @@ export const deleteSectionService = async ({ sectionId }) => {
 };
 
 export const createSectionService = async (body, params) => {
-  const { title, order } = body;
+  const { title, order, locale = "en", translations } = body;
   const { courseId } = params;
 
   const existingCourse = await DBService.findFirst({
@@ -853,19 +853,31 @@ export const createSectionService = async (body, params) => {
     throw error;
   }
 
+  const transList =
+    Array.isArray(translations) && translations.length > 0
+      ? translations
+      : [{ locale, title: title || "Section" }];
+
   const section = await DBService.create({
     model: "courseSection",
     data: {
-      title,
       order: Number(order) || 1,
       courseId,
+      translations: {
+        create: transList.map((t) => ({
+          locale: t.locale || locale,
+          title: t.title,
+        })),
+      },
     },
+    include: { translations: true },
   });
+
   return { section };
 };
 
 export const updateSectionService = async (body, params) => {
-  const { title, order } = body;
+  const { title, order, locale = "en", translations } = body;
   const { sectionId } = params;
 
   const existingSection = await DBService.findFirst({
@@ -879,15 +891,33 @@ export const updateSectionService = async (body, params) => {
     throw error;
   }
 
-  const updateData = {};
-  if (title !== undefined) updateData.title = title;
-  if (order !== undefined) updateData.order = Number(order);
+  const transList =
+    Array.isArray(translations) && translations.length > 0
+      ? translations
+      : title !== undefined
+        ? [{ locale, title }]
+        : [];
 
   const section = await DBService.updateOne({
     model: "courseSection",
     where: { id: sectionId },
-    data: updateData,
+    data: {
+      ...(order !== undefined && { order: Number(order) }),
+      ...(transList.length > 0 && {
+        translations: {
+          upsert: transList.map((t) => ({
+            where: {
+              sectionId_locale: { sectionId, locale: t.locale || locale },
+            },
+            create: { locale: t.locale || locale, title: t.title },
+            update: { title: t.title },
+          })),
+        },
+      }),
+    },
+    include: { translations: true },
   });
+
   return { section };
 };
 
@@ -901,6 +931,8 @@ export const createLessonService = async (body, params) => {
     contentUrl,
     description,
     isFreePreview,
+    locale = "en",
+    translations,
   } = body;
   const { sectionId } = params;
 
@@ -915,19 +947,37 @@ export const createLessonService = async (body, params) => {
     throw error;
   }
 
+  const transList =
+    Array.isArray(translations) && translations.length > 0
+      ? translations
+      : [
+          {
+            locale,
+            title: title || "Lesson",
+            description: description || null,
+          },
+        ];
+
   const lesson = await DBService.create({
     model: "courseLesson",
     data: {
-      title,
       order: Number(order) || 1,
       durationMinutes: Number(durationMinutes || duration) || 0,
       type: type || lessonTypeEnum.VIDEO,
       contentUrl,
-      description,
       isFreePreview: isFreePreview ?? false,
       sectionId,
+      translations: {
+        create: transList.map((t) => ({
+          locale: t.locale || locale,
+          title: t.title,
+          description: t.description || null,
+        })),
+      },
     },
+    include: { translations: true },
   });
+
   return { lesson };
 };
 
@@ -941,6 +991,8 @@ export const updateLessonService = async (body, params) => {
     contentUrl,
     description,
     isFreePreview,
+    locale = "en",
+    translations,
   } = body;
   const { lessonId } = params;
 
@@ -955,22 +1007,46 @@ export const updateLessonService = async (body, params) => {
     throw error;
   }
 
-  const updateData = {};
-  if (title !== undefined) updateData.title = title;
-  if (order !== undefined) updateData.order = Number(order);
-  if (durationMinutes !== undefined || duration !== undefined) {
-    updateData.durationMinutes = Number(durationMinutes || duration) || 0;
-  }
-  if (type !== undefined) updateData.type = type;
-  if (contentUrl !== undefined) updateData.contentUrl = contentUrl;
-  if (description !== undefined) updateData.description = description;
-  if (isFreePreview !== undefined) updateData.isFreePreview = isFreePreview;
+  const transList =
+    Array.isArray(translations) && translations.length > 0
+      ? translations
+      : title !== undefined || description !== undefined
+        ? [{ locale, title, description }]
+        : [];
 
   const lesson = await DBService.updateOne({
     model: "courseLesson",
     where: { id: lessonId },
-    data: updateData,
+    data: {
+      ...(order !== undefined && { order: Number(order) }),
+      ...(durationMinutes !== undefined || duration !== undefined
+        ? { durationMinutes: Number(durationMinutes || duration) || 0 }
+        : {}),
+      ...(type !== undefined && { type }),
+      ...(contentUrl !== undefined && { contentUrl }),
+      ...(isFreePreview !== undefined && { isFreePreview }),
+      ...(transList.length > 0 && {
+        translations: {
+          upsert: transList.map((t) => ({
+            where: {
+              lessonId_locale: { lessonId, locale: t.locale || locale },
+            },
+            create: {
+              locale: t.locale || locale,
+              title: t.title || "Lesson",
+              description: t.description || null,
+            },
+            update: {
+              ...(t.title !== undefined && { title: t.title }),
+              ...(t.description !== undefined && { description: t.description }),
+            },
+          })),
+        },
+      }),
+    },
+    include: { translations: true },
   });
+
   return { lesson };
 };
 
