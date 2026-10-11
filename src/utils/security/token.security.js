@@ -40,6 +40,8 @@ export const decodedToken = async ({
     });
   } catch (err) {
     if (err.name === "TokenExpiredError") {
+      console.log(err);
+      
       return next(new Error("TOKEN_EXPIRED", { cause: 401 }));
     }
     return next(new Error("INVALID_TOKEN", { cause: 401 }));

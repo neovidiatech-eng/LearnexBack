@@ -12,6 +12,7 @@ import adminCouponRouter from "../modules/admin/coupons/coupon.route.js"
 import adminOfferRouter from "../modules/admin/offers/offers.routes.js";
 import adminSettingsRouter from "../modules/admin/settings/settings.routes.js";
 import adminStatesRouter from "../modules/admin/states/states.routes.js";
+import adminPlansRouter from "../modules/admin/Plans/plan.routes.js";
 
 const router = Router();
 router.use("/auth", adminAuthRouter);
@@ -26,6 +27,7 @@ router.use("/offers",adminOfferRouter)
 router.use("/coupons",adminCouponRouter);
 router.use("/settings",adminSettingsRouter);
 router.use("/states",adminStatesRouter);
+router.use("/plans",adminPlansRouter);
 
 
 

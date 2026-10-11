@@ -2,11 +2,12 @@ model SessionPlan {
   id            String   @id @default(uuid())
   teacherId     String
   teacher       Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  color         String?  @default("#b36c14ff")
   title         String
   description   String?  @db.Text
   sessionsCount Int
-  price         Decimal  @db.Decimal(10, 2)   // إجمالي الـ Plan
-  discountType  String?                       // PERCENTAGE | FIXED
+  price         Decimal  @db.Decimal(10, 2) // إجمالي الـ Plan
+  discountType  String? // PERCENTAGE | FIXED
   discountValue Decimal? @db.Decimal(10, 2)
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())

@@ -1,0 +1,554 @@
+import * as db from "../../../db/db.service.js";
+import { deleteFile, deleteFiles } from "../../../utils/multer/file.utils.js";
+import {
+  decryptEncription,
+  generateEncryption,
+} from "../../../utils/security/encryption.security.js";
+
+export const getAllPlansService = async (query) => {
+  const { page = 1, limit = 10, search, sortOrder, teacherId } = query;
+
+  const where = {};
+
+  if (teacherId) {
+    where.teacherId = teacherId;
+  }
+  if (search) {
+    where.OR = [
+      { name: { contains: search } },
+      { description: { contains: search } },
+      { price: { contains: search } },
+    ];
+  }
+
+  const plans = await db.findManyWithPaginationAndCount({
+    model: "sessionPlan",
+    page,
+    limit,
+    where,
+    orderBy: { createdAt: sortOrder || "desc" },
+    select: {
+      id: true,
+      teacherId: true,
+      teacher: {
+        select: {
+          id: true,
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+            },
+          },
+        },
+      },
+      title: true,
+      description: true,
+      sessionsCount: true,
+      price: true,
+      discountType: true,
+      discountValue: true,
+      isActive: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  return plans;
+};
+
+export const getProfileService = async (userId) => {
+  const teacher = await db.findFirst({
+    model: "teacher",
+    where: { userId },
+    select: {
+      id: true,
+      subject: true,
+      headline: true,
+      bio: true,
+      experienceYears: true,
+      cvUrl: true,
+      introVideoUrl: true,
+      linkedinUrl: true,
+      isAvailable: true,
+      sessionPrice50Min: true,
+      currency: true,
+      avgRating: true,
+      totalStudentsCount: true,
+      reviewsCount: true,
+      totalCoursesCount: true,
+      referralCode: true,
+      certificates: {
+        select: {
+          id: true,
+          title: true,
+          issuer: true,
+          issueYear: true,
+          fileUrl: true,
+        },
+      },
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          phone: true,
+          country: true,
+          profilePhoto: true,
+          coverPhoto: true,
+        },
+      },
+    },
+  });
+
+  if (!teacher) {
+    const error = new Error("TEACHER_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+
+  if (teacher.user?.phone) {
+    teacher.user.phone = await decryptEncription({
+      cipherText: teacher.user.phone,
+    });
+  }
+
+  return teacher;
+};
+
+export const getSharedProfileService = async (teacherId) => {
+  const teacher = await db.findFirst({
+    model: "teacher",
+    where: {
+      id: teacherId,
+      isAvailable: true,
+      user: { status: "ACTIVE" },
+    },
+    select: {
+      id: true,
+      subject: true,
+      headline: true,
+      bio: true,
+      experienceYears: true,
+      introVideoUrl: true,
+      linkedinUrl: true,
+      sessionPrice50Min: true,
+      currency: true,
+      avgRating: true,
+      reviewsCount: true,
+      totalStudentsCount: true,
+      totalCoursesCount: true,
+
+      user: {
+        select: {
+          fullName: true,
+          country: true,
+          profilePhoto: true,
+          coverPhoto: true,
+        },
+      },
+
+      certificates: {
+        where: { status: "APPROVED" },
+        select: {
+          id: true,
+          title: true,
+          issuer: true,
+          issueYear: true,
+          fileUrl: true,
+        },
+      },
+
+      courses: {
+        where: { status: "APPROVED" },
+        select: {
+          id: true,
+          name: true,
+          wallPaper: true,
+          price: true,
+          totalHours: true,
+        },
+      },
+    },
+  });
+
+  if (!teacher) {
+    const error = new Error("PROFILE_NOT_FOUND_OR_UNAVAILABLE");
+    error.cause = 404;
+    throw error;
+  }
+
+  return teacher;
+};
+
+export const updateProfileService = async (userId, body) => {
+  const {
+    fullName,
+    email,
+    phone,
+    country,
+    subject,
+    headline,
+    bio,
+    experienceYears,
+    linkedinUrl,
+    introVideoUrl,
+    cvUrl,
+  } = body;
+
+  const teacher = await db.findFirst({
+    model: "teacher",
+    where: { userId },
+    include: { user: true },
+  });
+
+  if (!teacher) {
+    const error = new Error("TEACHER_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+
+  if (email && email.toLowerCase().trim() !== teacher.user.email) {
+    const emailExist = await db.findFirst({
+      model: "user",
+      where: {
+        email: email.toLowerCase().trim(),
+        id: { not: userId },
+      },
+    });
+
+    if (emailExist) {
+      const error = new Error("EMAIL_ALREADY_EXISTS");
+      error.cause = 409;
+      throw error;
+    }
+  }
+
+  const updatedTeacher = await db.updateOne({
+    model: "teacher",
+    where: { id: teacher.id },
+    data: {
+      ...(subject && { subject }),
+      ...(headline && { headline }),
+      ...(bio && { bio }),
+      ...(experienceYears !== undefined && {
+        experienceYears: Number(experienceYears),
+      }),
+      ...(linkedinUrl && { linkedinUrl }),
+      ...(introVideoUrl && { introVideoUrl }),
+      ...(cvUrl && { cvUrl }),
+      user: {
+        update: {
+          ...(fullName && { fullName: fullName.trim() }),
+          ...(email && { email: email.toLowerCase().trim() }),
+          ...(phone && {
+            phone: await generateEncryption({ plainText: phone }),
+          }),
+          ...(country && { country }),
+        },
+      },
+    },
+    select: {
+      id: true,
+      subject: true,
+      headline: true,
+      bio: true,
+      experienceYears: true,
+      introVideoUrl: true,
+      cvUrl: true,
+      linkedinUrl: true,
+      isAvailable: true,
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          phone: true,
+          country: true,
+        },
+      },
+    },
+  });
+
+  if (updatedTeacher.user?.phone) {
+    updatedTeacher.user.phone = await decryptEncription({
+      cipherText: updatedTeacher.user.phone,
+    });
+  }
+
+  return updatedTeacher;
+};
+
+export const updateSessionPriceService = async (userId, body) => {
+  const { sessionPrice50Min } = body;
+
+  const teacher = await db.findFirst({
+    model: "teacher",
+    where: { userId },
+    include: { user: true },
+  });
+
+  if (!teacher) {
+    const error = new Error("TEACHER_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+
+  const updatedData = await db.updateOne({
+    model: "teacher",
+    where: { id: teacher.id },
+    data: {
+      ...(sessionPrice50Min !== undefined && { sessionPrice50Min }),
+    },
+    select: {
+      id: true,
+      userId: true,
+      sessionPrice50Min: true,
+      currency: true,
+    },
+  });
+
+  return updatedData;
+};
+
+export const updateImageProfileService = async (userId, reqFiles) => {
+  const user = await db.findFirst({
+    model: "user",
+    where: { id: userId },
+    select: { id: true, profilePhoto: true, coverPhoto: true },
+  });
+  if (!user) {
+    const error = new Error("USER_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+  const newCoverPhoto = reqFiles.coverPhoto?.[0].relativeDestination;
+  const newProfilePhoto = reqFiles.profilePhoto?.[0].relativeDestination;
+  const updatedUser = await db.updateOne({
+    model: "user",
+    where: { id: userId },
+    data: {
+      ...(newCoverPhoto && { coverPhoto: newCoverPhoto }),
+      ...(newProfilePhoto && { profilePhoto: newProfilePhoto }),
+    },
+    select: {
+      id: true,
+      profilePhoto: true,
+      coverPhoto: true,
+    },
+  });
+  if (newCoverPhoto && user.coverPhoto) {
+    deleteFile(user.coverPhoto);
+  }
+  if (newProfilePhoto && user.profilePhoto) {
+    deleteFile(user.profilePhoto);
+  }
+  return updatedUser;
+};
+
+export const deleteProfileService = async (userId) => {
+  const teacher = await db.findFirst({
+    model: "teacher",
+    where: { userId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          profilePhoto: true,
+          coverPhoto: true,
+        },
+      },
+      certificates: {
+        select: {
+          fileUrl: true,
+        },
+      },
+      courses: {
+        select: {
+          wallPaper: true,
+          sections: {
+            select: {
+              items: {
+                select: {
+                  materialLink: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!teacher) {
+    const error = new Error("TEACHER_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+
+  const filesToDelete = [];
+
+  if (teacher.user?.profilePhoto) filesToDelete.push(teacher.user.profilePhoto);
+  if (teacher.user?.coverPhoto) filesToDelete.push(teacher.user.coverPhoto);
+
+  if (teacher.cvUrl) filesToDelete.push(teacher.cvUrl);
+
+  if (teacher.certificates?.length > 0) {
+    teacher.certificates.forEach((cert) => {
+      if (cert.fileUrl) filesToDelete.push(cert.fileUrl);
+    });
+  }
+
+  if (teacher.courses?.length > 0) {
+    teacher.courses.forEach((course) => {
+      if (course.wallPaper) filesToDelete.push(course.wallPaper);
+
+      course.sections?.forEach((section) => {
+        section.items?.forEach((item) => {
+          if (item.materialLink) filesToDelete.push(item.materialLink);
+        });
+      });
+    });
+  }
+
+  deleteFiles(filesToDelete);
+
+  await db.deleteOne({
+    model: "user",
+    where: { id: teacher.userId },
+  });
+
+  return { success: true };
+};
+export const updateWorkHoursService = async (userId, workHours = []) => {
+  console.log("workHours", workHours);
+  console.log("userId", userId);
+
+  const teacher = await db.findFirst({
+    model: "teacher",
+    where: { userId },
+    select: { id: true },
+  });
+
+  if (!teacher) {
+    const error = new Error("TEACHER_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+
+  const seenDays = new Set();
+
+  const formattedWorkHours = workHours.map((hour) => {
+    if (seenDays.has(hour.day)) {
+      const error = new Error(
+        `Duplicate day '${hour.day}' provided in workHours`,
+      );
+      error.cause = 400;
+      throw error;
+    }
+    seenDays.add(hour.day);
+
+    const slots = (hour.slots || []).map((slot) => {
+      if (slot.startTime >= slot.endTime) {
+        const error = new Error(
+          `Start time (${slot.startTime}) must be before end time (${slot.endTime}) on ${hour.day}`,
+        );
+        error.cause = 400;
+        throw error;
+      }
+      return {
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+      };
+    });
+
+    const sortedSlots = [...slots].sort((a, b) =>
+      a.startTime.localeCompare(b.startTime),
+    );
+
+    for (let i = 0; i < sortedSlots.length - 1; i++) {
+      const current = sortedSlots[i];
+      const next = sortedSlots[i + 1];
+      if (current.endTime > next.startTime) {
+        const error = new Error(
+          `Overlapping time slots detected for ${hour.day}: [${current.startTime} - ${current.endTime}] overlaps with [${next.startTime} - ${next.endTime}]`,
+        );
+        error.cause = 400;
+        throw error;
+      }
+    }
+
+    return {
+      day: hour.day,
+      slots: sortedSlots,
+    };
+  });
+
+  const existingRecord = await db.findFirst({
+    model: "teacherWorkHours",
+    where: { teacherId: teacher.id },
+  });
+
+  let result;
+  if (existingRecord) {
+    result = await db.updateOne({
+      model: "teacherWorkHours",
+      where: { id: existingRecord.id },
+      data: {
+        workHours: formattedWorkHours,
+      },
+      select: {
+        id: true,
+        teacherId: true,
+        workHours: true,
+        updatedAt: true,
+      },
+    });
+  } else {
+    result = await db.create({
+      model: "teacherWorkHours",
+      data: {
+        teacherId: teacher.id,
+        workHours: formattedWorkHours,
+      },
+      select: {
+        id: true,
+        teacherId: true,
+        workHours: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+  }
+
+  return result;
+};
+
+export const getWorkHoursService = async (userId) => {
+  console.log("userId", userId);
+
+  const teacher = await db.findFirst({
+    model: "teacher",
+    where: { userId },
+    select: { id: true },
+  });
+
+  if (!teacher) {
+    const error = new Error("TEACHER_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+
+  const workHoursRecord = await db.findFirst({
+    model: "teacherWorkHours",
+    where: { teacherId: teacher.id },
+    select: {
+      id: true,
+      teacherId: true,
+      workHours: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  return workHoursRecord || { teacherId: teacher.id, workHours: [] };
+};
