@@ -1,5 +1,5 @@
 export async function seedPlans(prisma, teachers) {
-  console.log("🌱 Seeding session plans...");
+  console.log("🌱 Seeding session plans with translations...");
 
   let teacherList = teachers;
   if (!teacherList || teacherList.length === 0) {
@@ -40,36 +40,72 @@ export async function seedPlans(prisma, teachers) {
     plansData.push(
       {
         teacherId: ahmed.id,
-        title: "خطة البداية السريعة (3 جلسات)",
-        description: "جلسات فردية مركزة لأساسيات تطوير الويب ومراجعة مشاريع HTML/CSS/JavaScript وحل المشكلات البرمجية.",
         sessionsCount: 3,
         price: 75.0,
         discountType: null,
         discountValue: null,
         color: "#2563EB",
         isActive: true,
+        translations: [
+          {
+            lang: "ar",
+            title: "خطة البداية السريعة (3 جلسات)",
+            description: "جلسات فردية مركزة لأساسيات تطوير الويب ومراجعة مشاريع HTML/CSS/JavaScript وحل المشكلات البرمجية.",
+            slug: "ahmed-web-starter-ar",
+          },
+          {
+            lang: "en",
+            title: "Web Dev Quickstart (3 Sessions)",
+            description: "Focused 1-on-1 sessions covering web development foundations, HTML/CSS/JS reviews, and code debugging.",
+            slug: "ahmed-web-starter-en",
+          },
+        ],
       },
       {
         teacherId: ahmed.id,
-        title: "خطة الإتقان الشاملة (6 جلسات)",
-        description: "خطة متكاملة للتدريب على تقنيات React و Node.js وبناء مشروع عملي متكامل مع كود ريفيو مباشر.",
         sessionsCount: 6,
         price: 140.0,
         discountType: "PERCENTAGE",
         discountValue: 10.0,
         color: "#7C3AED",
         isActive: true,
+        translations: [
+          {
+            lang: "ar",
+            title: "خطة الإتقان الشاملة (6 جلسات)",
+            description: "خطة متكاملة للتدريب على تقنيات React و Node.js وبناء مشروع عملي متكامل مع كود ريفيو مباشر.",
+            slug: "ahmed-fullstack-mastery-ar",
+          },
+          {
+            lang: "en",
+            title: "Full-Stack Mastery (6 Sessions)",
+            description: "Comprehensive hands-on training with React and Node.js, building a real production project with live reviews.",
+            slug: "ahmed-fullstack-mastery-en",
+          },
+        ],
       },
       {
         teacherId: ahmed.id,
-        title: "حزمة الاحتراف والتوجيه المهني (10 جلسات)",
-        description: "توجيه شامل يشمل معمارية البرمجيات المتقدمة، تحضير لمقابلات العمل التقنية، وإشراف على بناء بورتفوليو احترافي.",
         sessionsCount: 10,
         price: 220.0,
         discountType: "FIXED",
         discountValue: 30.0,
         color: "#b36c14ff",
         isActive: true,
+        translations: [
+          {
+            lang: "ar",
+            title: "حزمة الاحتراف والتوجيه المهني (10 جلسات)",
+            description: "توجيه شامل يشمل معمارية البرمجيات المتقدمة، تحضير لمقابلات العمل التقنية، وإشراف على بناء بورتفوليو احترافي.",
+            slug: "ahmed-pro-mentorship-ar",
+          },
+          {
+            lang: "en",
+            title: "Pro Mentorship & Career Track (10 Sessions)",
+            description: "Full mentorship covering advanced software architecture, tech interview preparation, and portfolio building.",
+            slug: "ahmed-pro-mentorship-en",
+          },
+        ],
       }
     );
   }
@@ -78,36 +114,72 @@ export async function seedPlans(prisma, teachers) {
     plansData.push(
       {
         teacherId: sara.id,
-        title: "خطة تحليل البيانات السريعة (4 جلسات)",
-        description: "جلسات متخصصة لتحليل وتنظيف البيانات الكبيرة باستخدام مكتبات Python، Pandas، و NumPy مع أمثلة واقعية.",
         sessionsCount: 4,
         price: 100.0,
         discountType: null,
         discountValue: null,
         color: "#059669",
         isActive: true,
+        translations: [
+          {
+            lang: "ar",
+            title: "خطة تحليل البيانات السريعة (4 جلسات)",
+            description: "جلسات متخصصة لتحليل وتنظيف البيانات الكبيرة باستخدام مكتبات Python، Pandas، و NumPy مع أمثلة واقعية.",
+            slug: "sara-data-analysis-ar",
+          },
+          {
+            lang: "en",
+            title: "Data Analysis Crash Course (4 Sessions)",
+            description: "Specialized sessions for data cleaning and exploration using Python, Pandas, and NumPy with real datasets.",
+            slug: "sara-data-analysis-en",
+          },
+        ],
       },
       {
         teacherId: sara.id,
-        title: "مسار تعلم الآلة المتقدم (8 جلسات)",
-        description: "بناء وتدريب وتقييم نماذج تعلم الآلة وتطبيق الخوارزميات وتحسين دقة النماذج في بيئة إنتاجية.",
         sessionsCount: 8,
         price: 190.0,
         discountType: "PERCENTAGE",
         discountValue: 15.0,
         color: "#DC2626",
         isActive: true,
+        translations: [
+          {
+            lang: "ar",
+            title: "مسار تعلم الآلة المتقدم (8 جلسات)",
+            description: "بناء وتدريب وتقييم نماذج تعلم الآلة وتطبيق الخوارزميات وتحسين دقة النماذج في بيئة إنتاجية.",
+            slug: "sara-ml-track-ar",
+          },
+          {
+            lang: "en",
+            title: "Applied Machine Learning Track (8 Sessions)",
+            description: "Build, train, and evaluate ML models, implementing algorithms and tuning hyperparameters for production.",
+            slug: "sara-ml-track-en",
+          },
+        ],
       },
       {
         teacherId: sara.id,
-        title: "خطة الذكاء الاصطناعي الشاملة (12 جلسة)",
-        description: "تغطية متقدمة لشبكات التعلم العميق Deep Learning ومشاريع الرؤية الحاسوبية وتطبيقات NLP باستخدام PyTorch.",
         sessionsCount: 12,
         price: 280.0,
         discountType: "FIXED",
         discountValue: 40.0,
         color: "#D97706",
         isActive: true,
+        translations: [
+          {
+            lang: "ar",
+            title: "خطة الذكاء الاصطناعي الشاملة (12 جلسة)",
+            description: "تغطية متقدمة لشبكات التعلم العميق Deep Learning ومشاريع الرؤية الحاسوبية وتطبيقات NLP باستخدام PyTorch.",
+            slug: "sara-ai-mastery-ar",
+          },
+          {
+            lang: "en",
+            title: "Deep Learning & AI Master Track (12 Sessions)",
+            description: "Deep dive into neural networks, Computer Vision, and NLP applications using PyTorch and transformer models.",
+            slug: "sara-ai-mastery-en",
+          },
+        ],
       }
     );
   }
@@ -116,108 +188,123 @@ export async function seedPlans(prisma, teachers) {
     plansData.push(
       {
         teacherId: omar.id,
-        title: "خطة استشارات ومراجعة التطبيقات (3 جلسات)",
-        description: "جلسات مكثفة لمراجعة كود التطبيقات وتصحيح الأخطاء وتحسين تجربة المستخدم وأداء تطبيقات الموبايل.",
         sessionsCount: 3,
         price: 85.0,
         discountType: null,
         discountValue: null,
         color: "#0284C7",
         isActive: true,
+        translations: [
+          {
+            lang: "ar",
+            title: "خطة استشارات ومراجعة التطبيقات (3 جلسات)",
+            description: "جلسات مكثفة لمراجعة كود التطبيقات وتصحيح الأخطاء وتحسين تجربة المستخدم وأداء تطبيقات الموبايل.",
+            slug: "omar-mobile-review-ar",
+          },
+          {
+            lang: "en",
+            title: "Mobile App Consultation & Code Review (3 Sessions)",
+            description: "Intensive sessions for mobile code auditing, bug hunting, UI/UX refinement, and performance profiling.",
+            slug: "omar-mobile-review-en",
+          },
+        ],
       },
       {
         teacherId: omar.id,
-        title: "خطة تطوير تطبيقات Flutter المتكاملة (6 جلسات)",
-        description: "بناء تطبيق موبايل متكامل بتقنية Flutter مع إدارة الحالة State Management وربط REST APIs والتعامل مع الكاش.",
         sessionsCount: 6,
         price: 160.0,
         discountType: "PERCENTAGE",
         discountValue: 10.0,
         color: "#0D9488",
         isActive: true,
+        translations: [
+          {
+            lang: "ar",
+            title: "خطة تطوير تطبيقات Flutter المتكاملة (6 جلسات)",
+            description: "بناء تطبيق موبايل متكامل بتقنية Flutter مع إدارة الحالة State Management وربط REST APIs والتعامل مع الكاش.",
+            slug: "omar-flutter-production-ar",
+          },
+          {
+            lang: "en",
+            title: "Flutter Production App Track (6 Sessions)",
+            description: "Build an end-to-end Flutter app with solid state management, REST API integration, and offline caching.",
+            slug: "omar-flutter-production-en",
+          },
+        ],
       },
       {
         teacherId: omar.id,
-        title: "خطة هندسة ونشر التطبيقات (10 جلسات)",
-        description: "معمارية برمجية متطورة، كتابة Unit & Widget Tests، والتحضير لنشر التطبيق على متجري Google Play و Apple App Store.",
         sessionsCount: 10,
         price: 250.0,
         discountType: "FIXED",
         discountValue: 35.0,
         color: "#831843",
         isActive: true,
+        translations: [
+          {
+            lang: "ar",
+            title: "خطة هندسة ونشر التطبيقات (10 جلسات)",
+            description: "معمارية برمجية متطورة، كتابة Unit & Widget Tests، والتحضير لنشر التطبيق على متجري Google Play و Apple App Store.",
+            slug: "omar-mobile-architecture-ar",
+          },
+          {
+            lang: "en",
+            title: "Mobile Architecture & App Store Launch (10 Sessions)",
+            description: "Clean mobile architecture, unit/widget tests, CI/CD pipelines, and store submissions to Google Play & App Store.",
+            slug: "omar-mobile-architecture-en",
+          },
+        ],
       },
       {
         teacherId: omar.id,
-        title: "خطة الإعداد لمقابلات عمل الموبايل (2 جلسات)",
-        description: "جلسات محاكاة لمقابلات العمل التقنية لمطوري الموبايل ومراجعة الخوارزميات وأسئلة النظام الشائعة.",
         sessionsCount: 2,
         price: 60.0,
         discountType: null,
         discountValue: null,
         color: "#475569",
         isActive: false,
+        translations: [
+          {
+            lang: "ar",
+            title: "خطة الإعداد لمقابلات عمل الموبايل (2 جلسات)",
+            description: "جلسات محاكاة لمقابلات العمل التقنية لمطوري الموبايل ومراجعة الخوارزميات وأسئلة النظام الشائعة.",
+            slug: "omar-mobile-interview-ar",
+          },
+          {
+            lang: "en",
+            title: "Mobile Technical Interview Prep (2 Sessions)",
+            description: "Mock technical interviews for mobile engineering roles covering CS fundamentals, system design, and algorithms.",
+            slug: "omar-mobile-interview-en",
+          },
+        ],
       }
     );
   }
 
-  // For any other teacher not explicitly listed above, seed default plans
-  for (const teacher of resolvedTeachers) {
-    if (
-      teacher.id !== ahmed?.id &&
-      teacher.id !== sara?.id &&
-      teacher.id !== omar?.id
-    ) {
-      plansData.push(
-        {
-          teacherId: teacher.id,
-          title: "خطة التدريب الأساسية (4 جلسات)",
-          description: "جلسات فردية لمراجعة الأساسيات والتدريب العملي.",
-          sessionsCount: 4,
-          price: 90.0,
-          discountType: null,
-          discountValue: null,
-          color: "#b36c14ff",
-          isActive: true,
-        },
-        {
-          teacherId: teacher.id,
-          title: "خطة التطوير المتقدمة (8 جلسات)",
-          description: "برنامج تدريبي متقدم مع متابعة مستمرة ومشاريع تطبيقية.",
-          sessionsCount: 8,
-          price: 170.0,
-          discountType: "PERCENTAGE",
-          discountValue: 10.0,
-          color: "#4F46E5",
-          isActive: true,
-        }
-      );
-    }
-  }
+  // Delete previously seeded session plans to re-seed cleanly with translations
+  await prisma.sessionPlan.deleteMany({
+    where: {
+      teacherId: { in: resolvedTeachers.map((t) => t.id) },
+    },
+  });
 
   const seededPlans = [];
   for (const plan of plansData) {
-    const existing = await prisma.sessionPlan.findFirst({
-      where: {
-        teacherId: plan.teacherId,
-        title: plan.title,
+    const { translations, ...scalarFields } = plan;
+    const created = await prisma.sessionPlan.create({
+      data: {
+        ...scalarFields,
+        sessionPlansTranslations: {
+          create: translations,
+        },
+      },
+      include: {
+        sessionPlansTranslations: true,
       },
     });
-
-    if (existing) {
-      const updated = await prisma.sessionPlan.update({
-        where: { id: existing.id },
-        data: plan,
-      });
-      seededPlans.push(updated);
-    } else {
-      const created = await prisma.sessionPlan.create({
-        data: plan,
-      });
-      seededPlans.push(created);
-    }
+    seededPlans.push(created);
   }
 
-  console.log(`✅ Seeded ${seededPlans.length} session plans across ${resolvedTeachers.length} teachers!`);
+  console.log(`✅ Seeded ${seededPlans.length} session plans with translations across ${resolvedTeachers.length} teachers!`);
   return seededPlans;
 }

@@ -11,19 +11,19 @@ export const getAllTeachersService = async ({
     ...(subject ? { subject: { contains: subject, mode: "insensitive" } } : {}),
     ...(search
       ? {
-        OR: [
-          { subject: { contains: search, mode: "insensitive" } },
-          {
-            user: {
-              OR: [
-                { fullName: { contains: search, mode: "insensitive" } },
-                { email: { contains: search, mode: "insensitive" } },
-                { phone: { contains: search, mode: "insensitive" } },
-              ],
+          OR: [
+            { subject: { contains: search, mode: "insensitive" } },
+            {
+              user: {
+                OR: [
+                  { fullName: { contains: search, mode: "insensitive" } },
+                  { email: { contains: search, mode: "insensitive" } },
+                  { phone: { contains: search, mode: "insensitive" } },
+                ],
+              },
             },
-          },
-        ],
-      }
+          ],
+        }
       : {}),
   };
 
@@ -105,6 +105,19 @@ export const getTeacherByIdService = async (teacherId) => {
             translations: true,
           },
         },
+      },
+    },
+    sessionPlans: {
+      where: { isActive: true },
+      select: {
+        id: true,
+        price: true,
+        discountType: true,
+        discountValue: true,
+        sessionsCount: true,
+        isActive: true,
+        color: true,
+        sessionPlansTranslations: true,
       },
     },
   };

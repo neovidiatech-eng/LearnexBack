@@ -8,7 +8,7 @@ export const getAllTeachers = asyncHandler(async (req, res) => {
 
 export const getTeacherById = asyncHandler(async (req, res) => {
   const teachers = await teachersService.getTeacherByIdService(
-    req.params.teacherId,
+    req.params.id || req.params.teacherId,
   );
   return successResponse({ res, data: teachers });
 });

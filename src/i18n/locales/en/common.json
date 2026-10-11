@@ -76,5 +76,12 @@
   "STAFF_UPDATED_SUCCESSFULLY": "Staff member updated successfully.",
   "STAFF_STATUS_UPDATED_SUCCESSFULLY": "Staff member status updated successfully.",
   "STAFF_DELETED_SUCCESSFULLY": "Staff member deleted successfully.",
-  "STAFF_ROLES_FETCHED_SUCCESSFULLY": "Staff roles fetched successfully."
+  "STAFF_ROLES_FETCHED_SUCCESSFULLY": "Staff roles fetched successfully.",
+  "PLAN_NOT_FOUND": "Plan not found.",
+  "PLAN_CREATED_SUCCESSFULLY": "Plan created successfully.",
+  "PLANS_FETCHED_SUCCESSFULLY": "Plans fetched successfully.",
+  "PLAN_DETAILS_FETCHED_SUCCESSFULLY": "Plan details fetched successfully.",
+  "PLAN_UPDATED_SUCCESSFULLY": "Plan updated successfully.",
+  "PLAN_DELETED_SUCCESSFULLY": "Plan deleted successfully.",
+  "PLAN_EXISTS":"The plan already exists."
 }
