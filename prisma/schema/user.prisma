@@ -75,6 +75,8 @@ model Teacher {
   workHours          TeacherWorkHours[]
 
   courses TeacherCourse[]
+  sessionPlans SessionPlan[]
+
 
   @@index([userId])
   @@map("teachers")
