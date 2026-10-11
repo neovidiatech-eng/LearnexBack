@@ -58,7 +58,7 @@ export const getAllTeachersService = async ({
     pagination: result.pagination,
   };
 };
-export const getTeacherByIdService = async (teacherId) => {
+export const getTeacherByIdService = async ({teacherId,lang}) => {
   const select = {
     id: true,
     subject: true,
@@ -117,7 +117,11 @@ export const getTeacherByIdService = async (teacherId) => {
         sessionsCount: true,
         isActive: true,
         color: true,
-        sessionPlansTranslations: true,
+        sessionPlansTranslations: {
+          where:{
+            lang
+          }
+        },
       },
     },
   };

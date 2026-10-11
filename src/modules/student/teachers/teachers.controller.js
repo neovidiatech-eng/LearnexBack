@@ -7,10 +7,10 @@ export const getAllTeachers = asyncHandler(async (req, res) => {
 });
 
 export const getTeacherById = asyncHandler(async (req, res) => {
+  const lang = req.headers["accept-language"];
   const teachers = await teachersService.getTeacherByIdService(
     req.params.id || req.params.teacherId,
+    lang,
   );
   return successResponse({ res, data: teachers });
 });
-
-
