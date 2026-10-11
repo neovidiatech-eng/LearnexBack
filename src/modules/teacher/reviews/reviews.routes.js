@@ -7,7 +7,7 @@ const router = Router();
 
 router.use(authentication());
 
-router.get("/", authorize(PERMISSIONS_V2.REVIEWS.READ),reviewsController.getReviews);
+router.get("/",reviewsController.getReviews);
 
 export default router;
 
