@@ -32,3 +32,37 @@ model SessionPlanTranslation {
   @@index([sessionId])
   @@map("session_plans_translations")
 }
+model Session {
+  id        String   @id @default(uuid())
+  teacherId String
+  teacher   Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  title     String?
+  roomName  String   @unique        // بيتولد في الباك (uuid)، مش من الفرونت
+  type      String   @default("GROUP")      // GROUP | ONE_TO_ONE
+  status    String   @default("SCHEDULED")  // SCHEDULED | LIVE | COMPLETED | CANCELLED
+  startAt   DateTime
+  endAt     DateTime                // = startAt + 50 دقيقة
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  participants SessionParticipant[]
+
+  @@index([teacherId, startAt])
+  @@index([status])
+  @@map("sessions")
+}
+
+model SessionParticipant {
+  id             String           @id @default(uuid())
+  sessionId      String
+  session        Session          @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  studentId      String
+  student        Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status         String           @default("BOOKED")  // BOOKED | ATTENDED | ABSENT | CANCELLED
+  joinedAt       DateTime?
+  leftAt         DateTime?
+
+  @@unique([sessionId, studentId])
+  @@index([studentId])
+  @@map("session_participants")
+}

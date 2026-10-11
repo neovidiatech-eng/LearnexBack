@@ -46,6 +46,7 @@ model Student {
 
   @@index([userId])
   @@map("students")
+  sessionParticipants SessionParticipant[]
 }
 
 model Teacher {
@@ -80,6 +81,7 @@ model Teacher {
 
   @@index([userId])
   @@map("teachers")
+  sessions Session[]
 }
 
 model TeacherCertificate {
