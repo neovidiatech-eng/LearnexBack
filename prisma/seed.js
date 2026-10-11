@@ -17,6 +17,7 @@ import { seedSaved } from "./seeders/saved.seed.js";
 import { seedActivityLogs } from "./seeders/activityLogs.seed.js";
 import { seedNotifications } from "./seeders/notifications.seed.js";
 import { seedCms } from "./seeders/cms.seed.js";
+import { seedPlans } from "./seeders/plans.seed.js";
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -51,6 +52,9 @@ async function main() {
 
   // 7.1. Teacher-Created Courses (depends on teachers)
   const teacherCourses = await seedTeacherCourses(prisma, teachers);
+
+  // 7.2. Session Plans (depends on teachers)
+  await seedPlans(prisma, teachers);
 
   // 8. Enrollments (depends on students + courses)
   await seedEnrollments(prisma, students, courses);

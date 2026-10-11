@@ -110,4 +110,11 @@ export const PERMISSIONS_V2 = {
     READ: "settings:read",
     UPDATE: "settings:update",
   },
+  PLANS: {
+    READ: "plans:read",
+    CREATE: "plans:create",
+    UPDATE: "plans:update",
+    DELETE: "plans:delete",
+    ASSIGN: "plans:assign",
+  },
 };
