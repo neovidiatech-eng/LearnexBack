@@ -1,5 +1,8 @@
 import * as db from "../../../db/db.service.js";
-import { checkReviewEligibility, recalculateReview } from "../../../utils/helpers/reviews.helper.js";
+import {
+  checkReviewEligibility,
+  recalculateReview,
+} from "../../../utils/helpers/reviews.helper.js";
 
 export const addReviewService = async (userId, body) => {
   const { courseId, teacherId, rating, comment, bookingId } = body;
@@ -44,32 +47,42 @@ export const addReviewService = async (userId, body) => {
   return { review, avgRating, reviewsCount };
 };
 
-
-export const getReviewsService = async (userId, query = {}) => {
-  const { courseId, teacherId, page = 1, limit = 10 } = query;
-  const isCourse = Boolean(courseId);
-  const model = isCourse ? "courseReview" : "teacherReview";
-  const where = isCourse ? { courseId } : { teacherId };
-
-  const result = await db.findManyWithPaginationAndCount({
-    model,
-    where: { ...where, isHidden: false },
-    page: Number(page),
-    limit: Number(limit),
-    orderBy: { createdAt: "desc" },
-    include: {
-      student: { select: { id: true, fullName: true, profilePhoto: true } },
-    },
-  });
+export const getReviewsService = async (userId) => {
+  const [courseReviews, teacherReviews] = await Promise.all([
+    db.findMany({
+      model: "courseReview",
+      where: { studentId: userId, isHidden: false },
+      include: {
+        course: {
+          select: {
+            id: true,
+            thumbnail: true,
+            translations: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    db.findMany({
+      model: "teacherReview",
+      where: { studentId: userId, isHidden: false },
+      include: {
+        teacher: {
+          select: {
+            id: true,
+            subject: true,
+            user: {
+              select: { id: true, fullName: true, profilePhoto: true },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
 
   return {
-    reviews: result.items.map((r) => ({
-      ...r,
-      isMine: r.studentId === userId,
-    })),
-    pagination: result.pagination,
+    courseReviews,
+    teacherReviews,
   };
 };
-
-
-

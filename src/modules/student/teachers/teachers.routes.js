@@ -5,5 +5,4 @@ const router = Router();
 router.use(authentication());
 router.get("/",teachersController.getAllTeachers)
 router.get("/",teachersController.getAllTeachers)
-router.post("/:teacherId/reviews", teachersController.addTeacherReview);
 export default router;

@@ -12,9 +12,11 @@ export const addReview = asyncHandler(async (req, res) => {
 });
 
 export const getReviews = asyncHandler(async (req, res) => {
-  const result = await reviewsService.getReviewsService(req.user?.id, req.query);
+  const result = await reviewsService.getReviewsService(req.user.id);
   return successResponse({
     res,
     data: result,
   });
 });
+
+

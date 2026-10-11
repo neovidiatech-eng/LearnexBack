@@ -13,11 +13,4 @@ export const getTeacherById = asyncHandler(async (req, res) => {
   return successResponse({ res, data: teachers });
 });
 
-export const addTeacherReview = asyncHandler(async (req, res) => {
-  const teachers = await teachersService.addTeacherReviewService(
-    req.params.userId,
-    req.params.teacherId,
-    req.body,
-  );
-  return successResponse({ res, data: teachers });
-});
+

@@ -582,7 +582,16 @@ Include the Bearer JWT token in the Authorization header:
           currency: { type: "string", default: "USD" },
           durationHours: { type: "integer", example: 40 },
           totalLessonsCount: { type: "integer", example: 50 },
-          tags: { type: "array", items: { type: "string" }, example: ["Python", "AI", "Machine Learning"] },
+          tags: {
+            type: "string",
+            description: 'JSON array string of tags (e.g. ["javascript", "frontend"])',
+            example: '["javascript", "frontend"]',
+          },
+          sections: {
+            type: "string",
+            description: "JSON array string of course sections and lessons",
+            example: '[{"order":1,"translations":[{"locale":"en","title":"Course Overview"}],"lessons":[{"order":1,"translations":[{"locale":"en","title":"Welcome to the Course","description":"Getting started overview"}],"durationMinutes":10,"type":"VIDEO"}]}]',
+          },
           hasCertificate: { type: "boolean", default: true },
           scheduledAt: { type: "string", format: "date-time" },
           thumbnail: { type: "string", format: "binary", description: "Course thumbnail image" },
@@ -1320,10 +1329,11 @@ Include the Bearer JWT token in the Authorization header:
         security: bearerSecurity,
         parameters: [
           ...paginationQueryParams,
+          { in: "query", name: "type", schema: { type: "string", enum: ["ALL", "COURSE", "TEACHER_COURSE"], default: "ALL" }, description: "Filter by course origin type (Admin courses vs Teacher courses)" },
           { in: "query", name: "categoryId", schema: { type: "string", format: "uuid" } },
           { in: "query", name: "instructorId", schema: { type: "string", format: "uuid" } },
           { in: "query", name: "level", schema: { type: "string", enum: ["BEGINNER", "INTERMEDIATE", "ADVANCED", "ALL_LEVELS"] } },
-          { in: "query", name: "status", schema: { type: "string", enum: ["DRAFT", "PUBLISHED", "ARCHIVED"] } },
+          { in: "query", name: "status", schema: { type: "string", enum: ["DRAFT", "PUBLISHED", "ARCHIVED", "PENDING", "APPROVED", "REJECTED"] } },
           { in: "query", name: "enrollmentType", schema: { type: "string", enum: ["PAID", "FREE"] } },
           { in: "query", name: "sort", schema: { type: "string", enum: ["newest", "oldest", "price_asc", "price_desc", "rating", "students"] } },
         ],
@@ -1410,7 +1420,15 @@ Include the Bearer JWT token in the Authorization header:
                 type: "object",
                 required: ["status"],
                 properties: {
-                  status: { type: "string", enum: ["DRAFT", "PUBLISHED", "ARCHIVED"], example: "PUBLISHED" },
+                  status: {
+                    type: "string",
+                    enum: ["DRAFT", "PUBLISHED", "ARCHIVED", "PENDING", "APPROVED", "REJECTED"],
+                    example: "PUBLISHED",
+                  },
+                  rejectionReason: {
+                    type: "string",
+                    example: "Please update the audio quality in chapter 1.",
+                  },
                 },
               },
             },

@@ -53,22 +53,6 @@ router.post(
   courseController.completeLesson
 );
 
-router.post(
-  "/:courseId/reviews",
-  validation(courseValidation.addCourseReview),
-  courseController.addCourseReview
-);
-router.get(
-  "/:courseId/reviews",
-  validation(courseValidation.getCourseReviews),
-  courseController.getCourseReviews
-);
-router.delete(
-  "/:courseId/reviews",
-  validation(courseValidation.deleteCourseReview),
-  courseController.deleteCourseReview
-);
-
 router.get(
   "/:courseId",
   validation(courseValidation.getCourseDetails),
