@@ -21,13 +21,27 @@ const translationSchema = joi.object({
 export const createOffer = {
   body: joi
     .object({
-      courseId: generalFields.id.optional(),
+      courseId: generalFields.id.allow(null).optional(),
       target: joi
         .string()
         .valid(...Object.values(offerTargetEnum))
         .default(offerTargetEnum.ALL_USERS),
-      studentIds: joi.array().items(generalFields.id).optional(),
-      teacherIds: joi.array().items(generalFields.id).optional(),
+      studentIds: joi.when("target", {
+        is: offerTargetEnum.SPECIFIC_STUDENTS,
+        then: joi.array().items(generalFields.id).min(1).required().messages({
+          "any.required": "STUDENT_IDS_REQUIRED_FOR_SPECIFIC_STUDENTS",
+          "array.min": "AT_LEAST_ONE_STUDENT_ID_REQUIRED",
+        }),
+        otherwise: joi.array().items(generalFields.id).optional(),
+      }),
+      teacherIds: joi.when("target", {
+        is: offerTargetEnum.SPECIFIC_TEACHERS,
+        then: joi.array().items(generalFields.id).min(1).required().messages({
+          "any.required": "TEACHER_IDS_REQUIRED_FOR_SPECIFIC_TEACHERS",
+          "array.min": "AT_LEAST_ONE_TEACHER_ID_REQUIRED",
+        }),
+        otherwise: joi.array().items(generalFields.id).optional(),
+      }),
       targetIds: joi.array().items(generalFields.id).optional(),
       offerType: joi
         .string()
