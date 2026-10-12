@@ -43,10 +43,11 @@ model Student {
   courseFavorites CourseFavorite[] @relation("StudentFavorites")
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
+  sessionRequests SessionRequest[]
+  sessions        Session[]
 
   @@index([userId])
   @@map("students")
-  sessionParticipants SessionParticipant[]
 }
 
 model Teacher {
@@ -75,13 +76,13 @@ model Teacher {
   reviews            TeacherReview[]
   workHours          TeacherWorkHours[]
 
-  courses TeacherCourse[]
-  sessionPlans SessionPlan[]
-
+  courses         TeacherCourse[]
+  sessionPlans    SessionPlan[]
+  sessions        Session[]
+  sessionRequests SessionRequest[]
 
   @@index([userId])
   @@map("teachers")
-  sessions Session[]
 }
 
 model TeacherCertificate {

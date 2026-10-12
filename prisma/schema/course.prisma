@@ -232,4 +232,3 @@ model OfferTranslation {
   @@unique([offerId, locale])
   @@map("offer_translations")
 }
-
