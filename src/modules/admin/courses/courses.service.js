@@ -175,6 +175,31 @@ const adminCourseInclude = {
       },
     },
   },
+  enrollments: {
+    include: {
+      student: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          profilePhoto: true,
+        },
+      },
+    },
+    orderBy: { enrolledAt: "desc" },
+  },
+  reviews: {
+    include: {
+      student: {
+        select: {
+          id: true,
+          fullName: true,
+          profilePhoto: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  },
   _count: {
     select: {
       sections: true,
@@ -212,7 +237,26 @@ const formatAdminCourse = (course) => {
   return {
     ...course,
     type: coursesType.COURSE,
-    title: primaryTranslation?.title || null,
+    title: primaryTranslation?.title || course.title || null,
+    description: primaryTranslation?.description || null,
+    whatYouWillLearn: primaryTranslation?.whatYouWillLearn || [],
+    requirements: primaryTranslation?.requirements || [],
+    students: (course.enrollments || []).map((enrollment) => ({
+      id: enrollment.student?.id,
+      fullName: enrollment.student?.fullName,
+      email: enrollment.student?.email,
+      profilePhoto: enrollment.student?.profilePhoto,
+      enrolledAt: enrollment.enrolledAt,
+      progressPercent: enrollment.progressPercent,
+      status: enrollment.status,
+    })),
+    reviews: (course.reviews || []).map((review) => ({
+      id: review.id,
+      rating: review.rating,
+      comment: review.comment,
+      createdAt: review.createdAt,
+      student: review.student,
+    })),
   };
 };
 
@@ -323,7 +367,7 @@ const sortUnifiedCourses = (items, sort = "newest") => {
       break;
     case "students":
       items.sort(
-        (a, b) => (b.totalStudentsCount || 0) - (a.totalStudentsCount || 0)
+        (a, b) => (b.totalStudentsCount || 0) - (a.totalStudentsCount || 0),
       );
       break;
     case "newest":
@@ -583,7 +627,9 @@ export const updateCourseService = async (body, params, reqFiles) => {
     where: { id: courseId },
     data: {
       ...(categoryId !== undefined && { categoryId }),
-      ...(resolvedInstructorId !== undefined && { instructorId: resolvedInstructorId }),
+      ...(resolvedInstructorId !== undefined && {
+        instructorId: resolvedInstructorId,
+      }),
       ...(level !== undefined && { level }),
       ...(newThumbnail && { thumbnail: newThumbnail }),
       ...(newPreviewVideo && { previewVideoUrl: newPreviewVideo }),
@@ -1038,7 +1084,9 @@ export const updateLessonService = async (body, params) => {
             },
             update: {
               ...(t.title !== undefined && { title: t.title }),
-              ...(t.description !== undefined && { description: t.description }),
+              ...(t.description !== undefined && {
+                description: t.description,
+              }),
             },
           })),
         },

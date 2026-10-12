@@ -3,6 +3,7 @@ import { generalFields } from "../../../utils/validation/generalField.js";
 import {
   offerStatusEnum,
   offerTypeEnum,
+  offerTargetEnum,
 } from "../../../utils/Enums/offer.enum.js";
 
 const translationSchema = joi.object({
@@ -27,7 +28,12 @@ export const createOffer = {
       courseId: generalFields.id.required().messages({
         "any.required": "COURSE_ID_REQUIRED",
       }),
-      target: joi.string().min(2).max(100).trim().default("All Users"),
+      target: joi
+        .string()
+        .valid(...Object.values(offerTargetEnum))
+        .default(offerTargetEnum.ALL_USERS),
+      studentIds: joi.array().items(generalFields.id).optional(),
+      targetIds: joi.array().items(generalFields.id).optional(),
       offerType: joi
         .string()
         .valid(...Object.values(offerTypeEnum))
@@ -108,7 +114,12 @@ export const updateOffer = {
   body: joi
     .object({
       courseId: generalFields.id.optional(),
-      target: joi.string().min(2).max(100).trim().optional(),
+      target: joi
+        .string()
+        .valid(...Object.values(offerTargetEnum))
+        .optional(),
+      studentIds: joi.array().items(generalFields.id).optional(),
+      targetIds: joi.array().items(generalFields.id).optional(),
       offerType: joi
         .string()
         .valid(...Object.values(offerTypeEnum))
