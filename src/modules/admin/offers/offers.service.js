@@ -12,6 +12,16 @@ export const formatAdminOfferResponse = (offer) => {
 
   const formatted = { ...rest };
 
+  if (!formatted.course && formatted.teacherCourse) {
+    formatted.course = {
+      id: formatted.teacherCourse.id,
+      thumbnail: formatted.teacherCourse.wallPaper,
+      originalPrice: formatted.teacherCourse.price,
+      title: formatted.teacherCourse.name,
+    };
+  }
+  delete formatted.teacherCourse;
+
   if (offer.target === offerTargetEnum.SPECIFIC_STUDENTS) {
     formatted.studentIds = targetIds || [];
   } else if (offer.target === offerTargetEnum.SPECIFIC_TEACHERS) {
@@ -37,15 +47,28 @@ export const createOfferService = async (body) => {
     translations = [],
   } = body;
 
+  let resolvedCourseId = null;
+  let resolvedTeacherCourseId = null;
+
   if (courseId) {
     const course = await dbService.findOne({
       model: "course",
       where: { id: courseId },
     });
-    if (!course) {
-      const error = new Error("COURSE_NOT_FOUND");
-      error.cause = 404;
-      throw error;
+    if (course) {
+      resolvedCourseId = course.id;
+    } else {
+      const teacherCourse = await dbService.findOne({
+        model: "teacherCourse",
+        where: { id: courseId },
+      });
+      if (teacherCourse) {
+        resolvedTeacherCourseId = teacherCourse.id;
+      } else {
+        const error = new Error("COURSE_NOT_FOUND");
+        error.cause = 404;
+        throw error;
+      }
     }
   }
 
@@ -140,8 +163,8 @@ export const createOfferService = async (body) => {
   const offer = await dbService.create({
     model: "offer",
     data: {
-      courseId: courseId || null,
-      teacherCourseId: null,
+      courseId: resolvedCourseId,
+      teacherCourseId: resolvedTeacherCourseId,
       target: target || offerTargetEnum.ALL_USERS,
       targetIds: resolvedTargetIds,
       offerType,
@@ -168,6 +191,14 @@ export const createOfferService = async (body) => {
           translations: { select: { locale: true, title: true } },
         },
       },
+      teacherCourse: {
+        select: {
+          id: true,
+          wallPaper: true,
+          price: true,
+          name: true,
+        },
+      },
     },
   });
 
@@ -187,8 +218,11 @@ export const getAllOffersService = async ({
   sortType = "desc",
 } = {}) => {
   const where = {
-    teacherCourseId: null, // Admin only views platform course / general offers
-    ...(courseId ? { courseId } : {}),
+    ...(courseId
+      ? {
+          OR: [{ courseId }, { teacherCourseId: courseId }],
+        }
+      : {}),
     ...(status ? { status } : {}),
     ...(offerType ? { offerType } : {}),
     ...(target ? { target: { contains: target, mode: "insensitive" } } : {}),
@@ -233,6 +267,14 @@ export const getAllOffersService = async ({
           originalPrice: true,
           salePrice: true,
           translations: { select: { locale: true, title: true } },
+        },
+      },
+      teacherCourse: {
+        select: {
+          id: true,
+          wallPaper: true,
+          price: true,
+          name: true,
         },
       },
       translations: {
@@ -311,7 +353,7 @@ export const getAllOffersService = async ({
 export const getOfferByIdService = async (offerId, locale) => {
   const offer = await dbService.findFirst({
     model: "offer",
-    where: { id: offerId, teacherCourseId: null },
+    where: { id: offerId },
     include: {
       course: {
         select: {
@@ -320,6 +362,14 @@ export const getOfferByIdService = async (offerId, locale) => {
           originalPrice: true,
           salePrice: true,
           translations: { select: { locale: true, title: true } },
+        },
+      },
+      teacherCourse: {
+        select: {
+          id: true,
+          wallPaper: true,
+          price: true,
+          name: true,
         },
       },
       translations: {
@@ -354,7 +404,7 @@ export const updateOfferService = async (offerId, body) => {
 
   const offer = await dbService.findFirst({
     model: "offer",
-    where: { id: offerId, teacherCourseId: null },
+    where: { id: offerId },
     include: {
       translations: true,
     },
@@ -366,15 +416,35 @@ export const updateOfferService = async (offerId, body) => {
     throw error;
   }
 
-  if (courseId !== undefined && courseId !== null) {
-    const course = await dbService.findOne({
-      model: "course",
-      where: { id: courseId },
-    });
-    if (!course) {
-      const error = new Error("COURSE_NOT_FOUND");
-      error.cause = 404;
-      throw error;
+  let resolvedCourseId = undefined;
+  let resolvedTeacherCourseId = undefined;
+
+  if (courseId !== undefined) {
+    if (courseId === null) {
+      resolvedCourseId = null;
+      resolvedTeacherCourseId = null;
+    } else {
+      const course = await dbService.findOne({
+        model: "course",
+        where: { id: courseId },
+      });
+      if (course) {
+        resolvedCourseId = course.id;
+        resolvedTeacherCourseId = null;
+      } else {
+        const teacherCourse = await dbService.findOne({
+          model: "teacherCourse",
+          where: { id: courseId },
+        });
+        if (teacherCourse) {
+          resolvedTeacherCourseId = teacherCourse.id;
+          resolvedCourseId = null;
+        } else {
+          const error = new Error("COURSE_NOT_FOUND");
+          error.cause = 404;
+          throw error;
+        }
+      }
     }
   }
 
@@ -470,7 +540,8 @@ export const updateOfferService = async (offerId, body) => {
     model: "offer",
     where: { id: offerId },
     data: {
-      ...(courseId !== undefined && { courseId }),
+      ...(resolvedCourseId !== undefined && { courseId: resolvedCourseId }),
+      ...(resolvedTeacherCourseId !== undefined && { teacherCourseId: resolvedTeacherCourseId }),
       ...(target !== undefined && { target }),
       ...(resolvedTargetIds !== undefined && { targetIds: resolvedTargetIds }),
       ...(offerType !== undefined && { offerType }),
@@ -511,6 +582,14 @@ export const updateOfferService = async (offerId, body) => {
           originalPrice: true,
           salePrice: true,
           translations: { select: { locale: true, title: true } },
+        },
+      },
+      teacherCourse: {
+        select: {
+          id: true,
+          wallPaper: true,
+          price: true,
+          name: true,
         },
       },
     },

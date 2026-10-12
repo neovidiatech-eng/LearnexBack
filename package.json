@@ -11,12 +11,14 @@
     "prisma:migrate": "prisma migrate dev --schema=./prisma/schema",
     "prisma:studio": "prisma studio --schema=./prisma/schema",
     "seed": "node prisma/seed.js",
-    "seed:Permission":"node prisma/seeders/permission.seed.js",
+    "seed:Permission": "node prisma/seeders/permission.seed.js",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:build": "docker compose build",
     "docker:logs": "docker compose logs -f",
-    "docker:restart": "docker compose restart"
+    "docker:restart": "docker compose restart",
+    "seed:reviews": "node prisma/seeders/reviews.seed.js",
+    "seed:offers": "node prisma/seeders/offers.seed.js"
   },
   "keywords": [],
   "author": "",

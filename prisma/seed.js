@@ -18,6 +18,8 @@ import { seedActivityLogs } from "./seeders/activityLogs.seed.js";
 import { seedNotifications } from "./seeders/notifications.seed.js";
 import { seedCms } from "./seeders/cms.seed.js";
 import { seedPlans } from "./seeders/plans.seed.js";
+import { seedReviews } from "./seeders/reviews.seed.js";
+import { seedOffers } from "./seeders/offers.seed.js";
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
