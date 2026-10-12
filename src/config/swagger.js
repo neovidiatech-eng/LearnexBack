@@ -2111,6 +2111,131 @@ Include the Bearer JWT token in the Authorization header:
           content: {
             "application/json": {
               schema: { $ref: "#/components/schemas/AdminOfferCreateDTO" },
+              examples: {
+                CourseOffer_SpecificStudents: {
+                  summary: "1. عرض على كورس محدد لطلاب معينين (مع courseId و studentIds)",
+                  value: {
+                    courseId: "01513780-0339-401a-ae47-ee10b28b4740",
+                    target: "SPECIFIC_STUDENTS",
+                    studentIds: [
+                      "01a44631-bd43-48e7-840c-af4c5b4c434f"
+                    ],
+                    offerType: "PERCENTAGE",
+                    discount: 35,
+                    startDate: "2026-10-15T00:00:00.000Z",
+                    endDate: "2026-11-30T23:59:59.000Z",
+                    status: "ACTIVE",
+                    translations: [
+                      {
+                        locale: "en",
+                        name: "Exclusive Student Reward",
+                        offerDesc: "35% exclusive discount for our top students on this course."
+                      },
+                      {
+                        locale: "ar",
+                        name: "مكافأة الطلاب المميزين",
+                        offerDesc: "خصم 35% حصري للطلاب المختارين على هذا الكورس."
+                      }
+                    ]
+                  }
+                },
+                CourseOffer_AllUsers: {
+                  summary: "2. عرض على كورس محدد لكافة المستخدمين (مع courseId فقط)",
+                  value: {
+                    courseId: "01513780-0339-401a-ae47-ee10b28b4740",
+                    target: "ALL_USERS",
+                    offerType: "PERCENTAGE",
+                    discount: 30,
+                    startDate: "2026-10-15T00:00:00.000Z",
+                    endDate: "2026-11-30T23:59:59.000Z",
+                    status: "ACTIVE",
+                    translations: [
+                      {
+                        locale: "en",
+                        name: "Special Course Discount",
+                        offerDesc: "Special 30% discount on this course for all users."
+                      },
+                      {
+                        locale: "ar",
+                        name: "عرض خاص على هذا الكورس",
+                        offerDesc: "خصم خاص 30% على هذا الكورس لجميع المستخدمين."
+                      }
+                    ]
+                  }
+                },
+                AllUsers_GeneralPlatformOffer: {
+                  summary: "3. عرض عام على كافة كورسات المنصة (بدون courseId وبدون IDs)",
+                  value: {
+                    target: "ALL_USERS",
+                    offerType: "PERCENTAGE",
+                    discount: 25,
+                    startDate: "2026-10-15T00:00:00.000Z",
+                    endDate: "2026-11-30T23:59:59.000Z",
+                    status: "ACTIVE",
+                    translations: [
+                      {
+                        locale: "en",
+                        name: "Autumn Big Sale",
+                        offerDesc: "Get 25% discount across the entire platform."
+                      },
+                      {
+                        locale: "ar",
+                        name: "عروض الخريف الكبرى",
+                        offerDesc: "احصل على خصم 25% على كافة محتويات المنصة."
+                      }
+                    ]
+                  }
+                },
+                SpecificTeachersOffer: {
+                  summary: "4. عرض مخصص لمدرسين محددين (مع teacherIds)",
+                  value: {
+                    target: "SPECIFIC_TEACHERS",
+                    teacherIds: [
+                      "93ef0d68-18e3-4b91-ae28-66236b2f763f"
+                    ],
+                    offerType: "PERCENTAGE",
+                    discount: 20,
+                    startDate: "2026-10-15T00:00:00.000Z",
+                    endDate: "2026-11-30T23:59:59.000Z",
+                    status: "ACTIVE",
+                    translations: [
+                      {
+                        locale: "en",
+                        name: "Teacher Appreciation Offer",
+                        offerDesc: "Exclusive 20% discount for partner teachers."
+                      },
+                      {
+                        locale: "ar",
+                        name: "عرض تقدير المعلمين",
+                        offerDesc: "خصم 20% حصري للمعلمين الشركاء."
+                      }
+                    ]
+                  }
+                },
+                NewUsersOffer: {
+                  summary: "5. عرض للمستخدمين الجدد (خلال آخر 7 أيام)",
+                  value: {
+                    target: "NEW_USERS",
+                    offerType: "PERCENTAGE",
+                    discount: 15,
+                    startDate: "2026-10-15T00:00:00.000Z",
+                    endDate: "2026-11-30T23:59:59.000Z",
+                    status: "ACTIVE",
+                    translations: [
+                      {
+                        locale: "en",
+                        name: "Welcome Gift For New Joiners",
+                        offerDesc: "15% off for users registered in the last 7 days."
+                      },
+                      {
+                        locale: "ar",
+                        name: "هدية ترحيبية للمسجلين الجدد",
+                        offerDesc: "خصم 15% للمستخدمين المسجلين خلال آخر 7 أيام."
+                      }
+                    ]
+                  }
+                }
+              }
             },
           },
         },

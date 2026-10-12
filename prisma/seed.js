@@ -18,6 +18,8 @@ import { seedActivityLogs } from "./seeders/activityLogs.seed.js";
 import { seedNotifications } from "./seeders/notifications.seed.js";
 import { seedCms } from "./seeders/cms.seed.js";
 import { seedPlans } from "./seeders/plans.seed.js";
+import { seedReviews } from "./seeders/reviews.seed.js";
+import { seedOffers } from "./seeders/offers.seed.js";
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -73,6 +75,12 @@ async function main() {
 
   // 12. CMS & App Settings (independent)
   await seedCms(prisma);
+
+  // 13. Reviews (depends on students + teachers + courses)
+  await seedReviews(prisma, students, teachers, courses);
+
+  // 14. Promotional Offers (depends on students + teachers + courses + teacherCourses)
+  await seedOffers(prisma, students, teachers, courses, teacherCourses);
 
   console.log("\n✅ Database seeding completed successfully!");
 }
