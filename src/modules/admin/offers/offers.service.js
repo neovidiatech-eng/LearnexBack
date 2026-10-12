@@ -6,6 +6,22 @@ import {
 } from "../../../utils/Enums/offer.enum.js";
 import dayjs from "dayjs";
 
+export const formatAdminOfferResponse = (offer) => {
+  if (!offer) return null;
+  const { teacherCourseId, targetIds, ...rest } = offer;
+
+  const formatted = { ...rest };
+
+  if (offer.target === offerTargetEnum.SPECIFIC_STUDENTS) {
+    formatted.studentIds = targetIds || [];
+  } else if (offer.target === offerTargetEnum.SPECIFIC_TEACHERS) {
+    formatted.teacherIds = targetIds || [];
+  }
+
+  return formatted;
+};
+
+
 export const createOfferService = async (body) => {
   const {
     courseId,
@@ -113,6 +129,8 @@ export const createOfferService = async (body) => {
       }
     }
     resolvedTargetIds = ids;
+  } else {
+    resolvedTargetIds = [];
   }
 
   const finalStatus =
@@ -153,7 +171,7 @@ export const createOfferService = async (body) => {
     },
   });
 
-  return { offer };
+  return { offer: formatAdminOfferResponse(offer) };
 };
 
 export const getAllOffersService = async ({
@@ -285,7 +303,7 @@ export const getAllOffersService = async ({
     activeOffers,
     expiringSoon,
     expired: expiredOffers,
-    offers: result.items,
+    offers: result.items.map(formatAdminOfferResponse),
     pagination: result.pagination,
   };
 };
@@ -316,7 +334,7 @@ export const getOfferByIdService = async (offerId, locale) => {
     throw error;
   }
 
-  return { offer };
+  return { offer: formatAdminOfferResponse(offer) };
 };
 
 export const updateOfferService = async (offerId, body) => {
@@ -498,7 +516,7 @@ export const updateOfferService = async (offerId, body) => {
     },
   });
 
-  return { offer: updatedOffer };
+  return { offer: formatAdminOfferResponse(updatedOffer) };
 };
 
 export const changeOfferStatusService = async (offerId, body) => {
