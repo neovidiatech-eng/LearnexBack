@@ -1,4 +1,3 @@
-
 model SessionPlan {
   id                       String                   @id @default(uuid())
   teacherId                String
@@ -12,6 +11,7 @@ model SessionPlan {
   createdAt                DateTime                 @default(now())
   updatedAt                DateTime                 @updatedAt
   sessionPlansTranslations SessionPlanTranslation[]
+  students                 Student[]
 
   @@index([teacherId])
   @@map("session_plans")
@@ -23,25 +23,26 @@ model SessionPlanTranslation {
   sessionPlan SessionPlan @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   lang        String
   title       String
-  description String       @db.Text
+  description String      @db.Text
   slug        String?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
   @@unique([sessionId, lang])
   @@index([sessionId])
   @@map("session_plans_translations")
 }
+
 model Session {
   id        String   @id @default(uuid())
   teacherId String
   teacher   Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   title     String?
-  roomName  String   @unique        // بيتولد في الباك (uuid)، مش من الفرونت
-  type      String   @default("GROUP")      // GROUP | ONE_TO_ONE
-  status    String   @default("SCHEDULED")  // SCHEDULED | LIVE | COMPLETED | CANCELLED
+  roomName  String   @unique // بيتولد في الباك (uuid)، مش من الفرونت
+  type      String   @default("GROUP") // GROUP | ONE_TO_ONE
+  status    String   @default("SCHEDULED") // SCHEDULED | LIVE | COMPLETED | CANCELLED
   startAt   DateTime
-  endAt     DateTime                // = startAt + 50 دقيقة
+  endAt     DateTime // = startAt + 50 دقيقة
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -53,14 +54,14 @@ model Session {
 }
 
 model SessionParticipant {
-  id             String           @id @default(uuid())
-  sessionId      String
-  session        Session          @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  studentId      String
-  student        Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  status         String           @default("BOOKED")  // BOOKED | ATTENDED | ABSENT | CANCELLED
-  joinedAt       DateTime?
-  leftAt         DateTime?
+  id        String    @id @default(uuid())
+  sessionId String
+  session   Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status    String    @default("BOOKED") // BOOKED | ATTENDED | ABSENT | CANCELLED
+  joinedAt  DateTime?
+  leftAt    DateTime?
 
   @@unique([sessionId, studentId])
   @@index([studentId])

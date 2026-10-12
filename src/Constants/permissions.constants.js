@@ -78,6 +78,7 @@ export const PERMISSIONS_V2 = {
     UPDATE: "roles:update",
     DELETE: "roles:delete",
     ASSIGN: "roles:assign",
+    PERMISSION:"roles:permissions"
   },
 
   // Permission Management
@@ -117,7 +118,8 @@ export const PERMISSIONS_V2 = {
     UPDATE: "plans:update",
     DELETE: "plans:delete",
     ASSIGN: "plans:assign",
-    GET_MY_PLANS:"plans:get_my_plans"
+    GET_MY_PLANS:"plans:get_my_plans",
+    BUY_PLAN:"plans:buy_plan",
   },
 
   SESSIONS: {

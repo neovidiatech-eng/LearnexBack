@@ -28,7 +28,7 @@ export async function seedPermissions(prisma, roles) {
 
   console.log("🌱 Assigning permissions to roles...");
   const permMap = Object.fromEntries(permissions.map((p) => [p.code, p.id]));
-  const rolesMap = Object.fromEntries(roles.map((r) => [r.name, r.id]));
+  const rolesMap = Object.fromEntries(roles.map((r) => [(r.slug || r.name)?.toUpperCase(), r.id]));
 
   for (const [roleName, codes] of Object.entries(ROLE_PERMISSIONS_MAP)) {
     const roleId = rolesMap[roleName];

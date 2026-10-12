@@ -4249,6 +4249,41 @@ Include the Bearer JWT token in the Authorization header:
         },
       },
     },
+    "/api/v1/student/teachers/book-plan/{id}": {
+      post: {
+        summary: "Initiate Booking / Subscription for Teacher Session Plan",
+        description: "Creates a pending transaction and pending subscription for the student to pay through a payment gateway. Does not credit the system wallet or increase session counters until payment is confirmed.",
+        tags: ["Student - Teachers"],
+        security: bearerSecurity,
+        parameters: [uuidParam("id", "Session Plan ID")],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  paymentMethod: {
+                    type: "string",
+                    enum: ["CARD"],
+                    default: "CARD",
+                    description: "Payment method used for the gateway transaction",
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[201]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
 
     // ═══════════════════════════════════════════════════════════
     // STUDENT CART

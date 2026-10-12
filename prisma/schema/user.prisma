@@ -27,6 +27,8 @@ model User {
   teacherReviews    TeacherReview[]    @relation("StudentTeacherReviews")
   cart              Cart?
   saveds            Saved[]
+  transactions      Transaction[]
+  wallet            wallet?
 
   @@index([roleId])
   @@index([status])
@@ -35,18 +37,24 @@ model User {
 }
 
 model Student {
-  id              String           @id @default(uuid())
-  userId          String           @unique
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  dateOfBirth     DateTime?
-  notes           String?          @db.Text
-  courseFavorites CourseFavorite[] @relation("StudentFavorites")
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  id                  String               @id @default(uuid())
+  userId              String               @unique
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dateOfBirth         DateTime?
+  notes               String?              @db.Text
+  planId              String?
+  plan                SessionPlan?         @relation(fields: [planId], references: [id], onDelete: SetNull)
+  sessionCount        Int                  @default(0)
+  sessionLeft         Int                  @default(0)
+  sessionUsed         Int                  @default(0)
+  courseFavorites     CourseFavorite[]     @relation("StudentFavorites")
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  sessionParticipants SessionParticipant[]
+  teacherSubscription teacherSubscription[]
 
   @@index([userId])
   @@map("students")
-  sessionParticipants SessionParticipant[]
 }
 
 model Teacher {
@@ -74,14 +82,14 @@ model Teacher {
   certificates       TeacherCertificate[]
   reviews            TeacherReview[]
   workHours          TeacherWorkHours[]
+  teacherSubscription  teacherSubscription[]
 
-  courses TeacherCourse[]
+  courses      TeacherCourse[]
   sessionPlans SessionPlan[]
-
+  sessions     Session[]
 
   @@index([userId])
   @@map("teachers")
-  sessions Session[]
 }
 
 model TeacherCertificate {

@@ -83,5 +83,14 @@
   "PLAN_DETAILS_FETCHED_SUCCESSFULLY": "Plan details fetched successfully.",
   "PLAN_UPDATED_SUCCESSFULLY": "Plan updated successfully.",
   "PLAN_DELETED_SUCCESSFULLY": "Plan deleted successfully.",
-  "PLAN_EXISTS":"The plan already exists."
+  "PLAN_EXISTS": "The plan already exists.",
+  "PLAN_BOOKED_SUCCESSFULLY": "Plan booked successfully.",
+  "PLAN_BOOKING_INITIATED": "Plan booking initiated. Please proceed to payment.",
+  "CANNOT_BOOK_OWN_PLAN": "You cannot book your own session plan.",
+  "STUDENT_WALLET_NOT_SUPPORTED": "Student wallet payment is not supported.",
+  "TEACHER_SESSION_PRICE_NOT_SET": "Teacher session price is not configured for custom booking.",
+  "INVALID_SESSION_COUNT": "Invalid session count provided.",
+  "PAYMENT_ALREADY_PROCESSED": "Payment has already been processed.",
+  "INVALID_TRANSACTION_STATUS": "Transaction is not in pending status.",
+  "TRANSACTION_NOT_FOUND": "Transaction not found."
 }

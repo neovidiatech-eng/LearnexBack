@@ -84,5 +84,14 @@
   "PLAN_UPDATED_SUCCESSFULLY": "تم تعديل الخطة بنجاح.",
   "PLAN_DELETED_SUCCESSFULLY": "تم حذف الخطة بنجاح.",
   "PLANS_FETCHED_SUCCESSFULLY": "تم جلب الخطط بنجاح.",
-  "PLAN_DETAILS_FETCHED_SUCCESSFULLY": "تم جلب تفاصيل الخطة بنجاح."
+  "PLAN_DETAILS_FETCHED_SUCCESSFULLY": "تم جلب تفاصيل الخطة بنجاح.",
+  "PLAN_BOOKED_SUCCESSFULLY": "تم حجز الخطة بنجاح.",
+  "PLAN_BOOKING_INITIATED": "تم بدء حجز الخطة. يرجى المتابعة إلى الدفع.",
+  "CANNOT_BOOK_OWN_PLAN": "لا يمكنك حجز خطة الجلسات الخاصة بك.",
+  "STUDENT_WALLET_NOT_SUPPORTED": "الدفع عبر محفظة الطالب غير مدعوم.",
+  "TEACHER_SESSION_PRICE_NOT_SET": "لم يتم تحديد سعر جلسة المعلم للحجز المخصص.",
+  "INVALID_SESSION_COUNT": "عدد الجلسات المطلوب غير صالح.",
+  "PAYMENT_ALREADY_PROCESSED": "تمت معالجة الدفع مسبقاً.",
+  "INVALID_TRANSACTION_STATUS": "المعاملة ليست قيد الانتظار.",
+  "TRANSACTION_NOT_FOUND": "المعاملة غير موجودة."
 }
