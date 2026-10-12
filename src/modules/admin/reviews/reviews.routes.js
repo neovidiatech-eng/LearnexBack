@@ -25,11 +25,7 @@ router.get(
   reviewsController.getReviewById,
 );
 
-router.patch(
-  "/:reviewId/status",
-  authorizeResource("reviews"),
-  reviewsController.toggleReviewVisibility,
-);
+
 router.patch(
   "/:reviewId/visibility",
   authorizeResource("reviews"),

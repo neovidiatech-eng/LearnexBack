@@ -2,6 +2,7 @@ import * as dbService from "../../../db/db.service.js";
 import {
   offerStatusEnum,
   offerTypeEnum,
+  offerTargetEnum,
 } from "../../../utils/Enums/offer.enum.js";
 
 const getTeacherProfile = async (userId) => {
@@ -25,7 +26,9 @@ export const createOfferService = async (userId, body) => {
 
   const {
     courseId,
-    target,
+    target = offerTargetEnum.ALL_USERS,
+    studentIds = [],
+    targetIds = [],
     offerType = offerTypeEnum.PERCENTAGE,
     discount,
     startDate,
@@ -91,6 +94,29 @@ export const createOfferService = async (userId, body) => {
     throw error;
   }
 
+  let resolvedTargetIds = [];
+
+  if (target === offerTargetEnum.SPECIFIC_STUDENTS) {
+    const ids = (studentIds?.length ? studentIds : targetIds) || [];
+    if (!ids.length) {
+      const error = new Error("STUDENT_IDS_REQUIRED_FOR_SPECIFIC_STUDENTS");
+      error.cause = 400;
+      throw error;
+    }
+    for (const sId of ids) {
+      const student = await dbService.findOne({
+        model: "student",
+        where: { id: sId },
+      });
+      if (!student) {
+        const error = new Error(`STUDENT_NOT_FOUND: ${sId}`);
+        error.cause = 404;
+        throw error;
+      }
+    }
+    resolvedTargetIds = ids;
+  }
+
   const finalStatus =
     status ||
     (start > new Date() ? offerStatusEnum.SCHEDULED : offerStatusEnum.ACTIVE);
@@ -100,7 +126,8 @@ export const createOfferService = async (userId, body) => {
     data: {
       teacherCourseId: courseId,
       courseId: null, 
-      target: target?.trim() || "All Users",
+      target: target || offerTargetEnum.ALL_USERS,
+      targetIds: resolvedTargetIds,
       offerType,
       discount,
       startDate: start,
@@ -245,6 +272,8 @@ export const updateOfferService = async (userId, offerId, body) => {
   const {
     courseId,
     target,
+    studentIds,
+    targetIds,
     offerType,
     discount,
     startDate,
@@ -325,12 +354,39 @@ export const updateOfferService = async (userId, offerId, body) => {
     }
   }
 
+  let resolvedTargetIds = undefined;
+  const currentTarget = target !== undefined ? target : offer.target;
+
+  if (currentTarget === offerTargetEnum.SPECIFIC_STUDENTS && (studentIds !== undefined || targetIds !== undefined || target !== undefined)) {
+    const ids = (studentIds?.length ? studentIds : targetIds) || offer.targetIds || [];
+    if (!ids.length) {
+      const error = new Error("STUDENT_IDS_REQUIRED_FOR_SPECIFIC_STUDENTS");
+      error.cause = 400;
+      throw error;
+    }
+    for (const sId of ids) {
+      const student = await dbService.findOne({
+        model: "student",
+        where: { id: sId },
+      });
+      if (!student) {
+        const error = new Error(`STUDENT_NOT_FOUND: ${sId}`);
+        error.cause = 404;
+        throw error;
+      }
+    }
+    resolvedTargetIds = ids;
+  } else if (target !== undefined && target !== offerTargetEnum.SPECIFIC_STUDENTS) {
+    resolvedTargetIds = [];
+  }
+
   const updatedOffer = await dbService.updateOne({
     model: "offer",
     where: { id: offerId },
     data: {
       ...(courseId !== undefined && { teacherCourseId: courseId }),
-      ...(target !== undefined && { target: target.trim() }),
+      ...(target !== undefined && { target }),
+      ...(resolvedTargetIds !== undefined && { targetIds: resolvedTargetIds }),
       ...(offerType !== undefined && { offerType }),
       ...(discount !== undefined && { discount }),
       ...(startDate !== undefined && { startDate: finalStart }),
