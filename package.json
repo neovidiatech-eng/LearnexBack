@@ -17,9 +17,7 @@
     "docker:down": "docker compose down",
     "docker:build": "docker compose build",
     "docker:logs": "docker compose logs -f",
-    "docker:restart": "docker compose restart",
-    "seed:reviews": "node prisma/seeders/reviews.seed.js",
-    "seed:offers": "node prisma/seeders/offers.seed.js"
+    "docker:restart": "docker compose restart"
   },
   "keywords": [],
   "author": "",

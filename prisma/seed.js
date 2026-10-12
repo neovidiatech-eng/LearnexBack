@@ -76,6 +76,12 @@ async function main() {
   // 12. CMS & App Settings (independent)
   await seedCms(prisma);
 
+  // 13. Reviews (depends on students + teachers + courses)
+  await seedReviews(prisma, students, teachers, courses);
+
+  // 14. Promotional Offers (depends on students + teachers + courses + teacherCourses)
+  await seedOffers(prisma, students, teachers, courses, teacherCourses);
+
   console.log("\n✅ Database seeding completed successfully!");
 }
 
