@@ -1,6 +1,7 @@
 -- AlterTable
 ALTER TABLE "offers" ADD COLUMN "courseId" TEXT,
-ADD COLUMN "teacherCourseId" TEXT;
+ADD COLUMN "teacherCourseId" TEXT,
+ADD COLUMN "targetIds" TEXT[] DEFAULT ARRAY[]::TEXT[];
 
 -- CreateIndex
 CREATE INDEX "offers_courseId_idx" ON "offers"("courseId");

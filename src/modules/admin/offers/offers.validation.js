@@ -1,6 +1,6 @@
 import joi from "joi";
 import { generalFields } from "../../../utils/validation/generalField.js";
-import { offerStatusEnum, offerTypeEnum } from "../../../utils/Enums/index.js";
+import { offerStatusEnum, offerTypeEnum, offerTargetEnum } from "../../../utils/Enums/index.js";
 
 const translationSchema = joi.object({
   locale: joi.string().valid("en", "ar", "fr").required().messages({
@@ -22,7 +22,13 @@ export const createOffer = {
   body: joi
     .object({
       courseId: generalFields.id.optional(),
-      target: joi.string().min(2).max(100).trim().default("All Users"),
+      target: joi
+        .string()
+        .valid(...Object.values(offerTargetEnum))
+        .default(offerTargetEnum.ALL_USERS),
+      studentIds: joi.array().items(generalFields.id).optional(),
+      teacherIds: joi.array().items(generalFields.id).optional(),
+      targetIds: joi.array().items(generalFields.id).optional(),
       offerType: joi
         .string()
         .valid(...Object.values(offerTypeEnum))
@@ -83,7 +89,10 @@ export const getAllOffers = {
         .string()
         .valid(...Object.values(offerTypeEnum))
         .optional(),
-      target: joi.string().trim().allow("").optional(),
+      target: joi
+        .string()
+        .valid(...Object.values(offerTargetEnum))
+        .optional(),
       sort: joi
         .string()
         .valid("createdAt", "startDate", "endDate")
@@ -104,7 +113,13 @@ export const updateOffer = {
   body: joi
     .object({
       courseId: generalFields.id.allow(null).optional(),
-      target: joi.string().min(2).max(100).trim().optional(),
+      target: joi
+        .string()
+        .valid(...Object.values(offerTargetEnum))
+        .optional(),
+      studentIds: joi.array().items(generalFields.id).optional(),
+      teacherIds: joi.array().items(generalFields.id).optional(),
+      targetIds: joi.array().items(generalFields.id).optional(),
       offerType: joi
         .string()
         .valid(...Object.values(offerTypeEnum))
