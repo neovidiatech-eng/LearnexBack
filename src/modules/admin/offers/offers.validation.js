@@ -21,6 +21,7 @@ const translationSchema = joi.object({
 export const createOffer = {
   body: joi
     .object({
+      courseId: generalFields.id.optional(),
       target: joi.string().min(2).max(100).trim().default("All Users"),
       offerType: joi
         .string()
@@ -69,6 +70,7 @@ export const getOfferById = {
 export const getAllOffers = {
   query: joi
     .object({
+      courseId: generalFields.id.optional(),
       page: generalFields.page.default(1),
       limit: generalFields.limit.default(10),
       search: joi.string().trim().allow("").optional(),
@@ -101,6 +103,7 @@ export const updateOffer = {
     .options({ allowUnknown: false }),
   body: joi
     .object({
+      courseId: generalFields.id.allow(null).optional(),
       target: joi.string().min(2).max(100).trim().optional(),
       offerType: joi
         .string()

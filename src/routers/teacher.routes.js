@@ -7,7 +7,8 @@ import teacherProfileRouter from "../modules/teacher/profile/profile.routes.js";
 import teacherCertificateRouter from "../modules/teacher/certificates/certificate.routes.js";
 import teacherQuizRouter from "../modules/teacher/courses/quizes/quiz.routes.js"
 import teacherReviewsRouter from "../modules/teacher/reviews/reviews.routes.js";
-import teacherPlans  from "../modules/teacher/Plans/plan.routes.js"
+import teacherOfferRouter from "../modules/teacher/offers/offers.routes.js";
+import teacherPlans from "../modules/teacher/Plans/plan.routes.js";
 
 const router = Router();
 router.use("/auth", teacherAuthRouter);
@@ -18,6 +19,7 @@ router.use("/items", teacherItemsRouter);
 router.use("/me", teacherProfileRouter);
 router.use("/certificates", teacherCertificateRouter);
 router.use("/reviews", teacherReviewsRouter);
-router.use("/plans",teacherPlans)
+router.use("/offers", teacherOfferRouter);
+router.use("/plans", teacherPlans);
 
 export default router;

@@ -10,11 +10,28 @@ export const updateAppInfoService = async (body, file, locale = "ar") => {
     websiteUrl,
     copyright,
   } = body;
-  const currentSetting = await db.findFirst({ model: "appSetting" });
+  let currentSetting = await db.findFirst({ model: "appSetting" });
   if (!currentSetting) {
-    const error = new Error("APP_SETTINGS_NOT_FOUND");
-    error.cause = 404;
-    throw error;
+    currentSetting = await db.create({
+      model: "appSetting",
+      data: {
+        appVersion: appVersion || "1.0.0",
+        ...(file && { logoUrl: file.relativeDestination }),
+        ...(facebookUrl !== undefined && { facebookUrl }),
+        ...(instaUrl !== undefined && { instaUrl }),
+        ...(websiteUrl !== undefined && { websiteUrl }),
+        translations: {
+          create: {
+            locale,
+            appName: appName || "LMS",
+            aboutUs: aboutUs || "",
+            copyright: copyright || "All rights reserved",
+          },
+        },
+      },
+      include: { translations: true },
+    });
+    return currentSetting;
   }
   const updatedSetting = await db.updateOne({
     model: "appSetting",
