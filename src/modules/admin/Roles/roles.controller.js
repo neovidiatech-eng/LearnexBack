@@ -50,7 +50,8 @@ export const deleteRole = asyncHandler(async (req, res) => {
   });
 });
 export const getAllPermissions = asyncHandler(async (req, res) => {
-  const result = await rolesService.getAllPermissionsService();
+
+  const result = await rolesService.getAllPermissionsService(req.query);
   return successResponse({
     res,
     status: 200,

@@ -23,6 +23,15 @@ export const createRole = {
     .required()
     .options({ allowUnknown: false }),
 };
+export const getAllPermissions = {
+  query: joi
+    .object()
+    .keys({
+      page: joi.number().integer().min(1).default(1),
+      limit: joi.number().integer().min(1).max(100).default(10),
+    })
+    .options({ allowUnknown: false }),
+};
 
 export const getAllRoles = {
   query: joi

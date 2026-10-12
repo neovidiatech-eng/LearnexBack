@@ -375,9 +375,12 @@ export const deleteRoleService = async (roleId) => {
 
 
 
-export const getAllPermissionsService = async () => {
-  const permissions = await DBService.findMany({
+export const getAllPermissionsService = async ({ page = 1, limit = 15 } = {}) => {
+  const permissions = await DBService.findManyWithPaginationAndCount({
     model: "permission",
+    page,
+    limit,
+    orderBy: { id: "asc" },
     select: {
       id: true,
       code: true,

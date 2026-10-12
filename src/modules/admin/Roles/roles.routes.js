@@ -23,6 +23,7 @@ router.get(
   "/permissions",
   authentication(),
   authorize(PERMISSIONS_V2.ROLES.PERMISSION),
+  validation(rolesValidation.getAllPermissions),
   rolesController.getAllPermissions,
 );
 
