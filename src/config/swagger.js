@@ -728,6 +728,125 @@ Include the Bearer JWT token in the Authorization header:
           },
         },
       },
+      SessionPlanTranslationInputDTO: {
+        type: "object",
+        required: ["title", "description"],
+        properties: {
+          lang: { type: "string", enum: ["en", "ar", "fr"], default: "en", example: "en" },
+          title: { type: "string", example: "Web Dev Quickstart (3 Sessions)" },
+          description: { type: "string", example: "Focused 1-on-1 sessions covering web development foundations." },
+          slug: { type: "string", example: "web-dev-quickstart" },
+        },
+      },
+      SessionPlanTranslationDTO: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440002" },
+          sessionId: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440000" },
+          lang: { type: "string", enum: ["en", "ar", "fr"], default: "en", example: "en" },
+          title: { type: "string", example: "Web Dev Quickstart (3 Sessions)" },
+          description: { type: "string", example: "Focused 1-on-1 sessions covering web development foundations." },
+          slug: { type: "string", example: "web-dev-quickstart" },
+          createdAt: { type: "string", format: "date-time" },
+          updatedAt: { type: "string", format: "date-time" },
+        },
+      },
+      SessionPlanResponseDTO: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440000" },
+          teacherId: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440001" },
+          color: { type: "string", example: "#2563EB" },
+          sessionsCount: { type: "integer", example: 3 },
+          price: { type: "number", example: 75.00 },
+          discountType: { type: "string", enum: ["PERCENTAGE", "FIXED"], nullable: true, example: "PERCENTAGE" },
+          discountValue: { type: "number", nullable: true, example: 10.00 },
+          isActive: { type: "boolean", example: true },
+          createdAt: { type: "string", format: "date-time" },
+          updatedAt: { type: "string", format: "date-time" },
+          sessionPlansTranslations: {
+            type: "array",
+            items: { $ref: "#/components/schemas/SessionPlanTranslationDTO" },
+          },
+        },
+      },
+      SessionPlanDetailResponseDTO: {
+        type: "object",
+        properties: {
+          message: { type: "string", example: "SUCCESS" },
+          data: { $ref: "#/components/schemas/SessionPlanResponseDTO" },
+        },
+      },
+      SessionPlanListResponseDTO: {
+        type: "object",
+        properties: {
+          message: { type: "string", example: "SUCCESS" },
+          data: {
+            type: "object",
+            properties: {
+              items: {
+                type: "array",
+                items: { $ref: "#/components/schemas/SessionPlanResponseDTO" },
+              },
+              pagination: { $ref: "#/components/schemas/PaginationMeta" },
+            },
+          },
+        },
+      },
+      CreateSessionPlanDTO: {
+        type: "object",
+        required: ["sessionsCount", "price", "translations"],
+        properties: {
+          color: { type: "string", example: "#2563EB" },
+          sessionsCount: { type: "integer", minimum: 1, example: 3 },
+          price: { type: "number", minimum: 0, example: 75.00 },
+          discountType: { type: "string", enum: ["PERCENTAGE", "FIXED"], nullable: true, example: "PERCENTAGE" },
+          discountValue: { type: "number", nullable: true, example: 10.00 },
+          isActive: { type: "boolean", default: true, example: true },
+          translations: {
+            type: "array",
+            minItems: 1,
+            items: { $ref: "#/components/schemas/SessionPlanTranslationInputDTO" },
+            example: [
+              {
+                lang: "en",
+                title: "Web Dev Quickstart (3 Sessions)",
+                description: "Focused 1-on-1 sessions covering web development foundations, HTML/CSS/JS reviews.",
+                slug: "web-starter-en",
+              },
+              {
+                lang: "ar",
+                title: "خطة البداية السريعة (3 جلسات)",
+                description: "جلسات فردية مركزة لأساسيات تطوير الويب ومراجعة مشاريع HTML/CSS/JavaScript.",
+                slug: "web-starter-ar",
+              },
+            ],
+          },
+        },
+      },
+      UpdateSessionPlanDTO: {
+        type: "object",
+        properties: {
+          color: { type: "string", example: "#7C3AED" },
+          sessionsCount: { type: "integer", minimum: 1, example: 5 },
+          price: { type: "number", minimum: 0, example: 120.00 },
+          discountType: { type: "string", enum: ["PERCENTAGE", "FIXED"], nullable: true, example: "FIXED" },
+          discountValue: { type: "number", nullable: true, example: 15.00 },
+          isActive: { type: "boolean", example: true },
+          translations: {
+            type: "array",
+            items: { $ref: "#/components/schemas/SessionPlanTranslationInputDTO" },
+            example: [
+              {
+                lang: "en",
+                title: "Full-Stack Mastery (5 Sessions)",
+                description: "Advanced hands-on React and Node.js mentoring.",
+                slug: "fullstack-mastery-en",
+              },
+            ],
+          },
+        },
+      },
     },
   },
   tags: [
@@ -740,6 +859,7 @@ Include the Bearer JWT token in the Authorization header:
     { name: "Admin - Roles & Permissions", description: "RBAC roles, permission sets, and localized titles" },
     { name: "Admin - Coupons", description: "Discount vouchers, redemption limits, and status toggles" },
     { name: "Admin - Offers", description: "Promotional offers, percentage discounts, and validity schedules" },
+    { name: "Admin - Plans", description: "Admin monitoring and management of teacher session plans" },
     { name: "Admin - Reviews", description: "Admin reviews management, visibility toggle (isHidden), and statistics" },
     { name: "Teacher - Reviews", description: "Teacher session and course reviews overview" },
     { name: "Teacher - Offers", description: "Teacher personal course promotional offers" },
@@ -748,6 +868,7 @@ Include the Bearer JWT token in the Authorization header:
 
     { name: "Teacher - Auth", description: "Teacher registration with CV upload, login, and password recovery" },
     { name: "Teacher - Profile", description: "Teacher bio, hourly session pricing, avatar uploads, and visibility" },
+    { name: "Teacher - Plans", description: "Teacher session plans, multi-session bundles, and multilingual packages" },
     { name: "Teacher - Certificates", description: "Teacher academic/professional credentials submission and tracking" },
     { name: "Teacher - Courses", description: "Teacher self-published courses CRUD" },
     { name: "Teacher - Sections", description: "Curriculum modules and section reordering" },
@@ -2407,6 +2528,69 @@ Include the Bearer JWT token in the Authorization header:
     },
 
     // ═══════════════════════════════════════════════════════════
+    // ADMIN PLANS
+    // ═══════════════════════════════════════════════════════════
+    "/api/v1/admin/plans": {
+      get: {
+        summary: "Get All Session Plans (Paginated)",
+        tags: ["Admin - Plans"],
+        security: bearerSecurity,
+        parameters: [
+          ...paginationQueryParams,
+          {
+            in: "query",
+            name: "teacherId",
+            schema: { type: "string", format: "uuid" },
+            description: "Filter plans by teacher UUID",
+          },
+          {
+            in: "query",
+            name: "sortOrder",
+            schema: { type: "string", enum: ["asc", "desc"], default: "desc" },
+            description: "Sort order by creation date",
+          },
+          {
+            in: "query",
+            name: "lang",
+            schema: { type: "string", enum: ["en", "ar", "fr"] },
+            description: "Filter translation language",
+          },
+          
+        ],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/SessionPlanListResponseDTO" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/admin/plans/{planId}": {
+      get: {
+        summary: "Get Session Plan Details by ID",
+        tags: ["Admin - Plans"],
+        security: bearerSecurity,
+        parameters: [
+          uuidParam("planId", "Session Plan UUID"),
+          {
+            in: "query",
+            name: "lang",
+            schema: { type: "string", enum: ["en", "ar", "fr"] },
+            description: "Filter translation language",
+          },
+          
+        ],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/SessionPlanDetailResponseDTO" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    // ═══════════════════════════════════════════════════════════
     // TEACHER AUTH
     // ═══════════════════════════════════════════════════════════
     "/api/v1/teacher/auth/signup": {
@@ -3209,6 +3393,119 @@ Include the Bearer JWT token in the Authorization header:
     },
 
     // ═══════════════════════════════════════════════════════════
+    // TEACHER PLANS
+    // ═══════════════════════════════════════════════════════════
+    "/api/v1/teacher/plans/me": {
+      get: {
+        summary: "Get My Session Plans",
+        tags: ["Teacher - Plans"],
+        security: bearerSecurity,
+        parameters: [
+          ...paginationQueryParams,
+          {
+            in: "query",
+            name: "sortOrder",
+            schema: { type: "string", enum: ["asc", "desc"], default: "desc" },
+            description: "Sort order by creation date",
+          },
+          {
+            in: "query",
+            name: "lang",
+            schema: { type: "string", enum: ["en", "ar", "fr"] },
+            description: "Filter translation language",
+          },
+        ],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/SessionPlanListResponseDTO" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/teacher/plans": {
+      post: {
+        summary: "Create Session Plan with Translations",
+        tags: ["Teacher - Plans"],
+        security: bearerSecurity,
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/CreateSessionPlanDTO" },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[201]({ $ref: "#/components/schemas/SessionPlanDetailResponseDTO" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          409: standardResponses[409],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/teacher/plans/{planId}": {
+      get: {
+        summary: "Get Session Plan Details",
+        tags: ["Teacher - Plans"],
+        security: bearerSecurity,
+        parameters: [
+          uuidParam("planId", "Session Plan UUID"),
+          {
+            in: "query",
+            name: "lang",
+            schema: { type: "string", enum: ["en", "ar", "fr"] },
+            description: "Filter translation language",
+          },
+        ],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/SessionPlanDetailResponseDTO" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+      patch: {
+        summary: "Update Session Plan",
+        tags: ["Teacher - Plans"],
+        security: bearerSecurity,
+        parameters: [uuidParam("planId", "Session Plan UUID")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/UpdateSessionPlanDTO" },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/SessionPlanDetailResponseDTO" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          409: standardResponses[409],
+          500: standardResponses[500],
+        },
+      },
+      delete: {
+        summary: "Delete Session Plan",
+        tags: ["Teacher - Plans"],
+        security: bearerSecurity,
+        parameters: [uuidParam("planId", "Session Plan UUID")],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/SuccessMessageResponse" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+
     // ═══════════════════════════════════════════════════════════
     // TEACHER REVIEWS
     // ═══════════════════════════════════════════════════════════
@@ -3364,6 +3661,8 @@ Include the Bearer JWT token in the Authorization header:
         },
       },
     },
+
+    // ═══════════════════════════════════════════════════════════
     // STUDENT AUTH
     // ═══════════════════════════════════════════════════════════
     "/api/v1/student/auth/signup": {
@@ -3717,12 +4016,12 @@ Include the Bearer JWT token in the Authorization header:
         },
       },
     },
-    "/api/v1/student/teachers/{teacherId}": {
+    "/api/v1/student/teachers/{id}": {
       get: {
         summary: "Get Teacher Details",
         tags: ["Student - Teachers"],
         security: bearerSecurity,
-        parameters: [uuidParam("teacherId", "Teacher ID")],
+        parameters: [uuidParam("id", "Teacher ID")],
         responses: {
           ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
           401: standardResponses[401],

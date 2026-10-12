@@ -77,5 +77,12 @@
   "STAFF_UPDATED_SUCCESSFULLY": "تم تعديل بيانات عضو الطاقم بنجاح.",
   "STAFF_STATUS_UPDATED_SUCCESSFULLY": "تم تعديل حالة عضو الطاقم بنجاح.",
   "STAFF_DELETED_SUCCESSFULLY": "تم حذف عضو الطاقم بنجاح.",
-  "STAFF_ROLES_FETCHED_SUCCESSFULLY": "تم جلب أدوار الطاقم بنجاح."
+  "STAFF_ROLES_FETCHED_SUCCESSFULLY": "تم جلب أدوار الطاقم بنجاح.",
+  "PLAN_NOT_FOUND": "الخطة غير موجودة",
+  "PLAN_EXISTS": "الخطة موجودة بالفعل",
+  "PLAN_CREATED_SUCCESSFULLY": "تم إنشاء الخطة بنجاح.",
+  "PLAN_UPDATED_SUCCESSFULLY": "تم تعديل الخطة بنجاح.",
+  "PLAN_DELETED_SUCCESSFULLY": "تم حذف الخطة بنجاح.",
+  "PLANS_FETCHED_SUCCESSFULLY": "تم جلب الخطط بنجاح.",
+  "PLAN_DETAILS_FETCHED_SUCCESSFULLY": "تم جلب تفاصيل الخطة بنجاح."
 }

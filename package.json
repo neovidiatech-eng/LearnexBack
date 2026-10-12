@@ -11,6 +11,7 @@
     "prisma:migrate": "prisma migrate dev --schema=./prisma/schema",
     "prisma:studio": "prisma studio --schema=./prisma/schema",
     "seed": "node prisma/seed.js",
+    "seed:Permission":"node prisma/seeders/permission.seed.js",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:build": "docker compose build",

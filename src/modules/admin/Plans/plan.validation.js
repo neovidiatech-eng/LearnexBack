@@ -11,5 +11,16 @@ export const getAllPlans = {
     search: generalFields.search.optional(),
     sortOrder: joi.string().optional().valid("asc", "desc").optional(),
     teacherId: generalFields.id.optional(),
-  })
-}
+    lang: joi.string().valid("en", "ar", "fr").optional(),
+  }),
+};
+
+export const getPlanById = {
+  params: joi.object({
+    planId: generalFields.id.required(),
+  }),
+  query: joi.object({
+    lang: joi.string().valid("en", "ar", "fr").optional(),
+  }),
+};
+

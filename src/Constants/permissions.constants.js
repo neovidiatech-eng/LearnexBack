@@ -117,5 +117,16 @@ export const PERMISSIONS_V2 = {
     UPDATE: "plans:update",
     DELETE: "plans:delete",
     ASSIGN: "plans:assign",
+    GET_MY_PLANS:"plans:get_my_plans"
+  },
+
+  SESSIONS: {
+    READ: "sessions:read",
+    CREATE: "sessions:create",
+    UPDATE: "sessions:update",
+    DELETE: "sessions:delete",
+    JOIN: "sessions:join",
+    START: "sessions:start",
+    END: "sessions:end",
   },
 };

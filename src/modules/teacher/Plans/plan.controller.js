@@ -1,91 +1,58 @@
-import * as profileService from "./profile.service.js";
 import { asyncHandler, successResponse } from "../../../utils/response.js";
+import * as planService from "./plan.service.js";
 
-export const toggleVisibility = asyncHandler(async (req, res) => {
-  const teacher = await profileService.toggleVisibilityService(
-    req.user.id,
-    req.body?.isAvailable,
-  );
+export const getMyPlansController = asyncHandler(async (req, res) => {
+  const plans = await planService.getMyPlansService({
+    userId: req.user.id,
+    query: req.query,
+  });
   return successResponse({
     res,
-    data: teacher,
+    data: plans,
   });
 });
 
-
-export const getProfile = asyncHandler(async (req, res) => {
-  const teacher = await profileService.getProfileService(req.user.id);
+export const getPlanById = asyncHandler(async (req, res) => {
+  const plans = await planService.getPlanByIdService(req.params.planId, req.query);
   return successResponse({
     res,
-    data: teacher,
+    data: plans,
   });
 });
 
-export const shareProfile = asyncHandler(async (req, res) => {
-  const teacher = await profileService.getSharedProfileService(
-    req.params.teacherId,
-  );
+export const createPlan = asyncHandler(async (req, res) => {
+  const plans = await planService.createPlanService({
+    body: req.body,
+    userId: req.user.id,
+  });
   return successResponse({
+    message: req.i18n.t("PLAN_CREATED_SUCCESSFULLY"),
     res,
-    data: teacher,
+    data: plans,
   });
 });
 
-export const updateProfile = asyncHandler(async (req, res) => {
-  const teacher = await profileService.updateProfileService(req.user.id,req.body);
-  return successResponse({
-    res,
-    data: teacher,
+export const deletePlan = asyncHandler(async (req, res) => {
+  const plans = await planService.deletePlanService({
+    userId: req.user.id,
+    planId: req.params.planId,
   });
-});
-export const updateSessionPrice = asyncHandler(async (req, res) => {
-  const teacher = await profileService.updateSessionPriceService(
-    req.user.id,
-    req.body,
-  );
   return successResponse({
     res,
-    data: teacher,
+    data: plans,
   });
 });
 
-export const updateImageProfile = asyncHandler(async (req, res) => {
-  const teacher = await profileService.updateImageProfileService(
-    req.user.id,
-    req.files,
-  );
+export const updatePlan = asyncHandler(async (req, res) => {
+  const plan = await planService.updatePlanService({
+    userId: req.user.id,
+    planId: req.params.planId,
+    body: req.body,
+  });
   return successResponse({
+    message: req.i18n.t("PLAN_UPDATED_SUCCESSFULLY"),
     res,
-    data: teacher,
+    data: plan,
   });
 });
 
-  
-  export const deleteProfile = asyncHandler(async (req, res) => {
-     await profileService.deleteProfileService(req.user.id);
-    return successResponse({
-      res,
-      status:204
-    });
-  });
-
-export const updateWorkHours = asyncHandler(async (req, res) => {
-
-  const teacher = await profileService.updateWorkHoursService(
-    req.user.id,
-    req.body.workHours,
-  );
-  return successResponse({
-    res,
-    data: teacher,
-  });
-});
-
-export const getWorkHours = asyncHandler(async (req, res) => {
-
-  const workHours = await profileService.getWorkHoursService(req.user.id);
-  return successResponse({
-    res,
-    data: workHours,
-  });
-});

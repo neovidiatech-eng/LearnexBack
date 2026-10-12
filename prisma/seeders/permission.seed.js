@@ -1,8 +1,16 @@
+import "dotenv/config";
+import { PrismaClient } from "@prisma/client";
 import {
   PERMISSIONS_DATA,
   ROLE_PERMISSIONS_MAP,
 } from "../../src/Constants/rolePermissions.constants.js";
+import { PrismaPg } from "@prisma/adapter-pg";
 
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL,
+});
+
+const prisma = new PrismaClient({ adapter });
 export async function seedPermissions(prisma, roles) {
   console.log("🌱 Seeding permissions...");
 
@@ -41,3 +49,23 @@ export async function seedPermissions(prisma, roles) {
   console.log("✅ Role permissions assigned");
   return permissions;
 }
+
+async function main() {
+  const roles = await prisma.role.findMany({
+    select: {
+      id: true,
+      slug: true,
+    },
+  });
+
+  await seedPermissions(prisma, roles);
+}
+
+main()
+  .catch((error) => {
+    console.error("❌ Permission seeding failed:", error);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

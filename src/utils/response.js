@@ -41,3 +41,11 @@ export const globalErrorHandling = (error, req, res, next) => {
     stack: process.env.MOOD === "DEV" ? error.stack : undefined,
   });
 };
+
+
+
+export const throwError = ({message, status = 400}) => {
+  const err = new Error(message);
+  err.cause = status;
+  throw err;
+};

@@ -20,4 +20,12 @@ router.get(
   planController.getAllPlans,
 )
 
+router.get(
+  "/:planId",
+  authentication(),
+  validation(planValidation.getPlanById),
+  authorize(PERMISSIONS_V2.PLANS.READ),
+  planController.getPlanById,
+)
+
 export default router;

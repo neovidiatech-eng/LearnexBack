@@ -1,18 +1,68 @@
+
 model SessionPlan {
-  id            String   @id @default(uuid())
-  teacherId     String
-  teacher       Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  color         String?  @default("#b36c14ff")
-  title         String
-  description   String?  @db.Text
-  sessionsCount Int
-  price         Decimal  @db.Decimal(10, 2) // إجمالي الـ Plan
-  discountType  String? // PERCENTAGE | FIXED
-  discountValue Decimal? @db.Decimal(10, 2)
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                       String                   @id @default(uuid())
+  teacherId                String
+  teacher                  Teacher                  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  color                    String?                  @default("#b36c14ff")
+  sessionsCount            Int
+  price                    Decimal                  @db.Decimal(10, 2)
+  discountType             String?
+  discountValue            Decimal?                 @db.Decimal(10, 2)
+  isActive                 Boolean                  @default(true)
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+  sessionPlansTranslations SessionPlanTranslation[]
 
   @@index([teacherId])
   @@map("session_plans")
+}
+
+model SessionPlanTranslation {
+  id          String      @id @default(uuid())
+  sessionId   String
+  sessionPlan SessionPlan @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  lang        String
+  title       String
+  description String       @db.Text
+  slug        String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@unique([sessionId, lang])
+  @@index([sessionId])
+  @@map("session_plans_translations")
+}
+model Session {
+  id        String   @id @default(uuid())
+  teacherId String
+  teacher   Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  title     String?
+  roomName  String   @unique        // بيتولد في الباك (uuid)، مش من الفرونت
+  type      String   @default("GROUP")      // GROUP | ONE_TO_ONE
+  status    String   @default("SCHEDULED")  // SCHEDULED | LIVE | COMPLETED | CANCELLED
+  startAt   DateTime
+  endAt     DateTime                // = startAt + 50 دقيقة
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  participants SessionParticipant[]
+
+  @@index([teacherId, startAt])
+  @@index([status])
+  @@map("sessions")
+}
+
+model SessionParticipant {
+  id             String           @id @default(uuid())
+  sessionId      String
+  session        Session          @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  studentId      String
+  student        Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status         String           @default("BOOKED")  // BOOKED | ATTENDED | ABSENT | CANCELLED
+  joinedAt       DateTime?
+  leftAt         DateTime?
+
+  @@unique([sessionId, studentId])
+  @@index([studentId])
+  @@map("session_participants")
 }

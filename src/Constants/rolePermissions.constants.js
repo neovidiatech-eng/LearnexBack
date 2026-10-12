@@ -368,6 +368,12 @@ export const PERMISSIONS_DATA = [
     resource: "plans",
     action: "delete",
   },
+  {
+    code: PERMISSIONS_V2.PLANS.GET_MY_PLANS,
+    name: "Get My Plans",
+    resource: "plans",
+    action: "get_my_plans",
+  },
 ];
 
 export const ROLE_PERMISSIONS_MAP = {
@@ -379,6 +385,13 @@ export const ROLE_PERMISSIONS_MAP = {
     PERMISSIONS_V2.TEACHERS.UPDATE,
     PERMISSIONS_V2.TEACHERS.DELETE,
     PERMISSIONS_V2.TEACHERS.READ_MY_STUDENTS,
+
+    // Plans
+    PERMISSIONS_V2.PLANS.GET_MY_PLANS,
+    PERMISSIONS_V2.PLANS.CREATE,
+    PERMISSIONS_V2.PLANS.READ,
+    PERMISSIONS_V2.PLANS.UPDATE,
+    PERMISSIONS_V2.PLANS.DELETE,
 
     // Work Hours
     PERMISSIONS_V2.WORK_HOURS.READ,

@@ -1,540 +1,377 @@
+import slugify from "slugify";
 import * as db from "../../../db/db.service.js";
-import { deleteFile, deleteFiles } from "../../../utils/multer/file.utils.js";
-import {
-  decryptEncription,
-  generateEncryption,
-} from "../../../utils/security/encryption.security.js";
+import { throwError } from "../../../utils/response.js";
 
-export const toggleVisibilityService = async (userId, isAvailable) => {
+export const getMyPlansService = async ({ userId, query }) => {
   const teacher = await db.findFirst({
     model: "teacher",
     where: { userId },
   });
 
   if (!teacher) {
-    const error = new Error("TEACHER_NOT_FOUND");
-    error.cause = 404;
-    throw error;
-  }
-
-  let newStatus;
-  if (isAvailable !== undefined) {
-    if (typeof isAvailable === "string") {
-      newStatus = isAvailable.toLowerCase() === "true";
-    } else {
-      newStatus = Boolean(isAvailable);
-    }
-  } else {
-    newStatus = !teacher.isAvailable;
-  }
-
-  const updatedTeacher = await db.updateOne({
-    model: "teacher",
-    where: { id: teacher.id },
-    data: {
-      isAvailable: newStatus,
-    },
-    select: {
-      id: true,
-      isAvailable: true,
-      updatedAt: true,
-    },
-  });
-
-  return updatedTeacher;
-};
-
-export const getProfileService = async (userId) => {
-  const teacher = await db.findFirst({
-    model: "teacher",
-    where: { userId },
-    select: {
-      id: true,
-      subject: true,
-      headline: true,
-      bio: true,
-      experienceYears: true,
-      cvUrl: true,
-      introVideoUrl: true,
-      linkedinUrl: true,
-      isAvailable: true,
-      sessionPrice50Min: true,
-      currency: true,
-      avgRating: true,
-      totalStudentsCount: true,
-      reviewsCount: true,
-      totalCoursesCount: true,
-      referralCode: true,
-      certificates: {
-        select: {
-          id: true,
-          title: true,
-          issuer: true,
-          issueYear: true,
-          fileUrl: true,
-        },
-      },
-      user: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-          phone: true,
-          country: true,
-          profilePhoto: true,
-          coverPhoto: true,
-        },
-      },
-    },
-  });
-
-  if (!teacher) {
-    const error = new Error("TEACHER_NOT_FOUND");
-    error.cause = 404;
-    throw error;
-  }
-
-  if (teacher.user?.phone) {
-    teacher.user.phone = await decryptEncription({
-      cipherText: teacher.user.phone,
+    throwError({
+      message: "TEACHER_NOT_FOUND",
+      status: 404,
     });
   }
 
-  return teacher;
-};
+  const targetLang = query.lang 
 
-export const getSharedProfileService = async (teacherId) => {
-  const teacher = await db.findFirst({
-    model: "teacher",
-    where: {
-      id: teacherId,
-      isAvailable: true,
-      user: { status: "ACTIVE" },
-    },
-    select: {
-      id: true,
-      subject: true,
-      headline: true,
-      bio: true,
-      experienceYears: true,
-      introVideoUrl: true,
-      linkedinUrl: true,
-      sessionPrice50Min: true,
-      currency: true,
-      avgRating: true,
-      reviewsCount: true,
-      totalStudentsCount: true,
-      totalCoursesCount: true,
+  const where = {
+    teacherId: teacher.id,
+  };
 
-      user: {
-        select: {
-          fullName: true,
-          country: true,
-          profilePhoto: true,
-          coverPhoto: true,
-        },
+  if (query.search) {
+    where.sessionPlansTranslations = {
+      some: {
+        OR: [
+          { title: { contains: query.search, mode: "insensitive" } },
+          { description: { contains: query.search, mode: "insensitive" } },
+        ],
       },
-
-      certificates: {
-        where: { status: "APPROVED" },
-        select: {
-          id: true,
-          title: true,
-          issuer: true,
-          issueYear: true,
-          fileUrl: true,
-        },
-      },
-
-      courses: {
-        where: { status: "APPROVED" },
-        select: {
-          id: true,
-          name: true,
-          wallPaper: true,
-          price: true,
-          totalHours: true,
-        },
-      },
-    },
-  });
-
-  if (!teacher) {
-    const error = new Error("PROFILE_NOT_FOUND_OR_UNAVAILABLE");
-    error.cause = 404;
-    throw error;
+    };
   }
 
-  return teacher;
-};
-
-export const updateProfileService = async (userId, body) => {
-  const {
-    fullName,
-    email,
-    phone,
-    country,
-    subject,
-    headline,
-    bio,
-    experienceYears,
-    linkedinUrl,
-    introVideoUrl,
-    cvUrl,
-  } = body;
-
-  const teacher = await db.findFirst({
-    model: "teacher",
-    where: { userId },
-    include: { user: true },
-  });
-
-  if (!teacher) {
-    const error = new Error("TEACHER_NOT_FOUND");
-    error.cause = 404;
-    throw error;
-  }
-
-  if (email && email.toLowerCase().trim() !== teacher.user.email) {
-    const emailExist = await db.findFirst({
-      model: "user",
-      where: {
-        email: email.toLowerCase().trim(),
-        id: { not: userId },
-      },
-    });
-
-    if (emailExist) {
-      const error = new Error("EMAIL_ALREADY_EXISTS");
-      error.cause = 409;
-      throw error;
-    }
-  }
-
-  const updatedTeacher = await db.updateOne({
-    model: "teacher",
-    where: { id: teacher.id },
-    data: {
-      ...(subject && { subject }),
-      ...(headline && { headline }),
-      ...(bio && { bio }),
-      ...(experienceYears !== undefined && {
-        experienceYears: Number(experienceYears),
-      }),
-      ...(linkedinUrl && { linkedinUrl }),
-      ...(introVideoUrl && { introVideoUrl }),
-      ...(cvUrl && { cvUrl }),
-      user: {
-        update: {
-          ...(fullName && { fullName: fullName.trim() }),
-          ...(email && { email: email.toLowerCase().trim() }),
-          ...(phone && {
-            phone: await generateEncryption({ plainText: phone }),
-          }),
-          ...(country && { country }),
-        },
-      },
-    },
-    select: {
-      id: true,
-      subject: true,
-      headline: true,
-      bio: true,
-      experienceYears: true,
-      introVideoUrl: true,
-      cvUrl: true,
-      linkedinUrl: true,
-      isAvailable: true,
-      user: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-          phone: true,
-          country: true,
-        },
-      },
-    },
-  });
-
-  if (updatedTeacher.user?.phone) {
-    updatedTeacher.user.phone = await decryptEncription({
-      cipherText: updatedTeacher.user.phone,
-    });
-  }
-
-  return updatedTeacher;
-};
-
-export const updateSessionPriceService = async (userId, body) => {
-  const { sessionPrice50Min } = body;
-
-  const teacher = await db.findFirst({
-    model: "teacher",
-    where: { userId },
-    include: { user: true },
-  });
-
-  if (!teacher) {
-    const error = new Error("TEACHER_NOT_FOUND");
-    error.cause = 404;
-    throw error;
-  }
-
-  const updatedData = await db.updateOne({
-    model: "teacher",
-    where: { id: teacher.id },
-    data: {
-      ...(sessionPrice50Min !== undefined && { sessionPrice50Min }),
-    },
-    select: {
-      id: true,
-      userId: true,
-      sessionPrice50Min: true,
-      currency: true,
-    },
-  });
-
-  return updatedData;
-};
-
-export const updateImageProfileService = async (userId, reqFiles) => {
-  const user = await db.findFirst({
-    model: "user",
-    where: { id: userId },
-    select: { id: true, profilePhoto: true, coverPhoto: true },
-  });
-  if (!user) {
-    const error = new Error("USER_NOT_FOUND");
-    error.cause = 404;
-    throw error;
-  }
-  const newCoverPhoto = reqFiles.coverPhoto?.[0].relativeDestination;
-  const newProfilePhoto = reqFiles.profilePhoto?.[0].relativeDestination;
-  const updatedUser = await db.updateOne({
-    model: "user",
-    where: { id: userId },
-    data: {
-      ...(newCoverPhoto && { coverPhoto: newCoverPhoto }),
-      ...(newProfilePhoto && { profilePhoto: newProfilePhoto }),
-    },
-    select: {
-      id: true,
-      profilePhoto: true,
-      coverPhoto: true,
-    },
-  });
-  if (newCoverPhoto && user.coverPhoto) {
-    deleteFile(user.coverPhoto);
-  }
-  if (newProfilePhoto && user.profilePhoto) {
-    deleteFile(user.profilePhoto);
-  }
-  return updatedUser;
-};
-
-export const deleteProfileService = async (userId) => {
-  const teacher = await db.findFirst({
-    model: "teacher",
-    where: { userId },
+  const plans = await db.findManyWithPaginationAndCount({
+    model: "sessionPlan",
+    where,
+    page: query.page,
+    limit: query.limit,
+    sortOrder: query.sortOrder,
     include: {
-      user: {
-        select: {
-          id: true,
-          profilePhoto: true,
-          coverPhoto: true,
-        },
-      },
-      certificates: {
-        select: {
-          fileUrl: true,
-        },
-      },
-      courses: {
-        select: {
-          wallPaper: true,
-          sections: {
+      teacher: {
+        include: {
+          user: {
             select: {
-              items: {
-                select: {
-                  materialLink: true,
-                },
-              },
+              id: true,
+              fullName: true,
+              email: true,
             },
           },
         },
       },
+      sessionPlansTranslations: {
+        where: targetLang ? { lang: targetLang } : undefined,
+      },
     },
   });
 
-  if (!teacher) {
-    const error = new Error("TEACHER_NOT_FOUND");
-    error.cause = 404;
-    throw error;
-  }
-
-  const filesToDelete = [];
-
-  if (teacher.user?.profilePhoto) filesToDelete.push(teacher.user.profilePhoto);
-  if (teacher.user?.coverPhoto) filesToDelete.push(teacher.user.coverPhoto);
-
-  if (teacher.cvUrl) filesToDelete.push(teacher.cvUrl);
-
-  if (teacher.certificates?.length > 0) {
-    teacher.certificates.forEach((cert) => {
-      if (cert.fileUrl) filesToDelete.push(cert.fileUrl);
-    });
-  }
-
-  if (teacher.courses?.length > 0) {
-    teacher.courses.forEach((course) => {
-      if (course.wallPaper) filesToDelete.push(course.wallPaper);
-
-      course.sections?.forEach((section) => {
-        section.items?.forEach((item) => {
-          if (item.materialLink) filesToDelete.push(item.materialLink);
-        });
-      });
-    });
-  }
-
-  deleteFiles(filesToDelete);
-
-  await db.deleteOne({
-    model: "user",
-    where: { id: teacher.userId },
-  });
-
-  return { success: true };
-};
-export const updateWorkHoursService = async (userId, workHours = []) => {
-  console.log("workHours", workHours);
-  console.log("userId", userId);
-
-  const teacher = await db.findFirst({
-    model: "teacher",
-    where: { userId },
-    select: { id: true },
-  });
-
-  if (!teacher) {
-    const error = new Error("TEACHER_NOT_FOUND");
-    error.cause = 404;
-    throw error;
-  }
-
-  const seenDays = new Set();
-
-  const formattedWorkHours = workHours.map((hour) => {
-    if (seenDays.has(hour.day)) {
-      const error = new Error(`Duplicate day '${hour.day}' provided in workHours`);
-      error.cause = 400;
-      throw error;
-    }
-    seenDays.add(hour.day);
-
-    const slots = (hour.slots || []).map((slot) => {
-      if (slot.startTime >= slot.endTime) {
-        const error = new Error(
-          `Start time (${slot.startTime}) must be before end time (${slot.endTime}) on ${hour.day}`
-        );
-        error.cause = 400;
-        throw error;
-      }
-      return {
-        startTime: slot.startTime,
-        endTime: slot.endTime,
-      };
-    });
-
-    const sortedSlots = [...slots].sort((a, b) =>
-      a.startTime.localeCompare(b.startTime)
-    );
-
-    for (let i = 0; i < sortedSlots.length - 1; i++) {
-      const current = sortedSlots[i];
-      const next = sortedSlots[i + 1];
-      if (current.endTime > next.startTime) {
-        const error = new Error(
-          `Overlapping time slots detected for ${hour.day}: [${current.startTime} - ${current.endTime}] overlaps with [${next.startTime} - ${next.endTime}]`
-        );
-        error.cause = 400;
-        throw error;
-      }
-    }
-
-    return {
-      day: hour.day,
-      slots: sortedSlots,
-    };
-  });
-
-  const existingRecord = await db.findFirst({
-    model: "teacherWorkHours",
-    where: { teacherId: teacher.id },
-  });
-
-  let result;
-  if (existingRecord) {
-    result = await db.updateOne({
-      model: "teacherWorkHours",
-      where: { id: existingRecord.id },
-      data: {
-        workHours: formattedWorkHours,
-      },
-      select: {
-        id: true,
-        teacherId: true,
-        workHours: true,
-        updatedAt: true,
-      },
-    });
-  } else {
-    result = await db.create({
-      model: "teacherWorkHours",
-      data: {
-        teacherId: teacher.id,
-        workHours: formattedWorkHours,
-      },
-      select: {
-        id: true,
-        teacherId: true,
-        workHours: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-  }
-
-  return result;
+  return plans;
 };
 
-export const getWorkHoursService = async (userId) => {
-  console.log("userId", userId);
+export const getPlanByIdService = async (planId, query = {}) => {
+  const targetLang = query.lang
 
-  const teacher = await db.findFirst({
-    model: "teacher",
-    where: { userId },
-    select: { id: true },
-  });
-
-  if (!teacher) {
-    const error = new Error("TEACHER_NOT_FOUND");
-    error.cause = 404;
-    throw error;
-  }
-
-  const workHoursRecord = await db.findFirst({
-    model: "teacherWorkHours",
-    where: { teacherId: teacher.id },
+  const plan = await db.findOne({
+    model: "sessionPlan",
+    where: { id: planId },
     select: {
       id: true,
       teacherId: true,
-      workHours: true,
+      color: true,
+      sessionsCount: true,
+      price: true,
+      discountType: true,
+      discountValue: true,
+      isActive: true,
       createdAt: true,
       updatedAt: true,
+      teacher: {
+        select: {
+          id: true,
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+            },
+          },
+        },
+      },
+      sessionPlansTranslations: {
+        where: targetLang ? { lang: targetLang } : undefined,
+      },
     },
   });
 
-  return workHoursRecord || { teacherId: teacher.id, workHours: [] };
+  if (!plan) {
+    throwError({
+      message: "PLAN_NOT_FOUND",
+      status: 404,
+    });
+  }
+
+  return plan;
+};
+
+export const createPlanService = async ({ body, userId }) => {
+  const {
+    sessionsCount,
+    price,
+    discountType,
+    discountValue,
+    color,
+    isActive,
+    translations,
+    title,
+    description,
+    lang = "en",
+    slug,
+  } = body;
+
+  const teacher = await db.findOne({
+    model: "teacher",
+    where: { userId },
+    select: { id: true },
+  });
+
+  if (!teacher) {
+    throwError({
+      message: "TEACHER_NOT_FOUND",
+      status: 404,
+    });
+  }
+
+  // Format translations array
+  let formattedTranslations = [];
+  if (translations && translations.length > 0) {
+    formattedTranslations = translations.map((t) => ({
+      lang: t.lang || "en",
+      title: t.title.trim(),
+      description: t.description.trim(),
+      slug: t.slug || slugify(t.title, { lower: true }) || undefined,
+    }));
+  } 
+  if (formattedTranslations.length === 0) {
+    throwError({
+      message: "TRANSLATIONS_REQUIRED",
+      status: 400,
+    });
+  }
+
+  // Check unique title per teacher
+  const titles = formattedTranslations.map((t) => t.title);
+  const existingPlan = await db.findFirst({
+    model: "sessionPlan",
+    where: {
+      teacherId: teacher.id,
+      sessionPlansTranslations: {
+        some: {
+          title: { in: titles },
+        },
+      },
+    },
+    select: { id: true },
+  });
+
+  if (existingPlan) {
+    throwError({
+      message: "PLAN_EXISTS",
+      status: 409,
+    });
+  }
+
+  const newPlan = await db.create({
+    model: "sessionPlan",
+    data: {
+      teacherId: teacher.id,
+      sessionsCount,
+      price,
+      discountType,
+      discountValue,
+      color: color || "#b36c14ff",
+      isActive: isActive !== undefined ? isActive : true,
+      sessionPlansTranslations: {
+        create: formattedTranslations,
+      },
+    },
+    include: {
+      sessionPlansTranslations: true,
+    },
+  });
+
+  return newPlan;
+};
+
+export const deletePlanService = async ({ planId, userId }) => {
+  const teacher = await db.findOne({
+    model: "teacher",
+    where: { userId },
+    select: { id: true },
+  });
+
+  if (!teacher) {
+    throwError({
+      message: "TEACHER_NOT_FOUND",
+      status: 404,
+    });
+  }
+
+  const plan = await db.findOne({
+    model: "sessionPlan",
+    where: { id: planId },
+    select: { id: true, teacherId: true },
+  });
+
+  if (!plan) {
+    throwError({
+      message: "PLAN_NOT_FOUND",
+      status: 404,
+    });
+  }
+
+  if (plan.teacherId !== teacher.id) {
+    throwError({
+      message: "NOT_AUTHORIZED",
+      status: 403,
+    });
+  }
+
+  await db.deleteOne({
+    model: "sessionPlan",
+    where: { id: planId },
+  });
+
+  return true;
+};
+
+export const updatePlanService = async ({ planId, userId, body }) => {
+  const teacher = await db.findOne({
+    model: "teacher",
+    where: { userId },
+    select: { id: true },
+  });
+
+  if (!teacher) {
+    throwError({
+      message: "TEACHER_NOT_FOUND",
+      status: 404,
+    });
+  }
+
+  const existingPlan = await db.findOne({
+    model: "sessionPlan",
+    where: { id: planId },
+    include: {
+      sessionPlansTranslations: true,
+    },
+  });
+
+  if (!existingPlan) {
+    throwError({
+      message: "PLAN_NOT_FOUND",
+      status: 404,
+    });
+  }
+
+  if (existingPlan.teacherId !== teacher.id) {
+    throwError({
+      message: "NOT_AUTHORIZED",
+      status: 403,
+    });
+  }
+
+  // Handle translations updates
+  const newTranslations = [];
+  if (body.translations && body.translations.length > 0) {
+    newTranslations.push(...body.translations);
+  } else if (body.title || body.description) {
+    const targetLang = body.lang || "en";
+    const existingTrans = existingPlan.sessionPlansTranslations.find(
+      (t) => t.lang === targetLang,
+    );
+    newTranslations.push({
+      lang: targetLang,
+      title: body.title !== undefined ? body.title : existingTrans?.title || "",
+      description:
+        body.description !== undefined
+          ? body.description
+          : existingTrans?.description || "",
+      slug:
+        body.slug ||
+        (body.title
+          ? slugify(body.title, { lower: true })
+          : existingTrans?.slug),
+    });
+  }
+
+  // Check title conflicts on other plans for this teacher
+  if (newTranslations.length > 0) {
+    const titlesToCheck = newTranslations.map((t) => t.title).filter(Boolean);
+    if (titlesToCheck.length > 0) {
+      const titleConflict = await db.findFirst({
+        model: "sessionPlan",
+        where: {
+          teacherId: teacher.id,
+          id: { not: planId },
+          sessionPlansTranslations: {
+            some: {
+              title: { in: titlesToCheck },
+            },
+          },
+        },
+        select: { id: true },
+      });
+
+      if (titleConflict) {
+        throwError({
+          message: "PLAN_EXISTS",
+          status: 409,
+        });
+      }
+    }
+  }
+
+  // Update sessionPlan fields
+  const updateData = {};
+  if (body.color !== undefined) updateData.color = body.color;
+  if (body.sessionsCount !== undefined)
+    updateData.sessionsCount = body.sessionsCount;
+  if (body.price !== undefined) updateData.price = body.price;
+  if (body.discountType !== undefined)
+    updateData.discountType = body.discountType;
+  if (body.discountValue !== undefined)
+    updateData.discountValue = body.discountValue;
+  if (body.isActive !== undefined) updateData.isActive = body.isActive;
+
+  // Execute translations upserts
+  for (const trans of newTranslations) {
+    if (!trans.title && !trans.description) continue;
+    const existingTrans = existingPlan.sessionPlansTranslations.find(
+      (t) => t.lang === trans.lang,
+    );
+    if (existingTrans) {
+      await db.updateOne({
+        model: "sessionPlanTranslation",
+        where: { id: existingTrans.id },
+        data: {
+          ...(trans.title && { title: trans.title.trim() }),
+          ...(trans.description && { description: trans.description.trim() }),
+          ...(trans.slug && { slug: trans.slug.trim() }),
+        },
+      });
+    } else {
+      await db.create({
+        model: "sessionPlanTranslation",
+        data: {
+          sessionId: planId,
+          lang: trans.lang || "en",
+          title: trans.title.trim(),
+          description: trans.description.trim(),
+          slug:
+            trans.slug || slugify(trans.title, { lower: true }) || undefined,
+        },
+      });
+    }
+  }
+
+  const updatedPlan = await db.updateOne({
+    model: "sessionPlan",
+    where: { id: planId },
+    data: updateData,
+    include: {
+      sessionPlansTranslations: true,
+    },
+  });
+
+  return updatedPlan;
 };
