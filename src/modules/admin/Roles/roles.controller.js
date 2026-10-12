@@ -49,3 +49,11 @@ export const deleteRole = asyncHandler(async (req, res) => {
     message: "ROLE_DELETED_SUCCESSFULLY",
   });
 });
+export const getAllPermissions = asyncHandler(async (req, res) => {
+  const result = await rolesService.getAllPermissionsService();
+  return successResponse({
+    res,
+    status: 200,
+    data: result,
+  });
+});

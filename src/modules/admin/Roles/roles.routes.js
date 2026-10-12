@@ -3,7 +3,10 @@ import * as rolesController from "./roles.controller.js";
 import * as rolesValidation from "./roles.validation.js";
 import { authentication } from "../../../middleware/authentication.middleware.js";
 import { validation } from "../../../middleware/validation.middleware.js";
-import { authorize, authorizeResource } from "../../../middleware/authorization.middleware.js";
+import {
+  authorize,
+  authorizeResource,
+} from "../../../middleware/authorization.middleware.js";
 import { PERMISSIONS_V2 } from "../../../Constants/permissions.constants.js";
 
 const router = Router();
@@ -13,7 +16,14 @@ router.post(
   authentication(),
   authorize(PERMISSIONS_V2.ROLES.CREATE),
   validation(rolesValidation.createRole),
-  rolesController.createRole
+  rolesController.createRole,
+);
+
+router.get(
+  "/permissions",
+  authentication(),
+  authorize(PERMISSIONS_V2.ROLES.PERMISSION),
+  rolesController.getAllPermissions,
 );
 
 router.get(
@@ -21,7 +31,7 @@ router.get(
   authentication(),
   authorize(PERMISSIONS_V2.ROLES.READ),
   validation(rolesValidation.getAllRoles),
-  rolesController.getAllRoles
+  rolesController.getAllRoles,
 );
 
 router.get(
@@ -29,7 +39,7 @@ router.get(
   authentication(),
   authorize(PERMISSIONS_V2.ROLES.READ),
   validation(rolesValidation.getRoleById),
-  rolesController.getRoleById
+  rolesController.getRoleById,
 );
 
 router.patch(
@@ -37,7 +47,7 @@ router.patch(
   authentication(),
   authorize(PERMISSIONS_V2.ROLES.UPDATE),
   validation(rolesValidation.updateRole),
-  rolesController.updateRole
+  rolesController.updateRole,
 );
 
 router.delete(
@@ -45,7 +55,7 @@ router.delete(
   authentication(),
   authorize(PERMISSIONS_V2.ROLES.DELETE),
   validation(rolesValidation.deleteRole),
-  rolesController.deleteRole
+  rolesController.deleteRole,
 );
 
 export default router;

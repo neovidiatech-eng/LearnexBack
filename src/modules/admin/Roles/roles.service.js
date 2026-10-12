@@ -372,3 +372,19 @@ export const deleteRoleService = async (roleId) => {
     });
   });
 };
+
+
+
+export const getAllPermissionsService = async () => {
+  const permissions = await DBService.findMany({
+    model: "permission",
+    select: {
+      id: true,
+      code: true,
+      name: true,
+      resource: true,
+      action: true,
+    },
+  });
+  return { permissions };
+}
