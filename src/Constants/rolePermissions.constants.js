@@ -374,6 +374,12 @@ export const PERMISSIONS_DATA = [
     resource: "plans",
     action: "get_my_plans",
   },
+  {
+    code: PERMISSIONS_V2.PLANS.BUY_PLAN,
+    name: "Buy Plan",
+    resource: "plans",
+    action: "buy_plan",
+  },
 ];
 
 export const ROLE_PERMISSIONS_MAP = {
@@ -425,5 +431,6 @@ export const ROLE_PERMISSIONS_MAP = {
     PERMISSIONS_V2.ENROLLMENTS.READ,
     PERMISSIONS_V2.CATEGORIES.READ,
     PERMISSIONS_V2.REVIEWS.READ,
+    PERMISSIONS_V2.PLANS.BUY_PLAN,
   ],
 };

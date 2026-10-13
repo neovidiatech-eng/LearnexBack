@@ -11,6 +11,7 @@ model SessionPlan {
   createdAt                DateTime                 @default(now())
   updatedAt                DateTime                 @updatedAt
   sessionPlansTranslations SessionPlanTranslation[]
+  students                 Student[]
 
   @@index([teacherId])
   @@map("session_plans")

@@ -54,6 +54,7 @@ model Course {
   enrollments        CourseEnrollment[]
   reviews            CourseReview[]
   translations       CourseTranslation[]
+  offers             Offer[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 
@@ -203,17 +204,24 @@ model CoupunRedemption {
 }
 
 model Offer {
-  id           String             @id @default(uuid())
-  target       String             @default("All Users")
-  offerType    String             @default("PERCENTAGE")
-  discount     Decimal?           @db.Decimal(10, 2)
-  startDate    DateTime
-  endDate      DateTime
-  status       String             @default("ACTIVE")
-  translations OfferTranslation[]
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+  id              String             @id @default(uuid())
+  target          String             @default("ALL_USERS")
+  targetIds       String[]           @default([])
+  offerType       String             @default("PERCENTAGE")
+  discount        Decimal?           @db.Decimal(10, 2)
+  startDate       DateTime
+  endDate         DateTime
+  status          String             @default("ACTIVE")
+  courseId        String?
+  course          Course?            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  teacherCourseId String?
+  teacherCourse   TeacherCourse?     @relation(fields: [teacherCourseId], references: [id], onDelete: Cascade)
+  translations    OfferTranslation[]
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
 
+  @@index([courseId])
+  @@index([teacherCourseId])
   @@index([status])
   @@index([offerType])
   @@index([startDate])

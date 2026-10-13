@@ -2,11 +2,43 @@ import * as dbService from "../../../db/db.service.js";
 import {
   offerStatusEnum,
   offerTypeEnum,
+  offerTargetEnum,
 } from "../../../utils/Enums/offer.enum.js";
+import dayjs from "dayjs";
+
+export const formatAdminOfferResponse = (offer) => {
+  if (!offer) return null;
+  const { teacherCourseId, targetIds, ...rest } = offer;
+
+  const formatted = { ...rest };
+
+  if (!formatted.course && formatted.teacherCourse) {
+    formatted.course = {
+      id: formatted.teacherCourse.id,
+      thumbnail: formatted.teacherCourse.wallPaper,
+      originalPrice: formatted.teacherCourse.price,
+      title: formatted.teacherCourse.name,
+    };
+  }
+  delete formatted.teacherCourse;
+
+  if (offer.target === offerTargetEnum.SPECIFIC_STUDENTS) {
+    formatted.studentIds = targetIds || [];
+  } else if (offer.target === offerTargetEnum.SPECIFIC_TEACHERS) {
+    formatted.teacherIds = targetIds || [];
+  }
+
+  return formatted;
+};
+
 
 export const createOfferService = async (body) => {
   const {
-    target,
+    courseId,
+    target = offerTargetEnum.ALL_USERS,
+    studentIds = [],
+    teacherIds = [],
+    targetIds = [],
     offerType,
     discount,
     startDate,
@@ -14,6 +46,31 @@ export const createOfferService = async (body) => {
     status,
     translations = [],
   } = body;
+
+  let resolvedCourseId = null;
+  let resolvedTeacherCourseId = null;
+
+  if (courseId) {
+    const course = await dbService.findOne({
+      model: "course",
+      where: { id: courseId },
+    });
+    if (course) {
+      resolvedCourseId = course.id;
+    } else {
+      const teacherCourse = await dbService.findOne({
+        model: "teacherCourse",
+        where: { id: courseId },
+      });
+      if (teacherCourse) {
+        resolvedTeacherCourseId = teacherCourse.id;
+      } else {
+        const error = new Error("COURSE_NOT_FOUND");
+        error.cause = 404;
+        throw error;
+      }
+    }
+  }
 
   for (const t of translations) {
     const existingTranslation = await dbService.findFirst({
@@ -55,6 +112,50 @@ export const createOfferService = async (body) => {
     throw error;
   }
 
+  let resolvedTargetIds = [];
+
+  if (target === offerTargetEnum.SPECIFIC_STUDENTS) {
+    const ids = (studentIds?.length ? studentIds : targetIds) || [];
+    if (!ids.length) {
+      const error = new Error("STUDENT_IDS_REQUIRED_FOR_SPECIFIC_STUDENTS");
+      error.cause = 400;
+      throw error;
+    }
+    for (const sId of ids) {
+      const student = await dbService.findOne({
+        model: "student",
+        where: { id: sId },
+      });
+      if (!student) {
+        const error = new Error(`STUDENT_NOT_FOUND: ${sId}`);
+        error.cause = 404;
+        throw error;
+      }
+    }
+    resolvedTargetIds = ids;
+  } else if (target === offerTargetEnum.SPECIFIC_TEACHERS) {
+    const ids = (teacherIds?.length ? teacherIds : targetIds) || [];
+    if (!ids.length) {
+      const error = new Error("TEACHER_IDS_REQUIRED_FOR_SPECIFIC_TEACHERS");
+      error.cause = 400;
+      throw error;
+    }
+    for (const tId of ids) {
+      const teacher = await dbService.findOne({
+        model: "teacher",
+        where: { id: tId },
+      });
+      if (!teacher) {
+        const error = new Error(`TEACHER_NOT_FOUND: ${tId}`);
+        error.cause = 404;
+        throw error;
+      }
+    }
+    resolvedTargetIds = ids;
+  } else {
+    resolvedTargetIds = [];
+  }
+
   const finalStatus =
     status ||
     (start > new Date() ? offerStatusEnum.SCHEDULED : offerStatusEnum.ACTIVE);
@@ -62,7 +163,10 @@ export const createOfferService = async (body) => {
   const offer = await dbService.create({
     model: "offer",
     data: {
-      target: target?.trim() || "All Users",
+      courseId: resolvedCourseId,
+      teacherCourseId: resolvedTeacherCourseId,
+      target: target || offerTargetEnum.ALL_USERS,
+      targetIds: resolvedTargetIds,
       offerType,
       discount,
       startDate: start,
@@ -78,13 +182,31 @@ export const createOfferService = async (body) => {
     },
     include: {
       translations: true,
+      course: {
+        select: {
+          id: true,
+          thumbnail: true,
+          originalPrice: true,
+          salePrice: true,
+          translations: { select: { locale: true, title: true } },
+        },
+      },
+      teacherCourse: {
+        select: {
+          id: true,
+          wallPaper: true,
+          price: true,
+          name: true,
+        },
+      },
     },
   });
 
-  return { offer };
+  return { offer: formatAdminOfferResponse(offer) };
 };
 
 export const getAllOffersService = async ({
+  courseId,
   page = 1,
   limit = 10,
   search = "",
@@ -96,6 +218,11 @@ export const getAllOffersService = async ({
   sortType = "desc",
 } = {}) => {
   const where = {
+    ...(courseId
+      ? {
+          OR: [{ courseId }, { teacherCourseId: courseId }],
+        }
+      : {}),
     ...(status ? { status } : {}),
     ...(offerType ? { offerType } : {}),
     ...(target ? { target: { contains: target, mode: "insensitive" } } : {}),
@@ -133,14 +260,92 @@ export const getAllOffersService = async ({
     limit,
     orderBy,
     include: {
+      course: {
+        select: {
+          id: true,
+          thumbnail: true,
+          originalPrice: true,
+          salePrice: true,
+          translations: { select: { locale: true, title: true } },
+        },
+      },
+      teacherCourse: {
+        select: {
+          id: true,
+          wallPaper: true,
+          price: true,
+          name: true,
+        },
+      },
       translations: {
         where: locale ? { locale } : undefined,
       },
     },
   });
 
+  const now = new Date();
+  const next7Days = dayjs().add(7, "day").toDate();
+  const startOfWeek = dayjs().startOf("week").toDate();
+
+  const [
+    totalOffers,
+    activeOffers,
+    activeThisWeek,
+    expiringSoon,
+    expiredOffers,
+  ] = await Promise.all([
+    dbService.count({
+      model: "offer",
+      where: { teacherCourseId: null },
+    }),
+    dbService.count({
+      model: "offer",
+      where: { teacherCourseId: null, status: offerStatusEnum.ACTIVE },
+    }),
+    dbService.count({
+      model: "offer",
+      where: {
+        teacherCourseId: null,
+        status: offerStatusEnum.ACTIVE,
+        createdAt: { gte: startOfWeek },
+      },
+    }),
+    dbService.count({
+      model: "offer",
+      where: {
+        teacherCourseId: null,
+        status: offerStatusEnum.ACTIVE,
+        endDate: { gte: now, lte: next7Days },
+      },
+    }),
+    dbService.count({
+      model: "offer",
+      where: {
+        teacherCourseId: null,
+        OR: [
+          { status: offerStatusEnum.EXPIRED },
+          { endDate: { lt: now } },
+        ],
+      },
+    }),
+  ]);
+
+  const stats = {
+    totalOffers,
+    activeOffers,
+    activeThisWeek,
+    expiringSoon,
+    expired: expiredOffers,
+    expiredOffers,
+  };
+
   return {
-    offers: result.items,
+    stats,
+    totalOffers,
+    activeOffers,
+    expiringSoon,
+    expired: expiredOffers,
+    offers: result.items.map(formatAdminOfferResponse),
     pagination: result.pagination,
   };
 };
@@ -150,6 +355,23 @@ export const getOfferByIdService = async (offerId, locale) => {
     model: "offer",
     where: { id: offerId },
     include: {
+      course: {
+        select: {
+          id: true,
+          thumbnail: true,
+          originalPrice: true,
+          salePrice: true,
+          translations: { select: { locale: true, title: true } },
+        },
+      },
+      teacherCourse: {
+        select: {
+          id: true,
+          wallPaper: true,
+          price: true,
+          name: true,
+        },
+      },
       translations: {
         where: locale ? { locale } : undefined,
       },
@@ -162,12 +384,16 @@ export const getOfferByIdService = async (offerId, locale) => {
     throw error;
   }
 
-  return { offer };
+  return { offer: formatAdminOfferResponse(offer) };
 };
 
 export const updateOfferService = async (offerId, body) => {
   const {
+    courseId,
     target,
+    studentIds,
+    teacherIds,
+    targetIds,
     offerType,
     discount,
     startDate,
@@ -188,6 +414,38 @@ export const updateOfferService = async (offerId, body) => {
     const error = new Error("OFFER_NOT_FOUND");
     error.cause = 404;
     throw error;
+  }
+
+  let resolvedCourseId = undefined;
+  let resolvedTeacherCourseId = undefined;
+
+  if (courseId !== undefined) {
+    if (courseId === null) {
+      resolvedCourseId = null;
+      resolvedTeacherCourseId = null;
+    } else {
+      const course = await dbService.findOne({
+        model: "course",
+        where: { id: courseId },
+      });
+      if (course) {
+        resolvedCourseId = course.id;
+        resolvedTeacherCourseId = null;
+      } else {
+        const teacherCourse = await dbService.findOne({
+          model: "teacherCourse",
+          where: { id: courseId },
+        });
+        if (teacherCourse) {
+          resolvedTeacherCourseId = teacherCourse.id;
+          resolvedCourseId = null;
+        } else {
+          const error = new Error("COURSE_NOT_FOUND");
+          error.cause = 404;
+          throw error;
+        }
+      }
+    }
   }
 
   const finalStart = startDate ? new Date(startDate) : offer.startDate;
@@ -233,11 +491,59 @@ export const updateOfferService = async (offerId, body) => {
     }
   }
 
+  let resolvedTargetIds = undefined;
+  const currentTarget = target !== undefined ? target : offer.target;
+
+  if (currentTarget === offerTargetEnum.SPECIFIC_STUDENTS && (studentIds !== undefined || targetIds !== undefined || target !== undefined)) {
+    const ids = (studentIds?.length ? studentIds : targetIds) || offer.targetIds || [];
+    if (!ids.length) {
+      const error = new Error("STUDENT_IDS_REQUIRED_FOR_SPECIFIC_STUDENTS");
+      error.cause = 400;
+      throw error;
+    }
+    for (const sId of ids) {
+      const student = await dbService.findOne({
+        model: "student",
+        where: { id: sId },
+      });
+      if (!student) {
+        const error = new Error(`STUDENT_NOT_FOUND: ${sId}`);
+        error.cause = 404;
+        throw error;
+      }
+    }
+    resolvedTargetIds = ids;
+  } else if (currentTarget === offerTargetEnum.SPECIFIC_TEACHERS && (teacherIds !== undefined || targetIds !== undefined || target !== undefined)) {
+    const ids = (teacherIds?.length ? teacherIds : targetIds) || offer.targetIds || [];
+    if (!ids.length) {
+      const error = new Error("TEACHER_IDS_REQUIRED_FOR_SPECIFIC_TEACHERS");
+      error.cause = 400;
+      throw error;
+    }
+    for (const tId of ids) {
+      const teacher = await dbService.findOne({
+        model: "teacher",
+        where: { id: tId },
+      });
+      if (!teacher) {
+        const error = new Error(`TEACHER_NOT_FOUND: ${tId}`);
+        error.cause = 404;
+        throw error;
+      }
+    }
+    resolvedTargetIds = ids;
+  } else if (target !== undefined && target !== offerTargetEnum.SPECIFIC_STUDENTS && target !== offerTargetEnum.SPECIFIC_TEACHERS) {
+    resolvedTargetIds = [];
+  }
+
   const updatedOffer = await dbService.updateOne({
     model: "offer",
     where: { id: offerId },
     data: {
-      ...(target !== undefined && { target: target.trim() }),
+      ...(resolvedCourseId !== undefined && { courseId: resolvedCourseId }),
+      ...(resolvedTeacherCourseId !== undefined && { teacherCourseId: resolvedTeacherCourseId }),
+      ...(target !== undefined && { target }),
+      ...(resolvedTargetIds !== undefined && { targetIds: resolvedTargetIds }),
       ...(offerType !== undefined && { offerType }),
       ...(discount !== undefined && { discount }),
       ...(startDate !== undefined && { startDate: finalStart }),
@@ -269,10 +575,27 @@ export const updateOfferService = async (offerId, body) => {
     },
     include: {
       translations: true,
+      course: {
+        select: {
+          id: true,
+          thumbnail: true,
+          originalPrice: true,
+          salePrice: true,
+          translations: { select: { locale: true, title: true } },
+        },
+      },
+      teacherCourse: {
+        select: {
+          id: true,
+          wallPaper: true,
+          price: true,
+          name: true,
+        },
+      },
     },
   });
 
-  return { offer: updatedOffer };
+  return { offer: formatAdminOfferResponse(updatedOffer) };
 };
 
 export const changeOfferStatusService = async (offerId, body) => {
@@ -320,3 +643,39 @@ export const deleteOfferService = async (offerId) => {
   await dbService.deleteOne({ model: "offer", where: { id: offerId } });
   return { success: true };
 };
+
+/**
+ * Checks whether a user is eligible for a given offer based on its target configuration
+ */
+export const isUserEligibleForOffer = (user, offer) => {
+  if (!offer || !user) return false;
+
+  switch (offer.target) {
+    case offerTargetEnum.ALL_USERS:
+      return true;
+
+    case offerTargetEnum.ALL_STUDENTS:
+      return Boolean(user.student || user.role?.slug === "STUDENT");
+
+    case offerTargetEnum.ALL_TEACHERS:
+      return Boolean(user.teacher || user.role?.slug === "TEACHER");
+
+    case offerTargetEnum.SPECIFIC_STUDENTS:
+      return Boolean(
+        user.student && offer.targetIds?.includes(user.student.id)
+      );
+
+    case offerTargetEnum.SPECIFIC_TEACHERS:
+      return Boolean(
+        user.teacher && offer.targetIds?.includes(user.teacher.id)
+      );
+
+    case offerTargetEnum.NEW_USERS:
+      // Users registered within the last 7 days (1 week) using dayjs
+      return dayjs(user.createdAt).isAfter(dayjs().subtract(7, "day"));
+
+    default:
+      return true;
+  }
+};
+

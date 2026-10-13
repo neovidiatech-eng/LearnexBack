@@ -27,6 +27,8 @@ model User {
   teacherReviews    TeacherReview[]    @relation("StudentTeacherReviews")
   cart              Cart?
   saveds            Saved[]
+  transactions      Transaction[]
+  wallet            wallet?
 
   @@index([roleId])
   @@index([status])
@@ -35,51 +37,58 @@ model User {
 }
 
 model Student {
-  id              String           @id @default(uuid())
-  userId          String           @unique
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  dateOfBirth     DateTime?
-  notes           String?          @db.Text
-  courseFavorites CourseFavorite[] @relation("StudentFavorites")
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  sessionRequests SessionRequest[]
-  sessions        Session[]
+  id                  String                @id @default(uuid())
+  userId              String                @unique
+  user                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dateOfBirth         DateTime?
+  notes               String?               @db.Text
+  planId              String?
+  plan                SessionPlan?          @relation(fields: [planId], references: [id], onDelete: SetNull)
+  sessionCount        Int                   @default(0)
+  sessionLeft         Int                   @default(0)
+  sessionUsed         Int                   @default(0)
+  courseFavorites     CourseFavorite[]      @relation("StudentFavorites")
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  teacherSubscription teacherSubscription[]
+  sessionRequests     SessionRequest[]
+  sessions            Session[]
 
   @@index([userId])
   @@map("students")
 }
 
 model Teacher {
-  id                 String               @id @default(uuid())
-  userId             String               @unique
-  user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  experienceYears    Int                  @default(0)
-  cvUrl              String?
-  introVideoUrl      String?
-  referralCode       String?
-  subject            String?
-  headline           String?
-  bio                String?              @db.Text
-  linkedinUrl        String?
-  isAvailable        Boolean              @default(true)
-  sessionPrice50Min  Decimal?             @default(0.0) @db.Decimal(10, 2)
-  currency           String               @default("USD")
-  avgRating          Decimal              @default(0.0) @db.Decimal(3, 2)
-  totalStudentsCount Int                  @default(0)
-  reviewsCount       Int                  @default(0)
-  totalCoursesCount  Int                  @default(0)
-  rejectionReason    String?              @db.Text
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-  certificates       TeacherCertificate[]
-  reviews            TeacherReview[]
-  workHours          TeacherWorkHours[]
+  id                  String                @id @default(uuid())
+  userId              String                @unique
+  user                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  experienceYears     Int                   @default(0)
+  cvUrl               String?
+  introVideoUrl       String?
+  referralCode        String?
+  subject             String?
+  headline            String?
+  bio                 String?               @db.Text
+  linkedinUrl         String?
+  isAvailable         Boolean               @default(true)
+  sessionPrice50Min   Decimal?              @default(0.0) @db.Decimal(10, 2)
+  currency            String                @default("USD")
+  avgRating           Decimal               @default(0.0) @db.Decimal(3, 2)
+  totalStudentsCount  Int                   @default(0)
+  reviewsCount        Int                   @default(0)
+  totalCoursesCount   Int                   @default(0)
+  rejectionReason     String?               @db.Text
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  certificates        TeacherCertificate[]
+  reviews             TeacherReview[]
+  workHours           TeacherWorkHours[]
+  teacherSubscription teacherSubscription[]
 
-  courses         TeacherCourse[]
-  sessionPlans    SessionPlan[]
-  sessions        Session[]
-  sessionRequests SessionRequest[]
+  courses             TeacherCourse[]
+  sessionPlans        SessionPlan[]
+  sessions            Session[]
+  sessionRequests     SessionRequest[]
 
   @@index([userId])
   @@map("teachers")

@@ -639,9 +639,128 @@ Include the Bearer JWT token in the Authorization header:
         type: "object",
         required: ["startDate", "endDate", "translations"],
         properties: {
-          target: { type: "string", default: "All Users", example: "New Students" },
+          courseId: {
+            type: "string",
+            format: "uuid",
+            nullable: true,
+            description: "(اختياري) معرّف الكورس إذا كان الخصم على كورس محدد. إذا كان العرض عاماً على المنصة، لا ترسله أو اتركه فارغاً.",
+          },
+          target: {
+            type: "string",
+            enum: ["ALL_USERS", "ALL_STUDENTS", "ALL_TEACHERS", "SPECIFIC_STUDENTS", "SPECIFIC_TEACHERS", "NEW_USERS"],
+            default: "ALL_USERS",
+            example: "ALL_USERS",
+            description: "الفئة المستهدفة:\n- ALL_USERS: جميع مستخدمي المنصة (لا ترسل studentIds أو teacherIds)\n- ALL_STUDENTS: جميع الطلاب (لا ترسل studentIds)\n- ALL_TEACHERS: جميع المدرسين (لا ترسل teacherIds)\n- SPECIFIC_STUDENTS: طلاب محددون فقط (إلزامي إرسال مصفوفة studentIds)\n- SPECIFIC_TEACHERS: مدرسون محددون فقط (إلزامي إرسال مصفوفة teacherIds)\n- NEW_USERS: المستخدمون الجدد خلال آخر 7 أيام فقط (لا ترسل أي IDs)",
+          },
+          studentIds: {
+            type: "array",
+            items: { type: "string", format: "uuid" },
+            description: "مطلوب فقط وحصرياً إذا كان target = SPECIFIC_STUDENTS. في الحالات الأخرى لا يُرسل.",
+          },
+          teacherIds: {
+            type: "array",
+            items: { type: "string", format: "uuid" },
+            description: "مطلوب فقط وحصرياً إذا كان target = SPECIFIC_TEACHERS. في الحالات الأخرى لا يُرسل.",
+          },
+          offerType: {
+            type: "string",
+            enum: ["PERCENTAGE", "FIXED_AMOUNT", "BUY_ONE_GET_ONE", "FREE_SHIPPING", "CUSTOM"],
+            default: "PERCENTAGE",
+            example: "PERCENTAGE",
+            description: "نوع العرض:\n- PERCENTAGE: نسبة مئوية (مثلاً 20 تعني خصم 20%)\n- FIXED_AMOUNT: خصم بمبلغ نقدي ثابت (مثلاً 50 تعني خصم $50)\n- BUY_ONE_GET_ONE: اشتري واحد واحصل على واحد\n- FREE_SHIPPING: شحن مجاني\n- CUSTOM: عرض مخصص",
+          },
+          discount: {
+            type: "number",
+            example: 25,
+            description: "قيمة الخصم (إذا كانت نسبة أرسل من 1 إلى 100، وإذا كان مبلغ ثابت أرسل القيمة النقدية)",
+          },
+          startDate: {
+            type: "string",
+            format: "date-time",
+            example: "2026-10-15T00:00:00.000Z",
+            description: "تاريخ بداية العرض (ISO Date)",
+          },
+          endDate: {
+            type: "string",
+            format: "date-time",
+            example: "2026-11-15T23:59:59.000Z",
+            description: "تاريخ نهاية العرض (ISO Date - يجب أن يكون بعد تاريخ البداية وليس في الماضي)",
+          },
+          status: {
+            type: "string",
+            enum: ["ACTIVE", "INACTIVE", "SCHEDULED", "EXPIRED"],
+            default: "ACTIVE",
+            example: "ACTIVE",
+            description: "حالة العرض: ACTIVE, INACTIVE, SCHEDULED, EXPIRED",
+          },
+          translations: {
+            type: "array",
+            description: "بيانات العرض باللغات (إلزامية لغة واحدة على الأقل)",
+            items: {
+              type: "object",
+              required: ["locale", "name", "offerDesc"],
+              properties: {
+                locale: {
+                  type: "string",
+                  enum: ["ar", "en", "fr"],
+                  example: "en",
+                  description: "اللغة: en أو ar أو fr",
+                },
+                name: {
+                  type: "string",
+                  example: "خصم الخريف الكبير",
+                  description: "اسم العرض (من 3 إلى 150 حرف)",
+                },
+                offerDesc: {
+                  type: "string",
+                  example: "خصم 25% على كافة الكورسات لفترة محدودة",
+                  description: "وصف العرض (من 5 إلى 2000 حرف)",
+                },
+              },
+            },
+          },
+        },
+        example: {
+          target: "ALL_USERS",
+          offerType: "PERCENTAGE",
+          discount: 25,
+          startDate: "2026-10-15T00:00:00.000Z",
+          endDate: "2026-11-15T23:59:59.000Z",
+          status: "ACTIVE",
+          translations: [
+            {
+              locale: "en",
+              name: "New Year Mega Sale",
+              offerDesc: "Enjoy 25% off all courses this week only."
+            },
+            {
+              locale: "ar",
+              name: "خصم رأس السنة",
+              offerDesc: "تمتع بخصم 25% على جميع الكورسات هذا الأسبوع."
+            }
+          ]
+        },
+      },
+      TeacherOfferCreateDTO: {
+        type: "object",
+        required: ["courseId", "startDate", "endDate", "translations"],
+        properties: {
+          courseId: { type: "string", format: "uuid", example: "t1a2b3c4-d5e6-7f8a-9b0c-1d2e3f4a5b6c", description: "Teacher Course ID (must be owned by the teacher)" },
+          target: {
+            type: "string",
+            enum: ["ALL_USERS", "ALL_STUDENTS", "SPECIFIC_STUDENTS", "NEW_USERS"],
+            default: "ALL_USERS",
+            example: "ALL_USERS",
+            description: "Target audience for the teacher offer",
+          },
+          studentIds: {
+            type: "array",
+            items: { type: "string", format: "uuid" },
+            description: "List of Student IDs when target is SPECIFIC_STUDENTS",
+            example: ["3fa85f64-5717-4562-b3fc-2c963f66afa6"],
+          },
           offerType: { type: "string", enum: ["PERCENTAGE", "FIXED"], default: "PERCENTAGE" },
-          discount: { type: "number", example: 25.00 },
+          discount: { type: "number", example: 20.00 },
           startDate: { type: "string", format: "date-time", example: "2026-01-01T00:00:00.000Z" },
           endDate: { type: "string", format: "date-time", example: "2026-12-31T23:59:59.000Z" },
           status: { type: "string", enum: ["ACTIVE", "INACTIVE", "SCHEDULED", "EXPIRED"], default: "ACTIVE" },
@@ -652,11 +771,18 @@ Include the Bearer JWT token in the Authorization header:
               required: ["locale", "name", "offerDesc"],
               properties: {
                 locale: { type: "string", enum: ["ar", "en", "fr"], example: "en" },
-                name: { type: "string", example: "New Year Mega Sale" },
-                offerDesc: { type: "string", example: "Enjoy 25% off all courses this week only." },
+                name: { type: "string", example: "Special Course Discount" },
+                offerDesc: { type: "string", example: "Limited time discount on my masterclass." },
               },
             },
           },
+        },
+      },
+      AdminReviewVisibilityDTO: {
+        type: "object",
+        properties: {
+          isHidden: { type: "boolean", example: true, description: "True to hide review, false to show. If omitted, toggles current value." },
+          type: { type: "string", enum: ["COURSE", "TEACHER"], example: "COURSE", description: "Review type (optional)" },
         },
       },
       AdminCouponCreateDTO: {
@@ -828,6 +954,9 @@ Include the Bearer JWT token in the Authorization header:
     { name: "Admin - Coupons", description: "Discount vouchers, redemption limits, and status toggles" },
     { name: "Admin - Offers", description: "Promotional offers, percentage discounts, and validity schedules" },
     { name: "Admin - Plans", description: "Admin monitoring and management of teacher session plans" },
+    { name: "Admin - Reviews", description: "Admin reviews management, visibility toggle (isHidden), and statistics" },
+    { name: "Teacher - Reviews", description: "Teacher session and course reviews overview" },
+    { name: "Teacher - Offers", description: "Teacher personal course promotional offers" },
     { name: "Admin - Activity Logs", description: "Audit trail, security metrics, and real-time activity tracking" },
     { name: "Admin - Settings & CMS", description: "App metadata, logo branding, and static CMS pages" },
 
@@ -1982,6 +2111,131 @@ Include the Bearer JWT token in the Authorization header:
           content: {
             "application/json": {
               schema: { $ref: "#/components/schemas/AdminOfferCreateDTO" },
+              examples: {
+                CourseOffer_SpecificStudents: {
+                  summary: "1. عرض على كورس محدد لطلاب معينين (مع courseId و studentIds)",
+                  value: {
+                    courseId: "01513780-0339-401a-ae47-ee10b28b4740",
+                    target: "SPECIFIC_STUDENTS",
+                    studentIds: [
+                      "01a44631-bd43-48e7-840c-af4c5b4c434f"
+                    ],
+                    offerType: "PERCENTAGE",
+                    discount: 35,
+                    startDate: "2026-10-15T00:00:00.000Z",
+                    endDate: "2026-11-30T23:59:59.000Z",
+                    status: "ACTIVE",
+                    translations: [
+                      {
+                        locale: "en",
+                        name: "Exclusive Student Reward",
+                        offerDesc: "35% exclusive discount for our top students on this course."
+                      },
+                      {
+                        locale: "ar",
+                        name: "مكافأة الطلاب المميزين",
+                        offerDesc: "خصم 35% حصري للطلاب المختارين على هذا الكورس."
+                      }
+                    ]
+                  }
+                },
+                CourseOffer_AllUsers: {
+                  summary: "2. عرض على كورس محدد لكافة المستخدمين (مع courseId فقط)",
+                  value: {
+                    courseId: "01513780-0339-401a-ae47-ee10b28b4740",
+                    target: "ALL_USERS",
+                    offerType: "PERCENTAGE",
+                    discount: 30,
+                    startDate: "2026-10-15T00:00:00.000Z",
+                    endDate: "2026-11-30T23:59:59.000Z",
+                    status: "ACTIVE",
+                    translations: [
+                      {
+                        locale: "en",
+                        name: "Special Course Discount",
+                        offerDesc: "Special 30% discount on this course for all users."
+                      },
+                      {
+                        locale: "ar",
+                        name: "عرض خاص على هذا الكورس",
+                        offerDesc: "خصم خاص 30% على هذا الكورس لجميع المستخدمين."
+                      }
+                    ]
+                  }
+                },
+                AllUsers_GeneralPlatformOffer: {
+                  summary: "3. عرض عام على كافة كورسات المنصة (بدون courseId وبدون IDs)",
+                  value: {
+                    target: "ALL_USERS",
+                    offerType: "PERCENTAGE",
+                    discount: 25,
+                    startDate: "2026-10-15T00:00:00.000Z",
+                    endDate: "2026-11-30T23:59:59.000Z",
+                    status: "ACTIVE",
+                    translations: [
+                      {
+                        locale: "en",
+                        name: "Autumn Big Sale",
+                        offerDesc: "Get 25% discount across the entire platform."
+                      },
+                      {
+                        locale: "ar",
+                        name: "عروض الخريف الكبرى",
+                        offerDesc: "احصل على خصم 25% على كافة محتويات المنصة."
+                      }
+                    ]
+                  }
+                },
+                SpecificTeachersOffer: {
+                  summary: "4. عرض مخصص لمدرسين محددين (مع teacherIds)",
+                  value: {
+                    target: "SPECIFIC_TEACHERS",
+                    teacherIds: [
+                      "93ef0d68-18e3-4b91-ae28-66236b2f763f"
+                    ],
+                    offerType: "PERCENTAGE",
+                    discount: 20,
+                    startDate: "2026-10-15T00:00:00.000Z",
+                    endDate: "2026-11-30T23:59:59.000Z",
+                    status: "ACTIVE",
+                    translations: [
+                      {
+                        locale: "en",
+                        name: "Teacher Appreciation Offer",
+                        offerDesc: "Exclusive 20% discount for partner teachers."
+                      },
+                      {
+                        locale: "ar",
+                        name: "عرض تقدير المعلمين",
+                        offerDesc: "خصم 20% حصري للمعلمين الشركاء."
+                      }
+                    ]
+                  }
+                },
+                NewUsersOffer: {
+                  summary: "5. عرض للمستخدمين الجدد (خلال آخر 7 أيام)",
+                  value: {
+                    target: "NEW_USERS",
+                    offerType: "PERCENTAGE",
+                    discount: 15,
+                    startDate: "2026-10-15T00:00:00.000Z",
+                    endDate: "2026-11-30T23:59:59.000Z",
+                    status: "ACTIVE",
+                    translations: [
+                      {
+                        locale: "en",
+                        name: "Welcome Gift For New Joiners",
+                        offerDesc: "15% off for users registered in the last 7 days."
+                      },
+                      {
+                        locale: "ar",
+                        name: "هدية ترحيبية للمسجلين الجدد",
+                        offerDesc: "خصم 15% للمستخدمين المسجلين خلال آخر 7 أيام."
+                      }
+                    ]
+                  }
+                }
+              }
             },
           },
         },
@@ -2095,6 +2349,162 @@ Include the Bearer JWT token in the Authorization header:
     // ═══════════════════════════════════════════════════════════
     // ADMIN COUPONS
     // ═══════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════
+    // ADMIN REVIEWS
+    // ═══════════════════════════════════════════════════════════
+    "/api/v1/admin/reviews": {
+      get: {
+        summary: "Get All Reviews (Courses & Teachers)",
+        tags: ["Admin - Reviews"],
+        security: bearerSecurity,
+        parameters: [
+          ...paginationQueryParams,
+          {
+            in: "query",
+            name: "type",
+            schema: { type: "string", enum: ["COURSE", "TEACHER"] },
+            description: "Filter reviews by type (COURSE or TEACHER). If omitted, returns both.",
+            example: "COURSE",
+          },
+          {
+            in: "query",
+            name: "isHidden",
+            schema: { type: "boolean" },
+            description: "Filter by hidden status (true for hidden, false for visible)",
+            example: false,
+          },
+          {
+            in: "query",
+            name: "rating",
+            schema: { type: "integer", minimum: 1, maximum: 5 },
+            description: "Filter by star rating",
+            example: 5,
+          },
+          {
+            in: "query",
+            name: "courseId",
+            schema: { type: "string", format: "uuid" },
+            description: "Filter by specific course ID",
+          },
+          {
+            in: "query",
+            name: "teacherId",
+            schema: { type: "string", format: "uuid" },
+            description: "Filter by specific teacher ID",
+          },
+        ],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/admin/reviews/stats": {
+      get: {
+        summary: "Get Reviews Dashboard Statistics",
+        tags: ["Admin - Reviews"],
+        security: bearerSecurity,
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/admin/reviews/{reviewId}": {
+      get: {
+        summary: "Get Review Details (For Modal)",
+        tags: ["Admin - Reviews"],
+        security: bearerSecurity,
+        parameters: [
+          uuidParam("reviewId", "Review UUID"),
+          {
+            in: "query",
+            name: "type",
+            schema: { type: "string", enum: ["COURSE", "TEACHER"] },
+            description: "Optional review type",
+            example: "COURSE",
+          },
+        ],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+      delete: {
+        summary: "Delete Review Permanently",
+        tags: ["Admin - Reviews"],
+        security: bearerSecurity,
+        parameters: [
+          uuidParam("reviewId", "Review UUID"),
+          {
+            in: "query",
+            name: "type",
+            schema: { type: "string", enum: ["COURSE", "TEACHER"] },
+            description: "Optional review type",
+          },
+        ],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/SuccessMessageResponse" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/admin/reviews/{reviewId}/status": {
+      patch: {
+        summary: "Toggle or Update Review Visibility (isHidden)",
+        tags: ["Admin - Reviews"],
+        security: bearerSecurity,
+        parameters: [uuidParam("reviewId", "Review UUID")],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/AdminReviewVisibilityDTO" },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/admin/reviews/{reviewId}/visibility": {
+      patch: {
+        summary: "Toggle or Update Review Visibility Alias (isHidden)",
+        tags: ["Admin - Reviews"],
+        security: bearerSecurity,
+        parameters: [uuidParam("reviewId", "Review UUID")],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/AdminReviewVisibilityDTO" },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
     "/api/v1/admin/coupons": {
       post: {
         summary: "Create Coupon",
@@ -3316,6 +3726,162 @@ Include the Bearer JWT token in the Authorization header:
     },
 
     // ═══════════════════════════════════════════════════════════
+    // TEACHER REVIEWS
+    // ═══════════════════════════════════════════════════════════
+    "/api/v1/teacher/reviews": {
+      get: {
+        summary: "Get Authenticated Teacher Reviews (Courses & Sessions)",
+        tags: ["Teacher - Reviews"],
+        security: bearerSecurity,
+        parameters: [
+          ...paginationQueryParams,
+        ],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // TEACHER OFFERS
+    // ═══════════════════════════════════════════════════════════
+    "/api/v1/teacher/offers": {
+      post: {
+        summary: "Create Offer on Teacher Course",
+        tags: ["Teacher - Offers"],
+        security: bearerSecurity,
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/TeacherOfferCreateDTO" },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[201]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          409: standardResponses[409],
+          500: standardResponses[500],
+        },
+      },
+      get: {
+        summary: "Get All Teacher Offers",
+        tags: ["Teacher - Offers"],
+        security: bearerSecurity,
+        parameters: [
+          ...paginationQueryParams,
+          {
+            in: "query",
+            name: "courseId",
+            schema: { type: "string", format: "uuid" },
+            description: "Filter offers by specific Teacher Course ID",
+          },
+          {
+            in: "query",
+            name: "status",
+            schema: { type: "string", enum: ["ACTIVE", "INACTIVE", "SCHEDULED", "EXPIRED"] },
+            description: "Filter offers by status",
+          },
+          localeQueryParam,
+        ],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/teacher/offers/{offerId}": {
+      get: {
+        summary: "Get Teacher Offer Details by ID",
+        tags: ["Teacher - Offers"],
+        security: bearerSecurity,
+        parameters: [uuidParam("offerId", "Offer UUID"), localeQueryParam],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+      patch: {
+        summary: "Update Teacher Offer",
+        tags: ["Teacher - Offers"],
+        security: bearerSecurity,
+        parameters: [uuidParam("offerId", "Offer UUID")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/TeacherOfferCreateDTO" },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          409: standardResponses[409],
+          500: standardResponses[500],
+        },
+      },
+      delete: {
+        summary: "Delete Teacher Offer",
+        tags: ["Teacher - Offers"],
+        security: bearerSecurity,
+        parameters: [uuidParam("offerId", "Offer UUID")],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/SuccessMessageResponse" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/teacher/offers/{offerId}/status": {
+      patch: {
+        summary: "Change Teacher Offer Status",
+        tags: ["Teacher - Offers"],
+        security: bearerSecurity,
+        parameters: [uuidParam("offerId", "Offer UUID")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["status"],
+                properties: {
+                  status: { type: "string", enum: ["ACTIVE", "INACTIVE", "SCHEDULED", "EXPIRED"], example: "ACTIVE" },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    // ═══════════════════════════════════════════════════════════
     // STUDENT AUTH
     // ═══════════════════════════════════════════════════════════
     "/api/v1/student/auth/signup": {
@@ -3678,6 +4244,41 @@ Include the Bearer JWT token in the Authorization header:
         responses: {
           ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
           401: standardResponses[401],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/student/teachers/book-plan/{id}": {
+      post: {
+        summary: "Initiate Booking / Subscription for Teacher Session Plan",
+        description: "Creates a pending transaction and pending subscription for the student to pay through a payment gateway. Does not credit the system wallet or increase session counters until payment is confirmed.",
+        tags: ["Student - Teachers"],
+        security: bearerSecurity,
+        parameters: [uuidParam("id", "Session Plan ID")],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  paymentMethod: {
+                    type: "string",
+                    enum: ["CARD"],
+                    default: "CARD",
+                    description: "Payment method used for the gateway transaction",
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[201]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
           404: standardResponses[404],
           500: standardResponses[500],
         },
