@@ -3,11 +3,34 @@ import joi from "joi";
 export const addReviewSchema = {
   body: joi
     .object({
-      courseId: joi.string().uuid(),
-      teacherId: joi.string().uuid(),
+      type: joi.string().valid("COURSE", "TEACHER").optional(),
+      courseId: joi.string().uuid().optional(),
+      teacherId: joi.string().uuid().optional(),
+      targetId: joi.string().uuid().optional(),
       rating: joi.number().integer().min(1).max(5).required(),
-      comment: joi.string().trim().min(2).max(2000).allow("", null),
-      bookingId: joi.string().uuid().optional(),
+      comment: joi.string().trim().min(2).max(2000).allow("", null).optional(),
+      bookingId: joi.string().uuid().allow(null).optional(),
     })
-    .xor("courseId", "teacherId"),
+    .custom((value, helpers) => {
+      const isCourse = value.type === "COURSE" || Boolean(value.courseId);
+      const isTeacher = value.type === "TEACHER" || Boolean(value.teacherId);
+
+      if (value.type === "COURSE") {
+        if (!value.courseId && !value.targetId) {
+          return helpers.message("courseId is required when type is COURSE");
+        }
+      } else if (value.type === "TEACHER") {
+        if (!value.teacherId && !value.targetId) {
+          return helpers.message("teacherId is required when type is TEACHER");
+        }
+      } else {
+        if (!value.courseId && !value.teacherId && !value.targetId) {
+          return helpers.message("Either courseId or teacherId is required");
+        }
+        if (value.courseId && value.teacherId) {
+          return helpers.message("Cannot provide both courseId and teacherId");
+        }
+      }
+      return value;
+    }),
 };
