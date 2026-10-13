@@ -2363,7 +2363,14 @@ Include the Bearer JWT token in the Authorization header:
             in: "query",
             name: "type",
             schema: { type: "string", enum: ["COURSE", "TEACHER"] },
-            description: "Filter reviews by type (COURSE or TEACHER). If omitted, returns both.",
+            description: "Filter reviews by type (COURSE for admin courses, TEACHER for teacher reviews). If omitted, returns both.",
+            example: "COURSE",
+          },
+          {
+            in: "query",
+            name: "subType",
+            schema: { type: "string", enum: ["COURSE", "SESSION"] },
+            description: "Sub-type filter when type is TEACHER: 'COURSE' for teacher course reviews, 'SESSION' for teacher session evaluations. If omitted, returns both.",
             example: "COURSE",
           },
           {

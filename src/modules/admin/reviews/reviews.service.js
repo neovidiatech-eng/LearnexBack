@@ -1,11 +1,49 @@
 import * as db from "../../../db/db.service.js";
 
-const studentSelect = {
-  select: { id: true, fullName: true, email: true, profilePhoto: true },
+const courseReviewInclude = {
+  student: {
+    select: { id: true, fullName: true, email: true, profilePhoto: true },
+  },
+  course: {
+    select: {
+      id: true,
+      thumbnail: true,
+      translations: { select: { locale: true, title: true } },
+      instructor: {
+        select: { id: true, fullName: true, email: true, profilePhoto: true },
+      },
+    },
+  },
+};
+
+const teacherReviewInclude = {
+  student: {
+    select: { id: true, fullName: true, email: true, profilePhoto: true },
+  },
+  teacher: {
+    include: {
+      user: {
+        select: { id: true, fullName: true, email: true, profilePhoto: true },
+      },
+    },
+  },
 };
 
 export const getReviewsService = async (query = {}) => {
-  const { page = 1, limit = 10, search = "", rating, isHidden, type } = query;
+  const {
+    page = 1,
+    limit = 10,
+    search = "",
+    rating,
+    isHidden,
+    type,
+    subType,
+    courseId,
+    teacherId,
+  } = query;
+
+  const normalizedType = type?.toUpperCase();
+  const normalizedSubType = subType?.toUpperCase();
 
   const where = {
     ...(isHidden !== undefined && { isHidden: isHidden === true || isHidden === "true" }),
@@ -13,82 +51,118 @@ export const getReviewsService = async (query = {}) => {
     ...(search && { comment: { contains: search, mode: "insensitive" } }),
   };
 
-  if (type === "TEACHER") {
+  if (normalizedType === "COURSE") {
     return await db.findManyWithPaginationAndCount({
-      model: "teacherReview",
-      where,
+      model: "courseReview",
+      where: {
+        ...where,
+        ...(courseId && { courseId }),
+        course: { instructor: { teacher: null } },
+      },
       page,
       limit,
-      include: {
-        student: studentSelect,
-        teacher: { include: { user: { select: { fullName: true } } } },
-      },
+      include: courseReviewInclude,
     });
   }
 
-  if (type === "COURSE") {
-    return await db.findManyWithPaginationAndCount({
-      model: "courseReview",
-      where,
-      page,
-      limit,
-      include: {
-        student: studentSelect,
-        course: { select: { id: true, translations: true } },
+  if (normalizedType === "TEACHER") {
+    const teacherCourseWhere = {
+      ...where,
+      ...(courseId && { courseId }),
+      course: {
+        instructor: {
+          teacher: { isNot: null },
+          ...(teacherId && { OR: [{ id: teacherId }, { teacher: { id: teacherId } }] }),
+        },
       },
-    });
+    };
+
+    const teacherSessionWhere = {
+      ...where,
+      ...(teacherId && { OR: [{ teacherId }, { teacher: { userId: teacherId } }] }),
+    };
+
+    if (normalizedSubType === "COURSE") {
+      return await db.findManyWithPaginationAndCount({
+        model: "courseReview",
+        where: teacherCourseWhere,
+        page,
+        limit,
+        include: courseReviewInclude,
+      });
+    }
+
+    if (normalizedSubType === "SESSION") {
+      return await db.findManyWithPaginationAndCount({
+        model: "teacherReview",
+        where: teacherSessionWhere,
+        page,
+        limit,
+        include: teacherReviewInclude,
+      });
+    }
+
+    const [courses, sessions] = await Promise.all([
+      db.findManyWithPaginationAndCount({
+        model: "courseReview",
+        where: teacherCourseWhere,
+        page,
+        limit,
+        include: courseReviewInclude,
+      }),
+      db.findManyWithPaginationAndCount({
+        model: "teacherReview",
+        where: teacherSessionWhere,
+        page,
+        limit,
+        include: teacherReviewInclude,
+      }),
+    ]);
+
+    return { courses, sessions };
   }
 
   const [courses, sessions] = await Promise.all([
     db.findManyWithPaginationAndCount({
       model: "courseReview",
-      where,
+      where: { ...where, ...(courseId && { courseId }) },
       page,
       limit,
-      include: {
-        student: studentSelect,
-        course: { select: { id: true, translations: true } },
-      },
+      include: courseReviewInclude,
     }),
     db.findManyWithPaginationAndCount({
       model: "teacherReview",
-      where,
+      where: { ...where, ...(teacherId && { teacherId }) },
       page,
       limit,
-      include: {
-        student: studentSelect,
-        teacher: { include: { user: { select: { fullName: true } } } },
-      },
+      include: teacherReviewInclude,
     }),
   ]);
 
   return { courses, sessions };
 };
 
-export const getReviewByIdService = async ({ reviewId }, { type } = {}) => {
-  let model = type === "TEACHER" ? "teacherReview" : "courseReview";
+export const getReviewByIdService = async ({ reviewId }) => {
   let review = await db.findOne({
-    model,
+    model: "courseReview",
     where: { id: reviewId },
-    include: {
-      student: studentSelect,
-      ...(model === "courseReview"
-        ? { course: { select: { id: true, translations: true, thumbnail: true } } }
-        : { teacher: { include: { user: studentSelect } } }),
-    },
+    include: courseReviewInclude,
   });
 
-  if (!review && !type) {
-    model = "teacherReview";
-    review = await db.findOne({
-      model,
-      where: { id: reviewId },
-      include: {
-        student: studentSelect,
-        teacher: { include: { user: studentSelect } },
-      },
-    });
+  if (review) {
+    const isTeacher = Boolean(review.course?.instructor?.teacher);
+    return {
+      review,
+      type: isTeacher ? "TEACHER" : "COURSE",
+      subType: isTeacher ? "COURSE" : "ADMIN_COURSE",
+    };
   }
+
+  review = await db.findOne({
+    model: "teacherReview",
+    where: { id: reviewId },
+    include: teacherReviewInclude,
+  });
 
   if (!review) {
     const error = new Error("REVIEW_NOT_FOUND");
@@ -96,14 +170,14 @@ export const getReviewByIdService = async ({ reviewId }, { type } = {}) => {
     throw error;
   }
 
-  return { review, type: model === "teacherReview" ? "TEACHER" : "COURSE" };
+  return { review, type: "TEACHER", subType: "SESSION" };
 };
 
-export const toggleReviewVisibilityService = async ({ reviewId }, { isHidden } = {}, { type } = {}) => {
-  let model = type === "TEACHER" ? "teacherReview" : "courseReview";
+export const toggleReviewVisibilityService = async ({ reviewId }, { isHidden } = {}) => {
+  let model = "courseReview";
   let review = await db.findOne({ model, where: { id: reviewId } });
 
-  if (!review && !type) {
+  if (!review) {
     model = "teacherReview";
     review = await db.findOne({ model, where: { id: reviewId } });
   }
@@ -114,7 +188,10 @@ export const toggleReviewVisibilityService = async ({ reviewId }, { isHidden } =
     throw error;
   }
 
-  const nextHidden = isHidden !== undefined ? Boolean(isHidden === true || isHidden === "true") : !review.isHidden;
+  const nextHidden =
+    isHidden !== undefined
+      ? Boolean(isHidden === true || isHidden === "true")
+      : !review.isHidden;
 
   const updated = await db.updateOne({
     model,
@@ -125,11 +202,11 @@ export const toggleReviewVisibilityService = async ({ reviewId }, { isHidden } =
   return { id: updated.id, isHidden: updated.isHidden };
 };
 
-export const deleteReviewService = async ({ reviewId }, { type } = {}) => {
-  let model = type === "TEACHER" ? "teacherReview" : "courseReview";
+export const deleteReviewService = async ({ reviewId }) => {
+  let model = "courseReview";
   let review = await db.findOne({ model, where: { id: reviewId } });
 
-  if (!review && !type) {
+  if (!review) {
     model = "teacherReview";
     review = await db.findOne({ model, where: { id: reviewId } });
   }
@@ -145,21 +222,25 @@ export const deleteReviewService = async ({ reviewId }, { type } = {}) => {
 };
 
 export const getReviewStatsService = async () => {
-  const [totalCourses, totalTeachers, hiddenCourses, hiddenTeachers] = await Promise.all([
-    db.count({ model: "courseReview" }),
-    db.count({ model: "teacherReview" }),
-    db.count({ model: "courseReview", where: { isHidden: true } }),
-    db.count({ model: "teacherReview", where: { isHidden: true } }),
-  ]);
+  const [adminCourses, teacherCourses, sessions, hiddenAdmin, hiddenTeacherCourses, hiddenSessions] =
+    await Promise.all([
+      db.count({ model: "courseReview", where: { course: { instructor: { teacher: null } } } }),
+      db.count({ model: "courseReview", where: { course: { instructor: { teacher: { isNot: null } } } } }),
+      db.count({ model: "teacherReview" }),
+      db.count({ model: "courseReview", where: { course: { instructor: { teacher: null } }, isHidden: true } }),
+      db.count({ model: "courseReview", where: { course: { instructor: { teacher: { isNot: null } } }, isHidden: true } }),
+      db.count({ model: "teacherReview", where: { isHidden: true } }),
+    ]);
 
-  const totalReviews = totalCourses + totalTeachers;
-  const hiddenReviews = hiddenCourses + hiddenTeachers;
+  const totalReviews = adminCourses + teacherCourses + sessions;
+  const hiddenReviews = hiddenAdmin + hiddenTeacherCourses + hiddenSessions;
 
   return {
     totalReviews,
     visibleReviews: totalReviews - hiddenReviews,
     hiddenReviews,
-    courseReviewsCount: totalCourses,
-    teacherReviewsCount: totalTeachers,
+    adminCoursesCount: adminCourses,
+    teacherCoursesCount: teacherCourses,
+    teacherSessionsCount: sessions,
   };
 };
