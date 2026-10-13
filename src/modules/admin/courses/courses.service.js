@@ -302,6 +302,7 @@ const formatAdminCourse = (course) => {
 
   return {
     ...cleanCourse,
+    type: coursesType.COURSE,
     totalLessonsCount: totalLessons,
     totalStudentsCount: totalStudents,
     totalRevenue: calculatedTotalRevenue,
@@ -319,85 +320,10 @@ const formatAdminCourse = (course) => {
   };
 };
 
-const formatTeacherCourse = (tc) => {
-  const totalLessons =
-    tc.sections?.reduce((sum, s) => sum + (s.items?.length || 0), 0) || 0;
-  const totalSections = tc.sections?.length || 0;
-
-  const statsData = {
-    totalStudents: 0,
-    totalLessons,
-    totalSections,
-    totalReviews: 0,
-    totalRevenue: 0,
-    avgRating: 0,
-    completionRate: 0,
-    sections: totalSections,
-    lessons: totalLessons,
-    enrollments: 0,
-    reviews: 0,
-  };
-
-  return {
-    id: tc.id,
-    type: coursesType.TEACHER_COURSE,
-    title: tc.name,
-    name: tc.name,
-    description: tc.description,
-    thumbnail: tc.wallPaper,
-    wallPaper: tc.wallPaper,
-    previewVideoUrl: null,
-    level: "ALL_LEVELS",
-    status: tc.status,
-    rejectionReason: tc.rejectionReason,
-    enrollmentType: "PAID",
-    language: "arabic",
-    originalPrice: Number(tc.price) || 0,
-    salePrice: null,
-    currency: "EGP",
-    durationHours: tc.totalHours || 0,
-    totalLessonsCount: totalLessons,
-    totalStudentsCount: 0,
-    totalRevenue: 0,
-    avgRating: 0,
-    reviewsCount: 0,
-    completionRate: 0,
-    states: statsData,
-    stats: statsData,
-    tags: [],
-    hasCertificate: false,
-    scheduledAt: null,
-    categoryId: null,
-    category: null,
-    instructorId: tc.teacher?.userId || tc.teacherId,
-    instructor: tc.teacher?.user
-      ? {
-          id: tc.teacher.user.id,
-          fullName: tc.teacher.user.fullName,
-          email: tc.teacher.user.email,
-          phone: tc.teacher.user.phone,
-          profilePhoto: tc.teacher.user.profilePhoto,
-        }
-      : null,
-    sections: (tc.sections || []).map((sec) => ({
-      id: sec.id,
-      order: sec.order,
-      title: sec.name,
-      name: sec.name,
-      lessons: (sec.items || []).map((item) => ({
-        id: item.id,
-        order: item.order,
-        title: item.title,
-        description: item.description,
-        type: item.materialType,
-        contentUrl: item.materialLink,
-      })),
-      quiz: sec.quiz || null,
-    })),
-    createdAt: tc.createdAt,
-    updatedAt: tc.updatedAt,
-  };
-};
+const formatTeacherCourse = (tc) => ({
+  ...tc,
+  type: coursesType.TEACHER_COURSE,
+});
 
 const getCourseOrderBy = (sort) => {
   switch (sort) {
@@ -431,34 +357,7 @@ const getTeacherCourseOrderBy = (sort) => {
   }
 };
 
-const sortUnifiedCourses = (items, sort = "newest") => {
-  switch (sort) {
-    case "oldest":
-      items.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-      break;
-    case "price_asc":
-      items.sort((a, b) => (a.originalPrice || 0) - (b.originalPrice || 0));
-      break;
-    case "price_desc":
-      items.sort((a, b) => (b.originalPrice || 0) - (a.originalPrice || 0));
-      break;
-    case "rating":
-      items.sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0));
-      break;
-    case "students":
-      items.sort(
-        (a, b) => (b.totalStudentsCount || 0) - (a.totalStudentsCount || 0),
-      );
-      break;
-    case "newest":
-    default:
-      items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      break;
-  }
-};
-
 export const getAllCoursesService = async ({
-  type = "ALL",
   search = "",
   categoryId,
   instructorId,
@@ -472,7 +371,6 @@ export const getAllCoursesService = async ({
 } = {}) => {
   const p = Math.max(1, Number(page));
   const take = Math.max(1, Number(limit));
-  const skip = (p - 1) * take;
 
   let adminInstructorId = instructorId;
   if (instructorId) {
@@ -515,13 +413,43 @@ export const getAllCoursesService = async ({
       : {}),
   };
 
+  const result = await DBService.findManyWithPaginationAndCount({
+    model: "course",
+    where: adminWhere,
+    page: p,
+    limit: take,
+    orderBy: getCourseOrderBy(sort),
+    include: adminCourseInclude,
+  });
+
+  return {
+    type: coursesType.COURSE,
+    courses: result.items.map(formatAdminCourse),
+    pagination: result.pagination,
+  };
+};
+
+export const getAllTeacherCoursesService = async ({
+  search = "",
+  teacherId,
+  instructorId,
+  status,
+  page = 1,
+  limit = 10,
+  sort = "newest",
+} = {}) => {
+  const p = Math.max(1, Number(page));
+  const take = Math.max(1, Number(limit));
+
+  const resolvedTeacherId = teacherId || instructorId;
+
   const teacherWhere = {
     ...(status ? { status } : {}),
-    ...(instructorId
+    ...(resolvedTeacherId
       ? {
           OR: [
-            { teacherId: instructorId },
-            { teacher: { userId: instructorId } },
+            { teacherId: resolvedTeacherId },
+            { teacher: { userId: resolvedTeacherId } },
           ],
         }
       : {}),
@@ -535,90 +463,19 @@ export const getAllCoursesService = async ({
       : {}),
   };
 
-  if (type === coursesType.COURSE) {
-    const result = await DBService.findManyWithPaginationAndCount({
-      model: "course",
-      where: adminWhere,
-      page: p,
-      limit: take,
-      orderBy: getCourseOrderBy(sort),
-      include: adminCourseInclude,
-    });
-
-    return {
-      courses: result.items.map(formatAdminCourse),
-      pagination: result.pagination,
-    };
-  }
-
-  if (type === coursesType.TEACHER_COURSE) {
-    const result = await DBService.findManyWithPaginationAndCount({
-      model: "teacherCourse",
-      where: teacherWhere,
-      page: p,
-      limit: take,
-      orderBy: getTeacherCourseOrderBy(sort),
-      include: teacherCourseInclude,
-    });
-
-    return {
-      courses: result.items.map(formatTeacherCourse),
-      pagination: result.pagination,
-    };
-  }
-
-  const isTeacherStatus = ["PENDING", "APPROVED", "REJECTED"].includes(status);
-  const isAdminStatus = Object.values(courseStatusEnum).includes(status);
-
-  const [adminResult, teacherResult] = await Promise.all([
-    isTeacherStatus
-      ? { items: [], count: 0 }
-      : DBService.findMany({
-          model: "course",
-          where: adminWhere,
-          include: adminCourseInclude,
-        }).then(async (items) => {
-          const count = await DBService.count({
-            model: "course",
-            where: adminWhere,
-          });
-          return { items, count };
-        }),
-    isAdminStatus || categoryId || level || enrollmentType || language
-      ? { items: [], count: 0 }
-      : DBService.findMany({
-          model: "teacherCourse",
-          where: teacherWhere,
-          include: teacherCourseInclude,
-        }).then(async (items) => {
-          const count = await DBService.count({
-            model: "teacherCourse",
-            where: teacherWhere,
-          });
-          return { items, count };
-        }),
-  ]);
-
-  const allFormatted = [
-    ...adminResult.items.map(formatAdminCourse),
-    ...teacherResult.items.map(formatTeacherCourse),
-  ];
-
-  sortUnifiedCourses(allFormatted, sort);
-
-  const totalItems = allFormatted.length;
-  const paginatedItems = allFormatted.slice(skip, skip + take);
-  const totalPages = Math.ceil(totalItems / take) || 1;
+  const result = await DBService.findManyWithPaginationAndCount({
+    model: "teacherCourse",
+    where: teacherWhere,
+    page: p,
+    limit: take,
+    orderBy: getTeacherCourseOrderBy(sort),
+    include: teacherCourseInclude,
+  });
 
   return {
-    courses: paginatedItems,
-    pagination: {
-      page: p,
-      limit: take,
-      totalItems,
-      totalPages,
-      hasNextPage: p < totalPages,
-    },
+    type: coursesType.TEACHER_COURSE,
+    courses: result.items.map(formatTeacherCourse),
+    pagination: result.pagination,
   };
 };
 
