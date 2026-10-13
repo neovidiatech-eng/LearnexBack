@@ -43,6 +43,7 @@
     "ioredis": "^6.0.0",
     "joi": "^18.2.5",
     "jsonwebtoken": "^9.0.3",
+    "luxon": "^3.7.2",
     "morgan": "^1.12.1",
     "multer": "^2.4.0",
     "nanoid": "^6.0.1",

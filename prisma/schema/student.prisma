@@ -16,10 +16,10 @@ model CartItem {
   cartId String
   cart   Cart   @relation(fields: [cartId], references: [id], onDelete: Cascade)
 
-  type String
+  type   String
   itemId String
 
-  createdAt       DateTime       @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([cartId, itemId]) // الكورس مايتكررش في نفس الـ cart
   @@index([itemId])

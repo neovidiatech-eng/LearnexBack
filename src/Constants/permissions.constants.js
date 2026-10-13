@@ -131,4 +131,7 @@ export const PERMISSIONS_V2 = {
     START: "sessions:start",
     END: "sessions:end",
   },
+  SESSIONREQUESTS:{
+    CREATE:"sessionRequests:create"
+  }
 };

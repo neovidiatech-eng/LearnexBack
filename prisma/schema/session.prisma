@@ -33,37 +33,49 @@ model SessionPlanTranslation {
   @@map("session_plans_translations")
 }
 
-model Session {
-  id        String   @id @default(uuid())
-  teacherId String
-  teacher   Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  title     String?
-  roomName  String   @unique // بيتولد في الباك (uuid)، مش من الفرونت
-  type      String   @default("GROUP") // GROUP | ONE_TO_ONE
-  status    String   @default("SCHEDULED") // SCHEDULED | LIVE | COMPLETED | CANCELLED
-  startAt   DateTime
-  endAt     DateTime // = startAt + 50 دقيقة
+model SessionRequest {
+  id             String    @id @default(uuid())
+  studentId      String
+  student        Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacherId      String
+  teacher        Teacher   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  startAt        DateTime
+  endAt          DateTime
+  note           String?
+  status         String    @default("PENDING") // PENDING,ACCEPTED,REJECTED,CANCELLED,COMPLETED,IN_PROGRESS
+  rejectedReason String?
+  respondedAt    DateTime?
+  session        Session?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  participants SessionParticipant[]
-
-  @@index([teacherId, startAt])
-  @@index([status])
-  @@map("sessions")
+  @@index([teacherId, status, startAt])
+  @@index([studentId, status])
+  @@map("session_requests")
 }
 
-model SessionParticipant {
-  id        String    @id @default(uuid())
-  sessionId String
-  session   Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  studentId String
-  student   Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  status    String    @default("BOOKED") // BOOKED | ATTENDED | ABSENT | CANCELLED
-  joinedAt  DateTime?
-  leftAt    DateTime?
+model Session {
+  id              String         @id @default(uuid())
+  requestId       String         @unique
+  request         SessionRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  teacherId       String
+  teacher         Teacher        @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  studentId       String
+  student         Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  title           String
+  roomName        String?        @unique
+  status          String         @default("SCHEDULED") // SCHEDULED | LIVE | COMPLETED | CANCELLED
+  startAt         DateTime
+  endAt           DateTime
+  studentJoinedAt DateTime?
+  studentLeftAt   DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@unique([sessionId, studentId])
-  @@index([studentId])
-  @@map("session_participants")
+  @@index([teacherId, startAt])
+  @@index([studentId, startAt])
+  @@index([status])
+  @@map("sessions")
 }
