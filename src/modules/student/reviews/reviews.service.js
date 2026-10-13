@@ -5,14 +5,21 @@ import {
 } from "../../../utils/helpers/reviews.helper.js";
 
 export const addReviewService = async (userId, body) => {
-  const { courseId, teacherId, rating, comment, bookingId } = body;
+  let { type, courseId, teacherId, targetId, rating, comment, bookingId } = body;
+
+  if (type === "COURSE" && targetId && !courseId) {
+    courseId = targetId;
+  }
+  if (type === "TEACHER" && targetId && !teacherId) {
+    teacherId = targetId;
+  }
 
   await checkReviewEligibility(userId, { courseId, teacherId });
 
-  const isCourse = Boolean(courseId);
+  const isCourse = type ? type === "COURSE" : Boolean(courseId);
   const model = isCourse ? "courseReview" : "teacherReview";
   const parentModel = isCourse ? "course" : "teacher";
-  const parentId = courseId || teacherId;
+  const parentId = isCourse ? courseId : teacherId;
 
   const review = await db.upsertOne({
     model,

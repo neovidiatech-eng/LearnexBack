@@ -955,8 +955,6 @@ Include the Bearer JWT token in the Authorization header:
     { name: "Admin - Offers", description: "Promotional offers, percentage discounts, and validity schedules" },
     { name: "Admin - Plans", description: "Admin monitoring and management of teacher session plans" },
     { name: "Admin - Reviews", description: "Admin reviews management, visibility toggle (isHidden), and statistics" },
-    { name: "Teacher - Reviews", description: "Teacher session and course reviews overview" },
-    { name: "Teacher - Offers", description: "Teacher personal course promotional offers" },
     { name: "Admin - Activity Logs", description: "Audit trail, security metrics, and real-time activity tracking" },
     { name: "Admin - Settings & CMS", description: "App metadata, logo branding, and static CMS pages" },
 
@@ -968,6 +966,8 @@ Include the Bearer JWT token in the Authorization header:
     { name: "Teacher - Sections", description: "Curriculum modules and section reordering" },
     { name: "Teacher - Items", description: "Lesson materials (Video / PDF / Document uploads)" },
     { name: "Teacher - Quizzes", description: "Section quizzes, MCQ questions, submissions, and grading" },
+    { name: "Teacher - Offers", description: "Teacher personal course promotional offers" },
+    { name: "Teacher - Reviews", description: "Teacher session and course reviews overview" },
 
     { name: "Student - Auth", description: "Student signup, OTP email verification, login, and password recovery" },
     { name: "Student - Profile", description: "Personal data, avatar/cover images, password change, and deletion" },
@@ -976,6 +976,7 @@ Include the Bearer JWT token in the Authorization header:
     { name: "Student - Cart", description: "Shopping cart items management, pricing, and checkout cleanup" },
     { name: "Student - Saved", description: "Student saved courses management" },
     { name: "Student - Quizzes", description: "Student quiz taking, submission, and grading results" },
+    { name: "Student - Reviews", description: "Student course and teacher review submission and history" },
 
     { name: "Notifications", description: "Global and user-specific push notifications and read receipts" },
     { name: "Settings", description: "Public app metadata, terms/privacy pages, and language preferences" },
@@ -3771,6 +3772,7 @@ Include the Bearer JWT token in the Authorization header:
     "/api/v1/teacher/reviews": {
       get: {
         summary: "Get Authenticated Teacher Reviews (Courses & Sessions)",
+        description: "Returns reviews left by students for the authenticated teacher, split into: `sessions` (1-on-1 mentoring sessions reviews including student profile and bookingId) and `courses` (course reviews including student profile and course title).",
         tags: ["Teacher - Reviews"],
         security: bearerSecurity,
         parameters: [
@@ -4869,6 +4871,114 @@ Include the Bearer JWT token in the Authorization header:
           },
           401: standardResponses[401],
           404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    // ───────────────────────────────────────────────────────────
+    // STUDENT REVIEWS (/api/v1/student/reviews)
+    // ───────────────────────────────────────────────────────────
+    "/api/v1/student/reviews": {
+      post: {
+        summary: "Add review for course or teacher session",
+        description: "Submit a review with rating and optional comment for a Course (requires enrollment) or a Teacher (session). Exactly one of courseId or teacherId must be provided.",
+        tags: ["Student - Reviews"],
+        security: bearerSecurity,
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["type", "rating"],
+                properties: {
+                  type: {
+                    type: "string",
+                    enum: ["COURSE", "TEACHER"],
+                    description: "Target type: COURSE (for course review) or TEACHER (for teacher / session review)",
+                    example: "COURSE",
+                  },
+                  courseId: {
+                    type: "string",
+                    format: "uuid",
+                    description: "Course UUID (Required if type is COURSE)",
+                  },
+                  teacherId: {
+                    type: "string",
+                    format: "uuid",
+                    description: "Teacher UUID (Required if type is TEACHER)",
+                  },
+                  bookingId: {
+                    type: "string",
+                    format: "uuid",
+                    nullable: true,
+                    description: "Optional session booking UUID (Only when type is TEACHER)",
+                  },
+                  rating: {
+                    type: "integer",
+                    minimum: 1,
+                    maximum: 5,
+                    description: "Rating score between 1 and 5",
+                    example: 5,
+                  },
+                  comment: {
+                    type: "string",
+                    description: "Review feedback comment",
+                    example: "محتوى علمي متميز وتطبيق عملي رائع",
+                  },
+                },
+              },
+              examples: {
+                courseReview: {
+                  summary: "Course Review (تقييم كورس)",
+                  description: "Use this body when reviewing an enrolled course",
+                  value: {
+                    type: "COURSE",
+                    courseId: "14447de1-9d4e-4958-93c8-59dca27e3570",
+                    rating: 5,
+                    comment: "محتوى علمي متميز وشرح رائع ومفيد جداً",
+                  },
+                },
+                teacherReview: {
+                  summary: "Teacher / Session Review (تقييم معلم / سيشن)",
+                  description: "Use this body when reviewing a teacher after a session",
+                  value: {
+                    type: "TEACHER",
+                    teacherId: "60ed8640-96c5-47bf-88df-7365ff6821b0",
+                    bookingId: "b001a111-7777-4444-9999-000000000001",
+                    rating: 5,
+                    comment: "أستاذ محترف ومتعاون جداً في الجلسة الاستشارية",
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: {
+            description: "Forbidden (Enrollment required to review course, or self-review forbidden)",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ForbiddenErrorResponse" },
+              },
+            },
+          },
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+      get: {
+        summary: "Get student submitted reviews",
+        description: "Returns all course reviews and teacher/session reviews submitted by the authenticated student.",
+        tags: ["Student - Reviews"],
+        security: bearerSecurity,
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          401: standardResponses[401],
           500: standardResponses[500],
         },
       },
