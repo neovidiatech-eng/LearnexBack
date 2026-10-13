@@ -156,7 +156,6 @@ export const updateCourseStatus = {
 
 export const getAllCourses = {
   query: joi.object({
-    type: joi.string().valid("ALL", "COURSE", "TEACHER_COURSE").optional(),
     search: joi.string().trim().optional(),
     categoryId: generalFields.id.optional(),
     instructorId: generalFields.id.optional(),
@@ -166,12 +165,7 @@ export const getAllCourses = {
       .optional(),
     status: joi
       .string()
-      .valid(
-        ...Object.values(courseStatusEnum),
-        "PENDING",
-        "APPROVED",
-        "REJECTED"
-      )
+      .valid(...Object.values(courseStatusEnum))
       .optional(),
     enrollmentType: joi
       .string()
@@ -190,6 +184,24 @@ export const getAllCourses = {
         "rating",
         "students",
       )
+      .default("newest"),
+  }),
+};
+
+export const getAllTeacherCourses = {
+  query: joi.object({
+    search: joi.string().trim().optional(),
+    teacherId: generalFields.id.optional(),
+    instructorId: generalFields.id.optional(),
+    status: joi
+      .string()
+      .valid("PENDING", "APPROVED", "REJECTED")
+      .optional(),
+    page: joi.number().integer().min(1).default(1),
+    limit: joi.number().integer().min(1).max(100).default(10),
+    sort: joi
+      .string()
+      .valid("newest", "oldest", "price_asc", "price_desc")
       .default("newest"),
   }),
 };

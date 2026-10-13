@@ -38,6 +38,14 @@ router.get(
 );
 
 router.get(
+  "/teacher-courses",
+  authentication(),
+  authorizeResource("courses"),
+  validation(coursesValidation.getAllTeacherCourses),
+  coursesController.getAllTeacherCourses,
+);
+
+router.get(
   "/:courseId",
   authentication(),
   authorizeResource("courses"),

@@ -1574,16 +1574,15 @@ Include the Bearer JWT token in the Authorization header:
         },
       },
       get: {
-        summary: "Get All Courses (Catalog)",
+        summary: "Get All Admin Courses",
         tags: ["Admin - Courses"],
         security: bearerSecurity,
         parameters: [
           ...paginationQueryParams,
-          { in: "query", name: "type", schema: { type: "string", enum: ["ALL", "COURSE", "TEACHER_COURSE"], default: "ALL" }, description: "Filter by course origin type (Admin courses vs Teacher courses)" },
           { in: "query", name: "categoryId", schema: { type: "string", format: "uuid" } },
           { in: "query", name: "instructorId", schema: { type: "string", format: "uuid" } },
           { in: "query", name: "level", schema: { type: "string", enum: ["BEGINNER", "INTERMEDIATE", "ADVANCED", "ALL_LEVELS"] } },
-          { in: "query", name: "status", schema: { type: "string", enum: ["DRAFT", "PUBLISHED", "ARCHIVED", "PENDING", "APPROVED", "REJECTED"] } },
+          { in: "query", name: "status", schema: { type: "string", enum: ["DRAFT", "PUBLISHED", "ARCHIVED"] } },
           { in: "query", name: "enrollmentType", schema: { type: "string", enum: ["PAID", "FREE"] } },
           { in: "query", name: "sort", schema: { type: "string", enum: ["newest", "oldest", "price_asc", "price_desc", "rating", "students"] } },
         ],
@@ -1591,10 +1590,44 @@ Include the Bearer JWT token in the Authorization header:
           ...standardResponses[200]({
             type: "object",
             properties: {
-              message: { type: "string", example: "COURSES_RETRIEVED" },
+              message: { type: "string", example: "COURSES_FETCHED_SUCCESSFULLY" },
               data: {
                 type: "object",
                 properties: {
+                  type: { type: "string", example: "COURSE" },
+                  courses: { type: "array", items: { type: "object" } },
+                  pagination: { $ref: "#/components/schemas/PaginationMeta" },
+                },
+              },
+            },
+          }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/admin/courses/teacher-courses": {
+      get: {
+        summary: "Get All Teacher Courses",
+        tags: ["Admin - Courses"],
+        security: bearerSecurity,
+        parameters: [
+          ...paginationQueryParams,
+          { in: "query", name: "search", schema: { type: "string" } },
+          { in: "query", name: "teacherId", schema: { type: "string", format: "uuid" } },
+          { in: "query", name: "status", schema: { type: "string", enum: ["PENDING", "APPROVED", "REJECTED"] } },
+          { in: "query", name: "sort", schema: { type: "string", enum: ["newest", "oldest", "price_asc", "price_desc"] } },
+        ],
+        responses: {
+          ...standardResponses[200]({
+            type: "object",
+            properties: {
+              message: { type: "string", example: "COURSES_FETCHED_SUCCESSFULLY" },
+              data: {
+                type: "object",
+                properties: {
+                  type: { type: "string", example: "TEACHER_COURSE" },
                   courses: { type: "array", items: { type: "object" } },
                   pagination: { $ref: "#/components/schemas/PaginationMeta" },
                 },

@@ -20,6 +20,15 @@ export const getAllCourses = asyncHandler(async (req, res) => {
   });
 });
 
+export const getAllTeacherCourses = asyncHandler(async (req, res) => {
+  const result = await coursesService.getAllTeacherCoursesService(req.query);
+  return successResponse({
+    res,
+    message: "COURSES_FETCHED_SUCCESSFULLY",
+    data: result,
+  });
+});
+
 export const getCourseById = asyncHandler(async (req, res) => {
   const result = await coursesService.getCourseByIdService(req.params);
   return successResponse({
