@@ -233,23 +233,82 @@ const teacherCourseInclude = {
 };
 
 const formatAdminCourse = (course) => {
-  const primaryTranslation = course.translations?.[0];
+  const totalSections =
+    course.sections?.length ?? course._count?.sections ?? 0;
+
+  const totalLessons =
+    course.sections?.reduce(
+      (sum, s) => sum + (s.lessons?.length || 0),
+      0
+    ) ?? course.totalLessonsCount ?? 0;
+
+  const totalStudents =
+    course.enrollments?.length ??
+    course._count?.enrollments ??
+    course.totalStudentsCount ??
+    0;
+
+  const totalReviews =
+    course.reviews?.length ?? course._count?.reviews ?? course.reviewsCount ?? 0;
+
+  const calculatedAvgRating =
+    course.reviews && course.reviews.length > 0
+      ? Number(
+          (
+            course.reviews.reduce(
+              (acc, r) => acc + (Number(r.rating) || 0),
+              0
+            ) / course.reviews.length
+          ).toFixed(1)
+        )
+      : Number(course.avgRating) || 0;
+
+  const calculatedTotalRevenue =
+    course.enrollments && course.enrollments.length > 0
+      ? Number(
+          course.enrollments
+            .reduce((acc, e) => acc + (Number(e.paidAmount) || 0), 0)
+            .toFixed(2)
+        )
+      : Number(course.totalRevenue) || 0;
+
+  const calculatedCompletionRate =
+    course.enrollments && course.enrollments.length > 0
+      ? Number(
+          (
+            course.enrollments.reduce(
+              (acc, e) => acc + (Number(e.progressPercent) || 0),
+              0
+            ) / course.enrollments.length
+          ).toFixed(1)
+        )
+      : Number(course.completionRate) || 0;
+
+  const statsData = {
+    totalStudents,
+    totalLessons,
+    totalSections,
+    totalReviews,
+    totalRevenue: calculatedTotalRevenue,
+    avgRating: calculatedAvgRating,
+    completionRate: calculatedCompletionRate,
+    sections: totalSections,
+    lessons: totalLessons,
+    enrollments: totalStudents,
+    reviews: totalReviews,
+  };
+
+  const { _count, ...cleanCourse } = course;
+
   return {
-    ...course,
-    type: coursesType.COURSE,
-    title: primaryTranslation?.title || course.title || null,
-    description: primaryTranslation?.description || null,
-    whatYouWillLearn: primaryTranslation?.whatYouWillLearn || [],
-    requirements: primaryTranslation?.requirements || [],
-    students: (course.enrollments || []).map((enrollment) => ({
-      id: enrollment.student?.id,
-      fullName: enrollment.student?.fullName,
-      email: enrollment.student?.email,
-      profilePhoto: enrollment.student?.profilePhoto,
-      enrolledAt: enrollment.enrolledAt,
-      progressPercent: enrollment.progressPercent,
-      status: enrollment.status,
-    })),
+    ...cleanCourse,
+    totalLessonsCount: totalLessons,
+    totalStudentsCount: totalStudents,
+    totalRevenue: calculatedTotalRevenue,
+    avgRating: calculatedAvgRating,
+    reviewsCount: totalReviews,
+    completionRate: calculatedCompletionRate,
+    stats: statsData,
     reviews: (course.reviews || []).map((review) => ({
       id: review.id,
       rating: review.rating,
@@ -260,64 +319,85 @@ const formatAdminCourse = (course) => {
   };
 };
 
-const formatTeacherCourse = (tc) => ({
-  id: tc.id,
-  type: coursesType.TEACHER_COURSE,
-  title: tc.name,
-  name: tc.name,
-  description: tc.description,
-  thumbnail: tc.wallPaper,
-  wallPaper: tc.wallPaper,
-  previewVideoUrl: null,
-  level: "ALL_LEVELS",
-  status: tc.status,
-  rejectionReason: tc.rejectionReason,
-  enrollmentType: "PAID",
-  language: "arabic",
-  originalPrice: Number(tc.price) || 0,
-  salePrice: null,
-  currency: "EGP",
-  durationHours: tc.totalHours || 0,
-  totalLessonsCount:
-    tc.sections?.reduce((sum, s) => sum + (s.items?.length || 0), 0) || 0,
-  totalStudentsCount: 0,
-  totalRevenue: 0,
-  avgRating: 0,
-  reviewsCount: 0,
-  completionRate: 0,
-  tags: [],
-  hasCertificate: false,
-  scheduledAt: null,
-  categoryId: null,
-  category: null,
-  instructorId: tc.teacher?.userId || tc.teacherId,
-  instructor: tc.teacher?.user
-    ? {
-        id: tc.teacher.user.id,
-        fullName: tc.teacher.user.fullName,
-        email: tc.teacher.user.email,
-        phone: tc.teacher.user.phone,
-        profilePhoto: tc.teacher.user.profilePhoto,
-      }
-    : null,
-  sections: (tc.sections || []).map((sec) => ({
-    id: sec.id,
-    order: sec.order,
-    title: sec.name,
-    name: sec.name,
-    lessons: (sec.items || []).map((item) => ({
-      id: item.id,
-      order: item.order,
-      title: item.title,
-      description: item.description,
-      type: item.materialType,
-      contentUrl: item.materialLink,
+const formatTeacherCourse = (tc) => {
+  const totalLessons =
+    tc.sections?.reduce((sum, s) => sum + (s.items?.length || 0), 0) || 0;
+  const totalSections = tc.sections?.length || 0;
+
+  const statsData = {
+    totalStudents: 0,
+    totalLessons,
+    totalSections,
+    totalReviews: 0,
+    totalRevenue: 0,
+    avgRating: 0,
+    completionRate: 0,
+    sections: totalSections,
+    lessons: totalLessons,
+    enrollments: 0,
+    reviews: 0,
+  };
+
+  return {
+    id: tc.id,
+    type: coursesType.TEACHER_COURSE,
+    title: tc.name,
+    name: tc.name,
+    description: tc.description,
+    thumbnail: tc.wallPaper,
+    wallPaper: tc.wallPaper,
+    previewVideoUrl: null,
+    level: "ALL_LEVELS",
+    status: tc.status,
+    rejectionReason: tc.rejectionReason,
+    enrollmentType: "PAID",
+    language: "arabic",
+    originalPrice: Number(tc.price) || 0,
+    salePrice: null,
+    currency: "EGP",
+    durationHours: tc.totalHours || 0,
+    totalLessonsCount: totalLessons,
+    totalStudentsCount: 0,
+    totalRevenue: 0,
+    avgRating: 0,
+    reviewsCount: 0,
+    completionRate: 0,
+    states: statsData,
+    stats: statsData,
+    tags: [],
+    hasCertificate: false,
+    scheduledAt: null,
+    categoryId: null,
+    category: null,
+    instructorId: tc.teacher?.userId || tc.teacherId,
+    instructor: tc.teacher?.user
+      ? {
+          id: tc.teacher.user.id,
+          fullName: tc.teacher.user.fullName,
+          email: tc.teacher.user.email,
+          phone: tc.teacher.user.phone,
+          profilePhoto: tc.teacher.user.profilePhoto,
+        }
+      : null,
+    sections: (tc.sections || []).map((sec) => ({
+      id: sec.id,
+      order: sec.order,
+      title: sec.name,
+      name: sec.name,
+      lessons: (sec.items || []).map((item) => ({
+        id: item.id,
+        order: item.order,
+        title: item.title,
+        description: item.description,
+        type: item.materialType,
+        contentUrl: item.materialLink,
+      })),
+      quiz: sec.quiz || null,
     })),
-    quiz: sec.quiz || null,
-  })),
-  createdAt: tc.createdAt,
-  updatedAt: tc.updatedAt,
-});
+    createdAt: tc.createdAt,
+    updatedAt: tc.updatedAt,
+  };
+};
 
 const getCourseOrderBy = (sort) => {
   switch (sort) {
