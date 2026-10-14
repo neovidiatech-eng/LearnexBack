@@ -260,6 +260,12 @@ export const PERMISSIONS_DATA = [
     resource: "roles",
     action: "assign",
   },
+  {
+    code: PERMISSIONS_V2.ROLES.PERMISSION,
+    name: "Manage Role Permissions",
+    resource: "roles",
+    action: "permissions",
+  },
 
   // Permissions
   {
@@ -307,6 +313,12 @@ export const PERMISSIONS_DATA = [
     name: "Read Reviews",
     resource: "reviews",
     action: "read",
+  },
+  {
+    code: PERMISSIONS_V2.REVIEWS.UPDATE,
+    name: "Update Reviews",
+    resource: "reviews",
+    action: "update",
   },
   {
     code: PERMISSIONS_V2.REVIEWS.DELETE,
@@ -375,10 +387,92 @@ export const PERMISSIONS_DATA = [
     action: "get_my_plans",
   },
   {
+    code: PERMISSIONS_V2.PLANS.ASSIGN,
+    name: "Assign Plan",
+    resource: "plans",
+    action: "assign",
+  },
+  {
     code: PERMISSIONS_V2.PLANS.BUY_PLAN,
     name: "Buy Plan",
     resource: "plans",
     action: "buy_plan",
+  },
+
+  // Sessions
+  {
+    code: PERMISSIONS_V2.SESSIONS.READ,
+    name: "Read Sessions",
+    resource: "sessions",
+    action: "read",
+  },
+  {
+    code: PERMISSIONS_V2.SESSIONS.CREATE,
+    name: "Create Sessions",
+    resource: "sessions",
+    action: "create",
+  },
+  {
+    code: PERMISSIONS_V2.SESSIONS.UPDATE,
+    name: "Update Sessions",
+    resource: "sessions",
+    action: "update",
+  },
+  {
+    code: PERMISSIONS_V2.SESSIONS.DELETE,
+    name: "Delete Sessions",
+    resource: "sessions",
+    action: "delete",
+  },
+  {
+    code: PERMISSIONS_V2.SESSIONS.JOIN,
+    name: "Join Session",
+    resource: "sessions",
+    action: "join",
+  },
+  {
+    code: PERMISSIONS_V2.SESSIONS.START,
+    name: "Start Session",
+    resource: "sessions",
+    action: "start",
+  },
+  {
+    code: PERMISSIONS_V2.SESSIONS.END,
+    name: "End Session",
+    resource: "sessions",
+    action: "end",
+  },
+
+  // Session Requests
+  {
+    code: PERMISSIONS_V2.SESSIONREQUESTS.CREATE,
+    name: "Create Session Request",
+    resource: "sessionRequests",
+    action: "create",
+  },
+  {
+    code: PERMISSIONS_V2.SESSIONREQUESTS.CANCEL,
+    name: "Cancel Session Request",
+    resource: "sessionRequests",
+    action: "cancel",
+  },
+  {
+    code: PERMISSIONS_V2.SESSIONREQUESTS.VIEW,
+    name: "View Session Requests",
+    resource: "sessionRequests",
+    action: "view",
+  },
+  {
+    code: PERMISSIONS_V2.SESSIONREQUESTS.ACCEPT,
+    name: "Accept Session Request",
+    resource: "sessionRequests",
+    action: "accept",
+  },
+  {
+    code: PERMISSIONS_V2.SESSIONREQUESTS.REJECT,
+    name: "Reject Session Request",
+    resource: "sessionRequests",
+    action: "reject",
   },
 ];
 
@@ -421,6 +515,20 @@ export const ROLE_PERMISSIONS_MAP = {
     PERMISSIONS_V2.ENROLLMENTS.READ,
     PERMISSIONS_V2.CATEGORIES.READ,
     PERMISSIONS_V2.REVIEWS.READ,
+
+    // Sessions
+    PERMISSIONS_V2.SESSIONS.READ,
+    PERMISSIONS_V2.SESSIONS.CREATE,
+    PERMISSIONS_V2.SESSIONS.UPDATE,
+    PERMISSIONS_V2.SESSIONS.DELETE,
+    PERMISSIONS_V2.SESSIONS.START,
+    PERMISSIONS_V2.SESSIONS.END,
+    PERMISSIONS_V2.SESSIONS.JOIN,
+
+    // Session Requests (teacher manages incoming requests)
+    PERMISSIONS_V2.SESSIONREQUESTS.VIEW,
+    PERMISSIONS_V2.SESSIONREQUESTS.ACCEPT,
+    PERMISSIONS_V2.SESSIONREQUESTS.REJECT,
   ],
   STUDENT: [
     PERMISSIONS_V2.STUDENTS.READ,
@@ -432,5 +540,12 @@ export const ROLE_PERMISSIONS_MAP = {
     PERMISSIONS_V2.CATEGORIES.READ,
     PERMISSIONS_V2.REVIEWS.READ,
     PERMISSIONS_V2.PLANS.BUY_PLAN,
+
+    // Session Requests (student creates and manages own requests)
+    PERMISSIONS_V2.SESSIONREQUESTS.CREATE,
+    PERMISSIONS_V2.SESSIONREQUESTS.CANCEL,
+    PERMISSIONS_V2.SESSIONREQUESTS.VIEW,
+    PERMISSIONS_V2.SESSIONS.READ,
+    PERMISSIONS_V2.SESSIONS.JOIN,
   ],
 };

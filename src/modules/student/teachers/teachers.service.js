@@ -234,14 +234,22 @@ export const bookPlanService = async ({
   // Those will only be updated upon verified payment confirmation.
   const booking = await db.transaction(async (tx) => {
     // 1) Create TeacherSubscription with PENDING status
+    const validityDays = plan.validityDays || 30;
+    const expiresAt = new Date(Date.now() + validityDays * 24 * 60 * 60 * 1000);
+
     const subscription = await tx.create({
       model: "teacherSubscription",
       data: {
         teacherId: plan.teacherId,
         studentId: student.id,
+        planId: plan.id,
         status: "PENDING",
         amount: finalPrice,
-        type: teacherSubscription.PLAN
+        type: "PLAN",
+        sessionsCount: effectiveSessionsCount,
+        sessionLeft: effectiveSessionsCount,
+        sessionUsed: 0,
+        expiresAt,
       },
     });
 
@@ -397,7 +405,11 @@ export const finalizePlanPaymentService = async ({
       updatedSubscription = await tx.updateOne({
         model: "teacherSubscription",
         where: { id: subscriptionId },
-        data: { status: "ACTIVE" },
+        data: {
+          status: "ACTIVE",
+          sessionsCount: Number(sessionsCount),
+          sessionLeft: Number(sessionsCount),
+        },
       });
     }
 

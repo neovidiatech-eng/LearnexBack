@@ -9,6 +9,7 @@ import studentSavedRouter from "../modules/student/saved/saved.routes.js";
 import studentQuizRouter from "../modules/student/quizzes/quizzes.routes.js";
 import studentReviewsRouter from "../modules/student/reviews/reviews.routes.js";
 import sessionRouter from "../modules/student/session/session.route.js";
+import avilbilityRouter from "../modules/student/session/avialbilty/avilability.route.js"
 
 const router = Router();
 router.use("/home", studentHomeRouter);
@@ -27,5 +28,6 @@ router.use("/quizzes", studentQuizRouter);
 router.use("/quizes", studentQuizRouter);
 router.use("/reviews", studentReviewsRouter);
 router.use("/sessions",sessionRouter)
+router.use("/avilability",avilbilityRouter)
 
 export default router;

@@ -20,6 +20,7 @@ import { seedCms } from "./seeders/cms.seed.js";
 import { seedPlans } from "./seeders/plans.seed.js";
 import { seedReviews } from "./seeders/reviews.seed.js";
 import { seedOffers } from "./seeders/offers.seed.js";
+import { seedSessions } from "./seeders/sessions.seed.js";
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -81,6 +82,9 @@ async function main() {
 
   // 14. Promotional Offers (depends on students + teachers + courses + teacherCourses)
   await seedOffers(prisma, students, teachers, courses, teacherCourses);
+
+  // 15. Sessions & Session Requests (depends on teachers + students)
+  await seedSessions(prisma, teachers, students);
 
   console.log("\n✅ Database seeding completed successfully!");
 }
