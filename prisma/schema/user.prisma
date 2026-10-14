@@ -29,6 +29,7 @@ model User {
   saveds            Saved[]
   transactions      Transaction[]
   wallet            wallet?
+  systemRequests    SystemRequest[]
 
   @@index([roleId])
   @@index([status])
