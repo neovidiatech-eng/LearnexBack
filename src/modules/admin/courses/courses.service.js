@@ -221,6 +221,19 @@ const teacherCourseInclude = {
           profilePhoto: true,
         },
       },
+      reviews: {
+        where: { isHidden: false },
+        include: {
+          student: {
+            select: {
+              id: true,
+              fullName: true,
+              profilePhoto: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      },
     },
   },
   sections: {
@@ -231,6 +244,7 @@ const teacherCourseInclude = {
     },
   },
 };
+
 
 const formatAdminCourse = (course) => {
   const totalSections =
@@ -320,10 +334,68 @@ const formatAdminCourse = (course) => {
   };
 };
 
-const formatTeacherCourse = (tc) => ({
-  ...tc,
-  type: coursesType.TEACHER_COURSE,
-});
+const formatTeacherCourse = (tc) => {
+  const teacherReviews = tc.teacher?.reviews || [];
+
+  const formattedReviews = teacherReviews.map((review) => ({
+    id: review.id,
+    rating: review.rating,
+    comment: review.comment,
+    createdAt: review.createdAt,
+    student: review.student,
+  }));
+
+  const totalSections = tc.sections?.length || 0;
+  const totalLessons =
+    tc.sections?.reduce(
+      (sum, s) => sum + (s.items?.length || 0),
+      0
+    ) || tc.totalHours || 0;
+
+  const totalStudents = tc.teacher?.totalStudentsCount || 0;
+  const totalReviews =
+    tc.teacher?.reviewsCount ?? teacherReviews.length ?? 0;
+
+  const calculatedAvgRating =
+    teacherReviews.length > 0
+      ? Number(
+          (
+            teacherReviews.reduce(
+              (acc, r) => acc + (Number(r.rating) || 0),
+              0
+            ) / teacherReviews.length
+          ).toFixed(1)
+        )
+      : Number(tc.teacher?.avgRating) || 0;
+
+  const statsData = {
+    totalStudents,
+    totalLessons,
+    totalSections,
+    totalReviews,
+    totalRevenue: 0,
+    avgRating: calculatedAvgRating,
+    completionRate: 0,
+    sections: totalSections,
+    lessons: totalLessons,
+    enrollments: totalStudents,
+    reviews: totalReviews,
+  };
+
+  const { reviews: _tReviews, ...cleanTeacher } = tc.teacher || {};
+
+  return {
+    ...tc,
+    teacher: cleanTeacher,
+    type: coursesType.TEACHER_COURSE,
+    enrollments: [],
+    reviews: formattedReviews,
+    reviewsCount: totalReviews,
+    avgRating: calculatedAvgRating,
+    stats: statsData,
+  };
+};
+
 
 const getCourseOrderBy = (sort) => {
   switch (sort) {
