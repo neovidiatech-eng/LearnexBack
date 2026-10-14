@@ -5,19 +5,20 @@ import {
 } from "../../../utils/Enums/request.enum.js";
 export const getRequestStatsService = async (query = {}) => {
   const { tab } = query;
+  const where = tab && tab !== "all" ? { tab } : {};
   const [total, pending, approved, rejected] = await Promise.all([
-    db.count({ model: "systemRequest", where: { tab } }),
+    db.count({ model: "systemRequest", where }),
     db.count({
       model: "systemRequest",
-      where: { tab, status: requestStatusEnum.PENDING },
+      where: { ...where, status: requestStatusEnum.PENDING },
     }),
     db.count({
       model: "systemRequest",
-      where: { tab, status: requestStatusEnum.APPROVED },
+      where: { ...where, status: requestStatusEnum.APPROVED },
     }),
     db.count({
       model: "systemRequest",
-      where: { tab, status: requestStatusEnum.REJECTED },
+      where: { ...where, status: requestStatusEnum.REJECTED },
     }),
   ]);
   return { total, pending, approved, rejected };
@@ -25,7 +26,7 @@ export const getRequestStatsService = async (query = {}) => {
 
 export const getAllRequestsService = async (query = {}) => {
   const {
-    tab = requestTabEnum.STUDENT,
+    tab,
     type,
     priority,
     status,
@@ -34,10 +35,10 @@ export const getAllRequestsService = async (query = {}) => {
     limit = 10,
   } = query;
   const where = {
-    tab,
-    type,
-    priority,
-    status,
+    ...(tab && tab !== "all" ? { tab } : {}),
+    ...(type ? { type } : {}),
+    ...(priority ? { priority } : {}),
+    ...(status ? { status } : {}),
     ...(search
       ? {
           OR: [
@@ -81,16 +82,26 @@ export const getAllRequestsService = async (query = {}) => {
 };
 
 export const getRequestByIdService = async (requestId) => {
-    const request = await db.findOne({
-      model: "systemRequest",
-        where: { requestId },
-    });
+  const request = await db.findOne({
+    model: "systemRequest",
+    where: { id: requestId },
+    include: {
+      requester: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          profilePhoto: true,
+        },
+      },
+    },
+  });
 
   if (!request) {
     const error = new Error("REQUEST_NOT_FOUND");
     error.cause = 404;
     throw error;
-    }
-    return request
+  }
+  return request;
 };
 export const approveRequestService = async (requestId) => {};

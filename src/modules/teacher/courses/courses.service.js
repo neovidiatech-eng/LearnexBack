@@ -7,6 +7,7 @@ import { createSystemRequest } from "../../../utils/helpers/requests.helper.js";
 
 export const createTeacherCourse = async ({
   teacherId,
+  userId,
   name,
   description,
   price,
@@ -24,6 +25,33 @@ export const createTeacherCourse = async ({
       wallPaper,
     },
   });
+
+  let requesterId = userId;
+  if (!requesterId && teacherId) {
+    const teacher = await dbService.findFirst({
+      model: "teacher",
+      where: { id: teacherId },
+      select: { userId: true },
+    });
+    requesterId = teacher?.userId;
+  }
+
+  if (requesterId) {
+    await createSystemRequest({
+      tab: requestTabEnum.TEACHER,
+      type: requestTypeEnum.COURSE_APPROVAL,
+      priority: requestPriorityEnum.HIGH,
+      requesterId,
+      requesterRole: requestTabEnum.TEACHER,
+      referenceId: course.id,
+      referenceModel: requestReferenceModelEnum.TEACHER_COURSE,
+      details: {
+        courseName: course.name,
+        price: course.price,
+        totalHours: course.totalHours,
+      },
+    });
+  }
 
   return {
     ...course,
@@ -79,20 +107,6 @@ export const getCourses = async ({ teacherId, role, search, page, limit }) => {
       type: coursesType.TEACHER_COURSE,
     };
   });
-  await createSystemRequest({
-    tab: requestTabEnum.TEACHER,
-    type: requestTypeEnum.COURSE_APPROVAL,
-    priority: requestPriorityEnum.HIGH,
-    requesterId: teacherId, 
-    requesterRole: requestTabEnum.TEACHER,
-    referenceId: course.id,
-    referenceModel: requestReferenceModelEnum.TEACHER_COURSE,
-    details: {
-      courseName: course.name,
-      price: course.price,
-      totalHours: course.totalHours,
-    },
-  });
 
   return allCoursesWithType;
 };;
@@ -137,6 +151,7 @@ export const getCourseById = async ({ courseId, teacherId }) => {
 export const updateTeacherCourse = async ({
   courseId,
   teacherId,
+  userId,
   name,
   description,
   price,
@@ -189,20 +204,33 @@ export const updateTeacherCourse = async ({
       }
     }
   }
-  await createSystemRequest({
-    tab: requestTabEnum.TEACHER,
-    type: requestTypeEnum.COURSE_UPDATE,
-    priority: requestPriorityEnum.MEDIUM,
-    requesterId: teacherId, 
-    requesterRole: requestTabEnum.TEACHER,
-    referenceId: course.id,
-    referenceModel: requestReferenceModelEnum.TEACHER_COURSE,
-    details: {
-      courseName: course.name,
-      price: course.price,
-      totalHours: course.totalHours,
-    },
-  });
+
+  let requesterId = userId;
+  if (!requesterId && teacherId) {
+    const teacher = await dbService.findFirst({
+      model: "teacher",
+      where: { id: teacherId },
+      select: { userId: true },
+    });
+    requesterId = teacher?.userId;
+  }
+
+  if (requesterId) {
+    await createSystemRequest({
+      tab: requestTabEnum.TEACHER,
+      type: requestTypeEnum.COURSE_UPDATE,
+      priority: requestPriorityEnum.MEDIUM,
+      requesterId,
+      requesterRole: requestTabEnum.TEACHER,
+      referenceId: updateCourse.id,
+      referenceModel: requestReferenceModelEnum.TEACHER_COURSE,
+      details: {
+        courseName: updateCourse.name,
+        price: updateCourse.price,
+        totalHours: updateCourse.totalHours,
+      },
+    });
+  }
 
   return {
     ...updateCourse,

@@ -8,33 +8,31 @@ const generateRequestCode = async () => {
   return `REQ-${nextNum}`;
 };
 
-export const createSystemRequest = asyncHandler(
-  async ({
-    tab,
-    type,
-    priority,
-    requesterId,
-    requesterRole = requestTabEnum.STUDENT,
-    referenceId,
-    referenceModel,
-    details = {},
-  } = {}) => {
-    const code = await generateRequestCode();
-    const request = await db.create({
-      model: "systemRequest",
-      data: {
-        code,
-        tab,
-        type,
-        priority,
-        status: requestStatusEnum.PENDING,
-        requesterId,
-        requesterRole,
-        referenceId,
-        referenceModel,
-        details,
-      },
-    });
-    return request;
-  },
-);
+export const createSystemRequest = async ({
+  tab,
+  type,
+  priority,
+  requesterId,
+  requesterRole = requestTabEnum.STUDENT,
+  referenceId,
+  referenceModel,
+  details = {},
+} = {}) => {
+  const code = await generateRequestCode();
+  const request = await db.create({
+    model: "systemRequest",
+    data: {
+      code,
+      tab,
+      type,
+      priority,
+      status: requestStatusEnum.PENDING,
+      requesterId,
+      requesterRole,
+      referenceId,
+      referenceModel,
+      details,
+    },
+  });
+  return request;
+};
