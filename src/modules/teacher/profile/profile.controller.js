@@ -70,7 +70,8 @@ export const updateImageProfile = asyncHandler(async (req, res) => {
   });
 
 export const updateWorkHours = asyncHandler(async (req, res) => {
-
+  console.log("BODY:", JSON.stringify(req.body, null, 2));
+  console.log("WORK HOURS:", req.body.workHours);
   const teacher = await profileService.updateWorkHoursService(
     req.user.id,
     req.body.workHours,

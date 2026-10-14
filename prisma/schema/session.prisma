@@ -7,11 +7,13 @@ model SessionPlan {
   price                    Decimal                  @db.Decimal(10, 2)
   discountType             String?
   discountValue            Decimal?                 @db.Decimal(10, 2)
+  validityDays             Int?                     @default(30)
   isActive                 Boolean                  @default(true)
   createdAt                DateTime                 @default(now())
   updatedAt                DateTime                 @updatedAt
   sessionPlansTranslations SessionPlanTranslation[]
   students                 Student[]
+  subscriptions            teacherSubscription[]
 
   @@index([teacherId])
   @@map("session_plans")
@@ -39,6 +41,7 @@ model SessionRequest {
   student        Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
   teacherId      String
   teacher        Teacher   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  title          String?
   startAt        DateTime
   endAt          DateTime
   note           String?
@@ -70,12 +73,40 @@ model Session {
   endAt           DateTime
   studentJoinedAt DateTime?
   studentLeftAt   DateTime?
+  actualEndAt     DateTime?
+  actualStartAt   DateTime?
+  teacherSubscriptionId String?
+  teacherSubscription   teacherSubscription? @relation(fields: [teacherSubscriptionId], references: [id], onDelete: SetNull)
   
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([teacherId, startAt])
   @@index([studentId, startAt])
   @@index([status])
+  @@index([teacherSubscriptionId])
   @@map("sessions")
+}
+
+model CustomSessionRequest {
+  id              String    @id @default(uuid())
+  studentId       String
+  student         Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacherId       String
+  teacher         Teacher   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  sessionsCount   Int
+  pricePerSession Decimal   @db.Decimal(10, 2)
+  totalPrice      Decimal   @db.Decimal(10, 2)
+  status          String    @default("PENDING") // PENDING | ACCEPTED | REJECTED | CANCELLED
+  rejectedReason  String?
+  respondedAt     DateTime?
+  validityDays    Int       @default(30)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([teacherId, status])
+  @@index([studentId, status])
+  @@map("custom_session_requests")
 }

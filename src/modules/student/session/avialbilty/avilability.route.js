@@ -7,7 +7,7 @@ import * as availabilityValidation from "../../session/avialbilty/avilability.va
 const router = Router();
 
 router.get(
-    "/:teacherId/availability",
+    "/:teacherId",
     authentication(),
     validation(availabilityValidation.getAvailableSlots),
     availabilityController.getAvailableSlotsController
