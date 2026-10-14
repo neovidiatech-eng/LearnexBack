@@ -36,8 +36,6 @@ export const requestStatusEnum = Object.freeze({
   PENDING: "PENDING",
   APPROVED: "APPROVED",
   REJECTED: "REJECTED",
-  IN_REVIEW: "IN_REVIEW",
-  CANCELLED: "CANCELLED",
 });
 
 

@@ -20,6 +20,7 @@ export const createTeacherCourse = asyncHandler(async (req, res, next) => {
   }
   const course = await teacherCourseService.createTeacherCourse({
     teacherId: teacher.id,
+    userId: req.user.id,
     name,
     description,
     price,
@@ -135,6 +136,7 @@ export const updateTeacherCourse = asyncHandler(async (req, res, next) => {
   const course = await teacherCourseService.updateTeacherCourse({
     courseId: id,
     teacherId: teacher.id,
+    userId: req.user.id,
     name,
     description,
     price,

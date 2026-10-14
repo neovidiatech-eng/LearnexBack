@@ -1105,6 +1105,17 @@ Include the Bearer JWT token in the Authorization header:
           },
         },
       },
+      AdminRejectRequestDTO: {
+        type: "object",
+        required: ["rejectionReason"],
+        properties: {
+          rejectionReason: {
+            type: "string",
+            example: "Course content does not meet platform quality standards",
+            description: "Reason for rejecting the request",
+          },
+        },
+      },
     },
   },
   tags: [
@@ -1121,6 +1132,7 @@ Include the Bearer JWT token in the Authorization header:
     { name: "Admin - Reviews", description: "Admin reviews management, visibility toggle (isHidden), and statistics" },
     { name: "Admin - Activity Logs", description: "Audit trail, security metrics, and real-time activity tracking" },
     { name: "Admin - Settings & CMS", description: "App metadata, logo branding, and static CMS pages" },
+    { name: "Admin - Requests", description: "Admin requests management, overview statistics, approvals, and rejections" },
 
     { name: "Teacher - Auth", description: "Teacher registration with CV upload, login, and password recovery" },
     { name: "Teacher - Profile", description: "Teacher bio, hourly session pricing, avatar uploads, and visibility" },
@@ -3008,6 +3020,199 @@ Include the Bearer JWT token in the Authorization header:
         ],
         responses: {
           ...standardResponses[200]({ $ref: "#/components/schemas/SessionPlanDetailResponseDTO" }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // ADMIN REQUESTS
+    // ═══════════════════════════════════════════════════════════
+    "/api/v1/admin/requests/stats": {
+      get: {
+        summary: "Get Request Statistics",
+        description: "Returns aggregated counts of system requests (total, pending, approved, rejected) optionally filtered by tab.",
+        tags: ["Admin - Requests"],
+        security: bearerSecurity,
+        parameters: [
+          {
+            in: "query",
+            name: "tab",
+            schema: { type: "string", enum: ["STUDENT", "TEACHER", "WITHDRAWAL"] },
+            description: "Filter stats by request tab category (STUDENT, TEACHER, WITHDRAWAL). Omit to aggregate across all.",
+            example: "TEACHER",
+          },
+        ],
+        responses: {
+          ...standardResponses[200]({
+            type: "object",
+            properties: {
+              message: { type: "string", example: "SUCCESS" },
+              data: {
+                type: "object",
+                properties: {
+                  total: { type: "integer", example: 25 },
+                  pending: { type: "integer", example: 8 },
+                  approved: { type: "integer", example: 14 },
+                  rejected: { type: "integer", example: 3 },
+                },
+              },
+            },
+          }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/admin/requests": {
+      get: {
+        summary: "Get All System Requests",
+        description: "Fetch paginated system requests with filtering by tab, type, priority, status, and keyword search.",
+        tags: ["Admin - Requests"],
+        security: bearerSecurity,
+        parameters: [
+          ...paginationQueryParams,
+          {
+            in: "query",
+            name: "tab",
+            schema: { type: "string", enum: ["STUDENT", "TEACHER", "WITHDRAWAL"], default: "STUDENT" },
+            description: "Tab category (STUDENT, TEACHER, WITHDRAWAL). Defaults to STUDENT.",
+            example: "TEACHER",
+          },
+          {
+            in: "query",
+            name: "type",
+            schema: {
+              type: "string",
+              enum: [
+                "BECOME_INSTRUCTOR",
+                "COURSE_APPROVAL",
+                "COURSE_UPDATE",
+                "VERIFICATION",
+                "PROFILE_UPDATE",
+                "SUPPORT",
+                "COURSE_ENROLLMENT",
+                "REFUND_REQUEST",
+                "CERTIFICATE_REQUEST",
+                "SESSION_BOOKING",
+                "WITHDRAWAL_PAYOUT",
+              ],
+            },
+            description: "Filter by request type",
+            example: "COURSE_APPROVAL",
+          },
+          {
+            in: "query",
+            name: "priority",
+            schema: { type: "string", enum: ["HIGH", "MEDIUM", "LOW"] },
+            description: "Filter by request priority level",
+            example: "HIGH",
+          },
+          {
+            in: "query",
+            name: "status",
+            schema: { type: "string", enum: ["PENDING", "APPROVED", "REJECTED"] },
+            description: "Filter by request status",
+            example: "PENDING",
+          },
+        ],
+        responses: {
+          ...standardResponses[200]({
+            type: "object",
+            properties: {
+              message: { type: "string", example: "SUCCESS" },
+              data: {
+                type: "object",
+                properties: {
+                  requests: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        id: { type: "string", format: "uuid" },
+                        code: { type: "string", example: "REQ-0001" },
+                        tab: { type: "string", example: "TEACHER" },
+                        type: { type: "string", example: "COURSE_APPROVAL" },
+                        priority: { type: "string", example: "HIGH" },
+                        status: { type: "string", example: "PENDING" },
+                        requesterId: { type: "string", format: "uuid" },
+                        requesterRole: { type: "string", example: "TEACHER" },
+                        referenceId: { type: "string", format: "uuid", nullable: true },
+                        referenceModel: { type: "string", example: "TeacherCourse", nullable: true },
+                        details: { type: "object" },
+                        rejectionReason: { type: "string", nullable: true },
+                        actionTakenAt: { type: "string", format: "date-time", nullable: true },
+                        createdAt: { type: "string", format: "date-time" },
+                        updatedAt: { type: "string", format: "date-time" },
+                        requester: {
+                          type: "object",
+                          properties: {
+                            id: { type: "string", format: "uuid" },
+                            fullName: { type: "string", example: "Ahmed Hassan" },
+                            email: { type: "string", example: "teacher@learnex.com" },
+                            profilePhoto: { type: "string", nullable: true },
+                          },
+                        },
+                      },
+                    },
+                  },
+                  pagination: {
+                    type: "object",
+                    properties: {
+                      total: { type: "integer", example: 45 },
+                      page: { type: "integer", example: 1 },
+                      limit: { type: "integer", example: 10 },
+                      totalPages: { type: "integer", example: 5 },
+                    },
+                  },
+                },
+              },
+            },
+          }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/admin/requests/{requestId}": {
+      get: {
+        summary: "Get Request Details by ID",
+        description: "Returns full details of a specific system request by its UUID.",
+        tags: ["Admin - Requests"],
+        security: bearerSecurity,
+        parameters: [uuidParam("requestId", "System Request ID")],
+        responses: {
+          ...standardResponses[200]({
+            type: "object",
+            properties: {
+              message: { type: "string", example: "SUCCESS" },
+              data: {
+                type: "object",
+                properties: {
+                  id: { type: "string", format: "uuid" },
+                  code: { type: "string", example: "REQ-0001" },
+                  tab: { type: "string", example: "TEACHER" },
+                  type: { type: "string", example: "COURSE_APPROVAL" },
+                  priority: { type: "string", example: "HIGH" },
+                  status: { type: "string", example: "PENDING" },
+                  requesterId: { type: "string", format: "uuid" },
+                  requesterRole: { type: "string", example: "TEACHER" },
+                  referenceId: { type: "string", format: "uuid", nullable: true },
+                  referenceModel: { type: "string", example: "TeacherCourse", nullable: true },
+                  details: { type: "object" },
+                  rejectionReason: { type: "string", nullable: true },
+                  actionTakenAt: { type: "string", format: "date-time", nullable: true },
+                  createdAt: { type: "string", format: "date-time" },
+                  updatedAt: { type: "string", format: "date-time" },
+                },
+              },
+            },
+          }),
           401: standardResponses[401],
           403: standardResponses[403],
           404: standardResponses[404],

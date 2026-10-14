@@ -10,6 +10,8 @@ import { userStatusEnum } from "../../../utils/Enums/userStatus.enum.js";
 import { customAlphabet } from "nanoid";
 import { emailEvent } from "../../../utils/events/email.event.js";
 import { deleteCache, getCache, setCache } from "../../../db/redis.service.js";
+import { requestPriorityEnum, requestReferenceModelEnum, requestTabEnum, requestTypeEnum } from "../../../utils/Enums/request.enum.js";
+import { createSystemRequest } from "../../../utils/helpers/requests.helper.js";
 
 export const teacherSignupService = async (body, reqFiles) => {
   const {
@@ -101,9 +103,24 @@ export const teacherSignupService = async (body, reqFiles) => {
       },
     },
   });
+  await createSystemRequest({
+    tab: requestTabEnum.TEACHER,
+    type: requestTypeEnum.BECOME_INSTRUCTOR,
+    priority: requestPriorityEnum.HIGH,
+    requesterId: createdTeacher.user.id,
+    requesterRole: requestTabEnum.TEACHER,
+    referenceId: createdTeacher.id,
+    referenceModel: requestReferenceModelEnum.TEACHER,
+    details: {
+      fullName,
+      subject,
+      experienceYears,
+      cvUrl,
+    },
+  });
 
   return createdTeacher;
-};
+};;
 
 export const teacherLoginService = async ({ email, password }) => {
   const normalizedEmail = email.toLowerCase().trim();

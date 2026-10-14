@@ -1,10 +1,13 @@
 import dbService from "../../../db/db.service.js";
+import { requestPriorityEnum, requestReferenceModelEnum, requestTabEnum, requestTypeEnum } from "../../../utils/Enums/request.enum.js";
 import { coursesType, teacherCourseStatusEnum } from "../../../utils/Enums/teacherCourse.enum.js";
 import fs from "fs/promises";
 import path from "path";
+import { createSystemRequest } from "../../../utils/helpers/requests.helper.js";
 
 export const createTeacherCourse = async ({
   teacherId,
+  userId,
   name,
   description,
   price,
@@ -23,19 +26,40 @@ export const createTeacherCourse = async ({
     },
   });
 
+  let requesterId = userId;
+  if (!requesterId && teacherId) {
+    const teacher = await dbService.findFirst({
+      model: "teacher",
+      where: { id: teacherId },
+      select: { userId: true },
+    });
+    requesterId = teacher?.userId;
+  }
+
+  if (requesterId) {
+    await createSystemRequest({
+      tab: requestTabEnum.TEACHER,
+      type: requestTypeEnum.COURSE_APPROVAL,
+      priority: requestPriorityEnum.HIGH,
+      requesterId,
+      requesterRole: requestTabEnum.TEACHER,
+      referenceId: course.id,
+      referenceModel: requestReferenceModelEnum.TEACHER_COURSE,
+      details: {
+        courseName: course.name,
+        price: course.price,
+        totalHours: course.totalHours,
+      },
+    });
+  }
+
   return {
     ...course,
     type: coursesType.TEACHER_COURSE,
   };
 };
 
-export const getCourses = async ({
-  teacherId,
-  role,
-  search,
-  page,
-  limit,
-}) => {
+export const getCourses = async ({ teacherId, role, search, page, limit }) => {
   const where =
     role === "teacher"
       ? {
@@ -85,7 +109,7 @@ export const getCourses = async ({
   });
 
   return allCoursesWithType;
-};
+};;
 
 export const getCourseById = async ({ courseId, teacherId }) => {
   const course = await dbService.findFirst({
@@ -127,6 +151,7 @@ export const getCourseById = async ({ courseId, teacherId }) => {
 export const updateTeacherCourse = async ({
   courseId,
   teacherId,
+  userId,
   name,
   description,
   price,
@@ -165,7 +190,11 @@ export const updateTeacherCourse = async ({
     },
   });
 
-  if (wallPaper !== undefined && course.wallPaper && course.wallPaper !== wallPaper) {
+  if (
+    wallPaper !== undefined &&
+    course.wallPaper &&
+    course.wallPaper !== wallPaper
+  ) {
     const filePath = path.resolve(course.wallPaper);
     try {
       await fs.unlink(filePath);
@@ -176,11 +205,38 @@ export const updateTeacherCourse = async ({
     }
   }
 
+  let requesterId = userId;
+  if (!requesterId && teacherId) {
+    const teacher = await dbService.findFirst({
+      model: "teacher",
+      where: { id: teacherId },
+      select: { userId: true },
+    });
+    requesterId = teacher?.userId;
+  }
+
+  if (requesterId) {
+    await createSystemRequest({
+      tab: requestTabEnum.TEACHER,
+      type: requestTypeEnum.COURSE_UPDATE,
+      priority: requestPriorityEnum.MEDIUM,
+      requesterId,
+      requesterRole: requestTabEnum.TEACHER,
+      referenceId: updateCourse.id,
+      referenceModel: requestReferenceModelEnum.TEACHER_COURSE,
+      details: {
+        courseName: updateCourse.name,
+        price: updateCourse.price,
+        totalHours: updateCourse.totalHours,
+      },
+    });
+  }
+
   return {
     ...updateCourse,
     type: coursesType.TEACHER_COURSE,
   };
-};
+};;
 
 export const deleteCourse = async ({ courseId, teacherId }) => {
   const course = await dbService.findFirst({

@@ -2,6 +2,8 @@ import * as db from "../../../db/db.service.js";
 import { deleteFile } from "../../../utils/multer/file.utils.js";
 import { emailEvent } from "../../../utils/events/email.event.js";
 import { CertificateStatus } from "../../../utils/Enums/teacherCertificate.enum.js";
+import { createSystemRequest } from "../../../utils/helpers/requests.helper.js";
+import { requestPriorityEnum, requestReferenceModelEnum, requestTabEnum, requestTypeEnum } from "../../../utils/Enums/request.enum.js";
 
 const formatFileSize = (bytes) => {
   if (!bytes) return "0 MB";
@@ -59,9 +61,24 @@ export const createCertificateService = async (userId, body, file) => {
       issuer: certificate.issuer,
     });
   }
+  await createSystemRequest({
+    tab: requestTabEnum.TEACHER,
+    type: requestTypeEnum.VERIFICATION,
+    priority: requestPriorityEnum.LOW,
+    requesterId: userId,
+    requesterRole: requestTabEnum.TEACHER,
+    referenceId: certificate.id,
+    referenceModel: requestReferenceModelEnum.TEACHER_CERTIFICATE,
+    details: {
+      certificateTitle: certificate.title,
+      issuer: certificate.issuer,
+      fileType: certificate.fileType,
+      fileUrl: certificate.fileUrl,
+    },
+  });
 
   return certificate;
-};
+};;
 
 
 export const getCertificateByIdService = async (userId, certificateId) => {
