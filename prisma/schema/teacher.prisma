@@ -168,8 +168,9 @@ model TeacherCourseQuizAnswer {
 
 model TeacherWorkHours {
   id        String  @id @default(uuid())
-  teacherId String
+  teacherId String  @unique
   teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  timezone  String  @default("Africa/Cairo")
   workHours Json[]
 
   createdAt DateTime @default(now())
@@ -180,14 +181,25 @@ model TeacherWorkHours {
 }
 
 model teacherSubscription {
-  id        String   @id @default(uuid())
-  teacherId String
-  teacher   Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  studentId String
-  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  status    String
-  amount    Decimal  @db.Decimal(10, 2)
-  type      String // plan | session
+  id            String       @id @default(uuid())
+  teacherId     String
+  teacher       Teacher      @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  studentId     String
+  student       Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  planId        String?
+  plan          SessionPlan? @relation(fields: [planId], references: [id], onDelete: SetNull)
+  status        String       @default("ACTIVE") // ACTIVE | EXPIRED | COMPLETED | PENDING
+  amount        Decimal      @db.Decimal(10, 2)
+  type          String       @default("PLAN") // PLAN | CUSTOM
+  sessionsCount Int          @default(0)
+  sessionLeft   Int          @default(0)
+  sessionUsed   Int          @default(0)
+  expiresAt     DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([teacherId, studentId, status])
+  @@map("teacher_subscriptions")
+  sessions Session[]
 }

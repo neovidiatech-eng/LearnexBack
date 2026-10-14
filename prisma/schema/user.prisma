@@ -52,8 +52,9 @@ model Student {
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
   teacherSubscription teacherSubscription[]
-  sessionRequests     SessionRequest[]
-  sessions            Session[]
+  sessionRequests       SessionRequest[]
+  sessions              Session[]
+  customSessionRequests CustomSessionRequest[]
 
   @@index([userId])
   @@map("students")
@@ -86,10 +87,11 @@ model Teacher {
   workHours           TeacherWorkHours[]
   teacherSubscription teacherSubscription[]
 
-  courses             TeacherCourse[]
-  sessionPlans        SessionPlan[]
-  sessions            Session[]
-  sessionRequests     SessionRequest[]
+  courses         TeacherCourse[]
+  sessionPlans          SessionPlan[]
+  sessions              Session[]
+  sessionRequests       SessionRequest[]
+  customSessionRequests CustomSessionRequest[]
 
   @@index([userId])
   @@map("teachers")

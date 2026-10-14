@@ -16,7 +16,7 @@ const getStudentByUser = async (userId) => {
   const student = await dbService.findFirst({
     model: "student",
     where: { userId },
-    select: { id: true },
+    select: { id: true, sessionLeft: true, sessionCount: true },
   });
   if (!student) throwError("STUDENT_NOT_FOUND", 404);
   return student;
@@ -36,15 +36,56 @@ const hasStudentConflict = async ({ studentId, startAt, endAt }) => {
   return Boolean(conflict);
 };
 
-export const createSessionRequest = async ({ userId, teacherId, startAt, note }) => {
+export const createSessionRequest = async ({ userId, teacherId, startAt, note, title }) => {
   const student = await getStudentByUser(userId);
 
   const teacher = await dbService.findFirst({
     model: "teacher",
     where: { id: teacherId },
-    select: { id: true },
+    select: { id: true, isAvailable: true },
   });
   if (!teacher) throwError("TEACHER_NOT_FOUND", 404);
+
+  // 1. Check student's active session balance with this teacher
+  const now = new Date();
+  const activeSubs = await dbService.findMany({
+    model: "teacherSubscription",
+    where: {
+      studentId: student.id,
+      teacherId: teacher.id,
+      status: "ACTIVE",
+      sessionLeft: { gt: 0 },
+      OR: [{ expiresAt: null }, { expiresAt: { gte: now } }],
+    },
+    select: { id: true, sessionLeft: true },
+  });
+
+  const totalSubLeft = activeSubs.reduce((acc, sub) => acc + sub.sessionLeft, 0);
+  const availableBalance = totalSubLeft > 0 ? totalSubLeft : (student.sessionLeft || 0);
+
+  if (availableBalance <= 0) {
+    throwError("INSUFFICIENT_SESSION_BALANCE", 400);
+  }
+
+  // 2. Count active pending requests and scheduled sessions with this teacher
+  const bookedOrPendingCount = await dbService.count({
+    model: "sessionRequest",
+    where: {
+      studentId: student.id,
+      teacherId: teacher.id,
+      OR: [
+        { status: requestStatus.PENDING },
+        {
+          status: requestStatus.ACCEPTED,
+          session: { status: { in: ACTIVE_SESSION } },
+        },
+      ],
+    },
+  });
+
+  if (availableBalance <= bookedOrPendingCount) {
+    throwError("INSUFFICIENT_AVAILABLE_SESSIONS", 400);
+  }
 
   const start = new Date(startAt);
   if (Number.isNaN(start.getTime())) throwError("INVALID_START_DATE", 400);
@@ -75,6 +116,7 @@ export const createSessionRequest = async ({ userId, teacherId, startAt, note })
     data: {
       studentId: student.id,
       teacherId: teacher.id,
+      title: title?.trim() || null,
       startAt: start,
       endAt: end,
       note: note?.trim() || null,
@@ -82,26 +124,24 @@ export const createSessionRequest = async ({ userId, teacherId, startAt, note })
     },
   });
 
-  // TODO: إشعار للمدرس بطلب جديد
   return request;
 };
 
-export const cancelSessionRequest = async({userId,requestId})=>{
+export const cancelSessionRequest = async ({ userId, requestId }) => {
   const student = await getStudentByUser(userId);
   const request = await dbService.findFirst({
-    model:"sessionRequest",
-    where:{id:requestId}
-  })
+    model: "sessionRequest",
+    where: { id: requestId },
+  });
 
-  if(!request) throwError("REQUEST_NOT_FOUND",404);
+  if (!request) throwError("REQUEST_NOT_FOUND", 404);
 
-  if(request.studentId !== student.id) throwError("UNAUTHORIZED",403);
-  if(request.status !== requestStatus.PENDING){
-    throwError("REQUEST_NOT_PENDING",400)
+  if (request.studentId !== student.id) throwError("UNAUTHORIZED", 403);
+  if (request.status !== requestStatus.PENDING) {
+    throwError("REQUEST_NOT_PENDING", 400);
   }
 
   try {
-    // شرط status في الـ where بيمنع الإلغاء لو المدرس قبل أو رفض في نفس اللحظة
     return await dbService.updateOne({
       model: "sessionRequest",
       where: { id: requestId, status: requestStatus.PENDING },
@@ -111,7 +151,101 @@ export const cancelSessionRequest = async({userId,requestId})=>{
     if (err?.code === "P2025") throwError("REQUEST_NOT_PENDING", 409);
     throw err;
   }
+};
 
-  // TODO: إشعار للمدرس إن الطلب اتلغى
-  
-}
+export const createCustomSessionRequest = async ({
+  userId,
+  teacherId,
+  sessionsCount,
+  validityDays = 30,
+}) => {
+  const student = await getStudentByUser(userId);
+
+  const teacher = await dbService.findFirst({
+    model: "teacher",
+    where: { id: teacherId },
+    select: { id: true, sessionPrice50Min: true, isAvailable: true },
+  });
+
+  if (!teacher) throwError("TEACHER_NOT_FOUND", 404);
+
+  const pricePerSession = Number(teacher.sessionPrice50Min || 0);
+  if (pricePerSession <= 0) {
+    throwError("TEACHER_HAS_NO_SESSION_PRICE", 400);
+  }
+
+  const count = Number(sessionsCount);
+  if (!count || count < 1) {
+    throwError("INVALID_SESSIONS_COUNT", 400);
+  }
+
+  const totalPrice = Number((count * pricePerSession).toFixed(2));
+
+  return await dbService.create({
+    model: "customSessionRequest",
+    data: {
+      studentId: student.id,
+      teacherId: teacher.id,
+      sessionsCount: count,
+      pricePerSession,
+      totalPrice,
+      validityDays: Number(validityDays) || 30,
+      status: "PENDING",
+    },
+  });
+};
+
+export const getStudentCustomSessionRequests = async ({
+  userId,
+  status,
+  page = 1,
+  limit = 20,
+}) => {
+  const student = await getStudentByUser(userId);
+
+  return dbService.findManyWithPaginationAndCount({
+    model: "customSessionRequest",
+    where: {
+      studentId: student.id,
+      ...(status ? { status } : {}),
+    },
+    page,
+    limit,
+    orderBy: { createdAt: "desc" },
+    include: {
+      teacher: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              profilePhoto: true,
+              email: true,
+            },
+          },
+        },
+      },
+    },
+  });
+};
+
+export const cancelCustomSessionRequest = async ({ userId, requestId }) => {
+  const student = await getStudentByUser(userId);
+
+  const request = await dbService.findFirst({
+    model: "customSessionRequest",
+    where: { id: requestId },
+  });
+
+  if (!request) throwError("REQUEST_NOT_FOUND", 404);
+  if (request.studentId !== student.id) throwError("UNAUTHORIZED", 403);
+  if (request.status !== "PENDING") {
+    throwError("REQUEST_NOT_PENDING", 400);
+  }
+
+  return await dbService.updateOne({
+    model: "customSessionRequest",
+    where: { id: requestId, status: "PENDING" },
+    data: { status: "CANCELLED" },
+  });
+};

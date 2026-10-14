@@ -9,6 +9,7 @@ import teacherQuizRouter from "../modules/teacher/courses/quizes/quiz.routes.js"
 import teacherReviewsRouter from "../modules/teacher/reviews/reviews.routes.js";
 import teacherOfferRouter from "../modules/teacher/offers/offers.routes.js";
 import teacherPlans from "../modules/teacher/Plans/plan.routes.js";
+import teacherSessionRouter from "../modules/teacher/session/session.routes.js";
 
 const router = Router();
 router.use("/auth", teacherAuthRouter);
@@ -21,5 +22,6 @@ router.use("/certificates", teacherCertificateRouter);
 router.use("/reviews", teacherReviewsRouter);
 router.use("/offers", teacherOfferRouter);
 router.use("/plans", teacherPlans);
+router.use("/sessions", teacherSessionRouter);
 
 export default router;

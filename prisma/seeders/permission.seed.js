@@ -1,16 +1,8 @@
-import "dotenv/config";
-import { PrismaClient } from "@prisma/client";
 import {
   PERMISSIONS_DATA,
   ROLE_PERMISSIONS_MAP,
 } from "../../src/Constants/rolePermissions.constants.js";
-import { PrismaPg } from "@prisma/adapter-pg";
 
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL,
-});
-
-const prisma = new PrismaClient({ adapter });
 export async function seedPermissions(prisma, roles) {
   console.log("🌱 Seeding permissions...");
 
@@ -28,7 +20,9 @@ export async function seedPermissions(prisma, roles) {
 
   console.log("🌱 Assigning permissions to roles...");
   const permMap = Object.fromEntries(permissions.map((p) => [p.code, p.id]));
-  const rolesMap = Object.fromEntries(roles.map((r) => [(r.slug || r.name)?.toUpperCase(), r.id]));
+  const rolesMap = Object.fromEntries(
+    roles.map((r) => [(r.slug || r.name)?.toUpperCase(), r.id]),
+  );
 
   for (const [roleName, codes] of Object.entries(ROLE_PERMISSIONS_MAP)) {
     const roleId = rolesMap[roleName];
@@ -50,22 +44,31 @@ export async function seedPermissions(prisma, roles) {
   return permissions;
 }
 
-async function main() {
-  const roles = await prisma.role.findMany({
-    select: {
-      id: true,
-      slug: true,
-    },
-  });
+async function standalone() {
+  const { PrismaClient } = await import("@prisma/client");
+  const { PrismaPg } = await import("@prisma/adapter-pg");
+  const { default: pg } = await import("pg");
+  await import("dotenv/config");
 
-  await seedPermissions(prisma, roles);
-}
+  const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+  const adapter = new PrismaPg(pool);
+  const prisma = new PrismaClient({ adapter });
 
-main()
-  .catch((error) => {
+  try {
+    const roles = await prisma.role.findMany({
+      select: { id: true, slug: true },
+    });
+    console.log(`Found ${roles.length} roles:`, roles.map((r) => r.slug));
+    await seedPermissions(prisma, roles);
+  } catch (error) {
     console.error("❌ Permission seeding failed:", error);
     process.exitCode = 1;
-  })
-  .finally(async () => {
+  } finally {
     await prisma.$disconnect();
-  });
+    await pool.end();
+  }
+}
+
+if (process.argv[1]?.includes("permission.seed.js")) {
+  standalone();
+}
