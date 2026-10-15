@@ -3220,6 +3220,90 @@ Include the Bearer JWT token in the Authorization header:
         },
       },
     },
+    "/api/v1/admin/requests/{requestId}/approve": {
+      patch: {
+        summary: "Approve System Request",
+        description: "Approves a pending system request (e.g. course approval, become instructor, refund, etc.) and updates status to APPROVED.",
+        tags: ["Admin - Requests"],
+        security: bearerSecurity,
+        parameters: [uuidParam("requestId", "System Request ID")],
+        responses: {
+          ...standardResponses[200]({
+            type: "object",
+            properties: {
+              message: { type: "string", example: "REQUEST_APPROVED_SUCCESSFULLY" },
+              data: {
+                type: "object",
+                properties: {
+                  id: { type: "string", format: "uuid" },
+                  code: { type: "string", example: "REQ-0001" },
+                  tab: { type: "string", example: "STUDENT" },
+                  type: { type: "string", example: "REFUND_REQUEST" },
+                  status: { type: "string", example: "APPROVED" },
+                  actionTakenAt: { type: "string", format: "date-time" },
+                },
+              },
+            },
+          }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/admin/requests/{requestId}/reject": {
+      patch: {
+        summary: "Reject System Request",
+        description: "Rejects a pending system request with a rejection reason.",
+        tags: ["Admin - Requests"],
+        security: bearerSecurity,
+        parameters: [uuidParam("requestId", "System Request ID")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["rejectionReason"],
+                properties: {
+                  rejectionReason: {
+                    type: "string",
+                    example: "Request does not meet the eligibility criteria or invalid documents.",
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[200]({
+            type: "object",
+            properties: {
+              message: { type: "string", example: "REQUEST_REJECTED_SUCCESSFULLY" },
+              data: {
+                type: "object",
+                properties: {
+                  id: { type: "string", format: "uuid" },
+                  code: { type: "string", example: "REQ-0001" },
+                  tab: { type: "string", example: "STUDENT" },
+                  type: { type: "string", example: "REFUND_REQUEST" },
+                  status: { type: "string", example: "REJECTED" },
+                  rejectionReason: { type: "string", example: "Request does not meet the eligibility criteria." },
+                  actionTakenAt: { type: "string", format: "date-time" },
+                },
+              },
+            },
+          }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
 
     // ═══════════════════════════════════════════════════════════
     // TEACHER AUTH

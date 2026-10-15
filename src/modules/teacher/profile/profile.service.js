@@ -264,22 +264,6 @@ export const updateProfileService = async (userId, body) => {
       cipherText: updatedTeacher.user.phone,
     });
   }
- await createSystemRequest({
-    tab: requestTabEnum.TEACHER,
-    type: requestTypeEnum.PROFILE_UPDATE,
-    priority: requestPriorityEnum.MEDIUM,
-    requesterId: updatedTeacher.user.id,
-    requesterRole: requestTabEnum.TEACHER,
-    referenceId: updatedTeacher.id,
-    referenceModel: requestReferenceModelEnum.TEACHER,
-    details: {
-      fullName,
-      subject,
-      experienceYears,
-      cvUrl,
-    },
-  });
-
   return updatedTeacher;
 };
 
