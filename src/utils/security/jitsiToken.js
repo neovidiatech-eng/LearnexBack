@@ -1,31 +1,48 @@
+
 import jwt from "jsonwebtoken";
-const JITSI_APP_ID = process.env.JITSI_APP_ID;
-const JITSI_APP_SECRET = process.env.JITSI_JWT_SECRET;
-const JITSI_AUDIENCE = process.env.JITSI_AUDIENCE;
+
 export const generateJitsiToken = ({
   userId,
   roomName,
   userName,
-  userEmail,
-  isModerator
-})=>{
-  const payload = {
-    context:{
-      user:{
-        id:userId,
-        name:userName,
-        email:userEmail,
-        moderator:isModerator
-      }
-    },
-    aud:JITSI_AUDIENCE,
-    iss:JITSI_APP_ID,
-    sub:"meet.jitsi",
-    room: roomName,
-    exp:Math.floor(Date.now() / 1000) + 60 * 60 * 2,
-  };
-  return jwt.sign(payload,JITSI_APP_SECRET,{
-    algorithm:"HS256"
-  })  
-}
+  isModerator,
+  ttlSeconds = 2 * 60 * 60,
+}) => {
+  const {
+    JITSI_APP_ID,
+    JITSI_JWT_SECRET,
+    JITSI_AUDIENCE,
+  } = process.env;
 
+  if (!JITSI_APP_ID || !JITSI_JWT_SECRET || !JITSI_AUDIENCE) {
+    throw new Error("JITSI_NOT_CONFIGURED");
+  }
+
+  if (!userId || !roomName || !userName) {
+    throw new Error("JITSI_INVALID_TOKEN_PAYLOAD");
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+
+  const payload = {
+    aud: JITSI_AUDIENCE,
+    iss: JITSI_APP_ID,
+    sub: "meet.jitsi",
+    room: roomName,
+    nbf: now - 10,
+    exp: now + ttlSeconds,
+
+    context: {
+      user: {
+        id: String(userId),
+        name: userName,
+        moderator: Boolean(isModerator),
+        affiliation: isModerator ? "owner" : "member",
+      },
+    },
+  };
+
+  return jwt.sign(payload, JITSI_JWT_SECRET, {
+    algorithm: "HS256",
+  });
+};

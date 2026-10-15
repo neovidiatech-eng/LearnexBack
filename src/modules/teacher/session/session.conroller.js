@@ -142,3 +142,16 @@ export const rejectCustomRequestController = asyncHandler(async (req, res) => {
   });
 });
 
+export const joinSessionController = asyncHandler(async(req,res)=>{
+  const result = await sessionService.joinSession({
+    userId:req.user.id,
+    sessionId:req.params.sessionId,
+  })
+
+  return successResponse({
+    res,
+    status:200,
+    message:"SESSION_JOINED_SUCCESSFULLY",
+    data:result
+  })
+})

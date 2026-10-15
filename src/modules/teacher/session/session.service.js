@@ -1,7 +1,9 @@
 
+import { nanoid } from "nanoid";
 import dbService from "../../../db/db.service.js";
 import { requestStatus } from "../../../utils/Enums/session-request.enum.js";
 import { sessionStatus } from "../../../utils/Enums/sessions.enum.js";
+import { generateJitsiToken } from "../../../utils/security/jitsiToken.js";
 import { isSlotAvailable } from "../../student/session/avialbilty/avilability.service.js";
 
 const throwError = (message, status = 400) => {
@@ -148,6 +150,7 @@ export const acceptRequest = async ({ userId, requestId }) => {
         studentId: request.studentId,
         teacherSubscriptionId: activeSub.id,
         title: request.title || "Private Session",
+        roomName: `session_${nanoid(10)}`,
         startAt: request.startAt,
         endAt: request.endAt,
         status: sessionStatus.SCHEDULED,
@@ -324,6 +327,7 @@ export const startSession = async({userId,sessionId})=>{
       data: {
         status: sessionStatus.LIVE,
         actualStartAt: new Date(),
+        ...(!session.roomName ? { roomName: `session_${nanoid(10)}` } : {}),
       },
     });
   } catch (error) {
@@ -617,4 +621,59 @@ export const rejectCustomSessionRequest = async ({
   });
 };
 
+export const joinSession = async({userId,sessionId})=>{
+  const teacherId = await getTeacherId(userId);
+  const session = await dbService.findFirst({
+    model:"session",
+    where:{id:sessionId,teacherId},
+    select:{
+      id:true,
+      status:true,
+      endAt:true,
+      roomName:true,
+      teacher: { select: { user: { select: { fullName: true } } } },
+    }
+  })
+if (!session) {
+    throwError("SESSION_NOT_FOUND", 404);
+  }
+
+  if (session.status !== sessionStatus.LIVE) {
+    throwError("SESSION_NOT_JOINABLE", 409);
+  }
+
+  if (!session.roomName) {
+    throwError("ROOM_NOT_READY", 409);
+  }
+  
+  const now = Date.now();
+
+  if (now > session.endAt.getTime() + JOIN_LATE_MS) {
+    throwError("SESSION_JOIN_EXPIRED", 409);
+  }
+
+  const ttlSeconds = Math.ceil(
+    (session.endAt.getTime() + JOIN_LATE_MS - now) / 1000,
+  );
+
+  if (ttlSeconds <= 0) {
+    throwError("SESSION_JOIN_EXPIRED", 409);
+  }
+
+
+
+  const token = generateJitsiToken({
+    userId,
+    roomName:session.roomName,
+    userName:session.teacher.user.fullName,
+    isModerator:true,
+    ttlSeconds,
+  })
+  return {
+    sessionId:session.id,
+    roomName:session.roomName,
+    token,
+  }
+  
+}
 

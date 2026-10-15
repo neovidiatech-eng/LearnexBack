@@ -50,3 +50,8 @@ export const endSessionValidation = {
     sessionId: Joi.string().uuid().required(),
   }),
 };
+export const joinSession = {
+  params: Joi.object({
+    sessionId: Joi.string().uuid().required(),
+  }),
+};

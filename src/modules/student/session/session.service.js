@@ -2,9 +2,11 @@ import dbService from "../../../db/db.service.js";
 import { SESSION_DURATION_MS } from "../../../utils/constants/session.constant.js";
 import { requestStatus } from "../../../utils/Enums/session-request.enum.js";
 import { sessionStatus } from "../../../utils/Enums/sessions.enum.js";
+import { generateJitsiToken } from "../../../utils/security/jitsiToken.js";
 import { isSlotAvailable } from "../session/avialbilty/avilability.service.js";
 
 const ACTIVE_SESSION = [sessionStatus.LIVE, sessionStatus.SCHEDULED];
+const JOIN_LATE_MS = 15 * 60 * 1000;
 
 const throwError = (message, status = 400) => {
   const err = new Error(message);
@@ -248,4 +250,82 @@ export const cancelCustomSessionRequest = async ({ userId, requestId }) => {
     where: { id: requestId, status: "PENDING" },
     data: { status: "CANCELLED" },
   });
+};
+
+export const joinSession = async ({ userId, sessionId }) => {
+  const student = await dbService.findFirst({
+    model: "student",
+    where: { userId },
+    select: {
+      id: true,
+      user: { select: { fullName: true } },
+    },
+  });
+
+  if (!student) {
+    throwError("STUDENT_NOT_FOUND", 404);
+  }
+
+  const session = await dbService.findFirst({
+    model: "session",
+    where: {
+      id: sessionId,
+      studentId: student.id,
+    },
+    select: {
+      id: true,
+      status: true,
+      endAt: true,
+      roomName: true,
+      studentJoinedAt: true,
+    },
+  });
+
+  if (!session) {
+    throwError("SESSION_NOT_FOUND", 404);
+  }
+
+  if (session.status !== sessionStatus.LIVE) {
+    throwError("SESSION_NOT_JOINABLE", 409);
+  }
+
+  if (!session.roomName) {
+    throwError("ROOM_NOT_READY", 409);
+  }
+
+  const now = Date.now();
+
+  if (now > session.endAt.getTime() + JOIN_LATE_MS) {
+    throwError("SESSION_JOIN_EXPIRED", 409);
+  }
+
+  const ttlSeconds = Math.ceil(
+    (session.endAt.getTime() + JOIN_LATE_MS - now) / 1000,
+  );
+
+  if (ttlSeconds <= 0) {
+    throwError("SESSION_JOIN_EXPIRED", 409);
+  }
+
+  if (!session.studentJoinedAt) {
+    await dbService.updateOne({
+      model: "session",
+      where: { id: session.id },
+      data: { studentJoinedAt: new Date() },
+    });
+  }
+
+  const token = generateJitsiToken({
+    userId,
+    roomName: session.roomName,
+    userName: student.user?.fullName || "Student",
+    isModerator: false,
+    ttlSeconds,
+  });
+
+  return {
+    sessionId: session.id,
+    roomName: session.roomName,
+    token,
+  };
 };

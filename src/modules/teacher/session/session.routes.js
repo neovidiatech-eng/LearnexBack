@@ -74,5 +74,12 @@ router.patch(
   sessionController.rejectCustomRequestController
 );
 
+router.post(
+  "/:sessionId/join",
+  authorize(PERMISSIONS_V2.SESSIONS.JOIN),
+  validation(sessionValidation.joinSession),
+  sessionController.joinSessionController
+)
+
 export default router;
 
