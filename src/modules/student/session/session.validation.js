@@ -42,3 +42,10 @@ export const getCustomRequests = {
     limit: Joi.number().integer().min(1).max(50).default(20),
   }),
 };
+
+export const joinSession = {
+  params: Joi.object({
+    sessionId: Joi.string().uuid().required(),
+  }),
+};
+
