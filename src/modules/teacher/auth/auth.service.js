@@ -112,9 +112,11 @@ export const teacherSignupService = async (body, reqFiles) => {
     referenceId: createdTeacher.id,
     referenceModel: requestReferenceModelEnum.TEACHER,
     details: {
-      fullName,
+      bio,
+      headline,
       subject,
       experienceYears,
+      linkedinUrl,
       cvUrl,
     },
   });

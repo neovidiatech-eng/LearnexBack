@@ -11,9 +11,9 @@ router.get("/", requestsController.getAllRequests);
 
 router.get("/:requestId", requestsController.getRequestById);
 
-// router.patch("/:requestId/approve", requestsController.approveRequest);
+router.patch("/:requestId/approve", requestsController.approveRequest);
 
-// router.patch("/:requestId/reject", requestsController.rejectRequest);
+router.patch("/:requestId/reject", requestsController.rejectRequest);
 
 
 export default router;

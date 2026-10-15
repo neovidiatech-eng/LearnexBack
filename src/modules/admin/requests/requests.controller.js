@@ -35,3 +35,14 @@ export const approveRequest = asyncHandler(async (req, res) => {
     data: request,
   });
 });
+
+export const rejectRequest = asyncHandler(async (req, res) => {
+  const request = await requestService.rejectRequestService(
+    req.params.requestId,
+    req.body
+  );
+  return successResponse({
+    res,
+    data: request,
+  });
+});

@@ -1,7 +1,9 @@
 import * as db from "../../../db/db.service.js";
 import { courseStatusEnum } from "../../../utils/Enums/courseStatus.enum.js";
 import { enrollmentTypeEnum } from "../../../utils/Enums/enrollmentType.enum.js";
+import { requestPriorityEnum, requestReferenceModelEnum, requestTabEnum, requestTypeEnum } from "../../../utils/Enums/request.enum.js";
 import { coursesType } from "../../../utils/Enums/teacherCourse.enum.js";
+import { createSystemRequest } from "../../../utils/helpers/requests.helper.js";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -332,6 +334,22 @@ export const checkoutCartService = async (userId, locale = "ar") => {
         });
 
         enrolled.push(enrollment);
+
+        await createSystemRequest({
+          tab: requestTabEnum.STUDENT,
+          type: requestTypeEnum.COURSE_ENROLLMENT,
+          priority: requestPriorityEnum.HIGH,
+          requesterId: userId,
+          requesterRole: requestTabEnum.STUDENT,
+          referenceId: enrollment.id,
+          referenceModel: requestReferenceModelEnum.COURSE_ENROLLMENT,
+          details: {
+            courseId: course.id,
+            amount: enrollment.paidAmount,
+            status: enrollment.status,
+          },
+        });
+
       }
     }
   }
@@ -349,6 +367,7 @@ export const checkoutCartService = async (userId, locale = "ar") => {
     data: { totalItems: 0, totalPrice: 0 },
   });
 
+  
   return {
     totalEnrolled: enrolled.length,
     enrolled,

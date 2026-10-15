@@ -3,6 +3,8 @@ import { courseStatusEnum } from "../../../utils/Enums/courseStatus.enum.js";
 import { enrollmentTypeEnum } from "../../../utils/Enums/enrollmentType.enum.js";
 import { coursesType } from "../../../utils/Enums/teacherCourse.enum.js";
 import redis from "../../../config/redis.config.js";
+import { createSystemRequest } from "../../../utils/helpers/requests.helper.js";
+import { requestPriorityEnum, requestReferenceModelEnum, requestTabEnum, requestTypeEnum } from "../../../utils/Enums/request.enum.js";
 
 export const toggleFavouriteService = async (
   userId,
@@ -251,6 +253,21 @@ export const enrollFreeCourseService = async (userId, courseId) => {
     },
   });
 
+   await createSystemRequest({
+            tab: requestTabEnum.STUDENT,
+            type: requestTypeEnum.COURSE_ENROLLMENT,
+            priority: requestPriorityEnum.HIGH,
+            requesterId: userId,
+            requesterRole: requestTabEnum.STUDENT,
+            referenceId: enrollment.id,
+            referenceModel: requestReferenceModelEnum.COURSE_ENROLLMENT,
+            details: {
+              courseId: course.id,
+              amount: enrollment.paidAmount,
+              status: enrollment.status,
+            },
+   });
+  
   return enrollment;
 };
 

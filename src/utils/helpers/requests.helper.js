@@ -1,6 +1,5 @@
 import * as db from "../../db/db.service.js";
 import { requestStatusEnum, requestTabEnum } from "../Enums/request.enum.js";
-import { asyncHandler } from "../response.js";
 
 const generateRequestCode = async () => {
   const count = await db.count({ model: "systemRequest" });

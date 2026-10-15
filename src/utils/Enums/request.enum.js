@@ -4,15 +4,12 @@ export const requestTabEnum = Object.freeze({
   WITHDRAWAL: "WITHDRAWAL",
 });
 
-
 export const requestTypeEnum = Object.freeze({
   // Teacher Requests
   BECOME_INSTRUCTOR: "BECOME_INSTRUCTOR",
   COURSE_APPROVAL: "COURSE_APPROVAL",
   COURSE_UPDATE: "COURSE_UPDATE",
   VERIFICATION: "VERIFICATION",
-  PROFILE_UPDATE: "PROFILE_UPDATE",
-  SUPPORT: "SUPPORT",
 
   // Student Requests
   COURSE_ENROLLMENT: "COURSE_ENROLLMENT",
@@ -24,20 +21,17 @@ export const requestTypeEnum = Object.freeze({
   WITHDRAWAL_PAYOUT: "WITHDRAWAL_PAYOUT",
 });
 
-
 export const requestPriorityEnum = Object.freeze({
   HIGH: "HIGH",
   MEDIUM: "MEDIUM",
   LOW: "LOW",
 });
 
-
 export const requestStatusEnum = Object.freeze({
   PENDING: "PENDING",
   APPROVED: "APPROVED",
   REJECTED: "REJECTED",
 });
-
 
 export const requestReferenceModelEnum = Object.freeze({
   TEACHER: "Teacher",

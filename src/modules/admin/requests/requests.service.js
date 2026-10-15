@@ -1,8 +1,5 @@
 import * as db from "../../../db/db.service.js";
-import {
-  requestStatusEnum,
-  requestTabEnum,
-} from "../../../utils/Enums/request.enum.js";
+import { requestStatusEnum } from "../../../utils/Enums/request.enum.js";
 export const getRequestStatsService = async (query = {}) => {
   const { tab } = query;
   const where = tab && tab !== "all" ? { tab } : {};
@@ -104,4 +101,61 @@ export const getRequestByIdService = async (requestId) => {
   }
   return request;
 };
-export const approveRequestService = async (requestId) => {};
+
+
+export const approveRequestService = async (requestId) => {
+  const request = await db.findOne({
+    model: "systemRequest",
+    where: {id: requestId },
+  });
+  if (!request) {
+    const error = new Error("REQUEST_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+  if (request.status !== requestStatusEnum.PENDING) {
+    const error = new Error("REQUEST_ALREADY_PROCESSED");
+    error.cause = 400;
+    throw error;
+  }
+
+  const updatedRequest = await db.updateOne({
+    model: "systemRequest",
+    where: { id: requestId },
+    data: {
+      status: requestStatusEnum.APPROVED,
+    
+    },
+  });
+
+  return updatedRequest
+};
+
+export const rejectRequestService = async (requestId, body) => {
+  const { rejectionReason } = body;
+  const request = await db.findOne({
+    model: "systemRequest",
+    where: { requestId },
+  });
+  if (!request) {
+    const error = new Error("REQUEST_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+  // if (request.status !== requestStatusEnum.PENDING) {
+  //   const error = new Error("REQUEST_ALREADY_PROCESSED");
+  //   error.cause = 400;
+  //   throw error;
+  // }
+
+  const updatedRequest = await db.updateOne({
+    model: "systemRequest",
+    where: {id: requestId },
+    data: {
+      status: requestStatusEnum.REJECTED,
+      rejectionReason
+    },
+  });
+
+  return updatedRequest;
+};
