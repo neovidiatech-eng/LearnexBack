@@ -1116,10 +1116,146 @@ Include the Bearer JWT token in the Authorization header:
           },
         },
       },
+      AdminDashboardStatsResponse: {
+        type: "object",
+        properties: {
+          message: { type: "string", example: "DASHBOARD_STATS_FETCHED_SUCCESSFULLY" },
+          data: {
+            type: "object",
+            properties: {
+              cards: {
+                type: "object",
+                properties: {
+                  totalStudents: {
+                    type: "object",
+                    properties: {
+                      count: { type: "integer", example: 2580 },
+                      subTitle: { type: "string", example: "Across all courses" },
+                      growthPercent: { type: "number", example: 12.4, description: "Growth % compared to last month" },
+                    },
+                  },
+                  totalTeachers: {
+                    type: "object",
+                    properties: {
+                      count: { type: "integer", example: 48 },
+                      pendingApprovalCount: { type: "integer", example: 8, description: "Teachers pending admin review" },
+                      thisMonthCount: { type: "integer", example: 4, description: "New teachers joined this month" },
+                    },
+                  },
+                  activeCourses: {
+                    type: "object",
+                    properties: {
+                      count: { type: "integer", example: 34, description: "Published courses count" },
+                      draftCount: { type: "integer", example: 9, description: "Courses currently in draft" },
+                      thisMonthCount: { type: "integer", example: 6, description: "Courses published this month" },
+                    },
+                  },
+                  monthlyRevenue: {
+                    type: "object",
+                    properties: {
+                      amount: { type: "number", example: 98700, description: "Total revenue for the current month" },
+                      monthName: { type: "string", example: "Nov 2024" },
+                      growthPercent: { type: "number", example: 14.8, description: "Revenue growth % vs previous month" },
+                    },
+                  },
+                  activeSessions: {
+                    type: "object",
+                    properties: {
+                      count: { type: "integer", example: 1248, description: "Live/active sessions right now" },
+                      subTitle: { type: "string", example: "Right now" },
+                      growthPercent: { type: "number", example: -3.1, description: "Session growth % vs yesterday" },
+                    },
+                  },
+                },
+              },
+              charts: {
+                type: "object",
+                properties: {
+                  selectedYear: { type: "integer", example: 2026 },
+                  yearlyOverview: {
+                    type: "array",
+                    description: "Monthly enrollment and revenue stats for the selected year",
+                    items: {
+                      type: "object",
+                      properties: {
+                        month: { type: "string", example: "Oct" },
+                        enrolledStudents: { type: "integer", example: 400 },
+                        revenue: { type: "number", example: 15400 },
+                      },
+                    },
+                  },
+                  courseCategories: {
+                    type: "array",
+                    description: "Student enrollments distribution per course category",
+                    items: {
+                      type: "object",
+                      properties: {
+                        id: { type: "string", format: "uuid" },
+                        name: { type: "string", example: "Technology" },
+                        slug: { type: "string", example: "technology" },
+                        image: { type: "string", nullable: true, example: "https://learnex.com/uploads/cat.png" },
+                        enrollmentsCount: { type: "integer", example: 420 },
+                        percentage: { type: "number", example: 42 },
+                      },
+                    },
+                  },
+                },
+              },
+              recentNotifications: {
+                type: "array",
+                description: "Top 5 recent notifications for admin with localized titles and messages",
+                items: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string", format: "uuid" },
+                    type: { type: "string", example: "INFO" },
+                    priority: { type: "string", example: "HIGH" },
+                    link: { type: "string", nullable: true, example: "/courses/detail" },
+                    isRead: { type: "boolean", example: false },
+                    title: { type: "string", example: "New Student Registration" },
+                    message: { type: "string", example: "Sarah Johnson just registered for Complete Web Development 2024." },
+                    createdAt: { type: "string", format: "date-time" },
+                  },
+                },
+              },
+              recentActivities: {
+                type: "array",
+                description: "Top 5 live educational activities across the platform (enrollments, new courses published, live sessions)",
+                items: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string", example: "enrollment-550e8400-e29b-41d4-a716-446655440000" },
+                    type: { type: "string", enum: ["ENROLLMENT", "COURSE_PUBLISHED", "SESSION"], example: "ENROLLMENT" },
+                    action: { type: "string", example: "ENROLLED" },
+                    title: { type: "string", example: "Sarah Johnson enrolled in Complete Web Dev" },
+                    actor: {
+                      type: "object",
+                      properties: {
+                        id: { type: "string", format: "uuid" },
+                        name: { type: "string", example: "Sarah Johnson" },
+                        photo: { type: "string", nullable: true, example: "https://learnex.com/uploads/photo.jpg" },
+                      },
+                    },
+                    target: {
+                      type: "object",
+                      properties: {
+                        id: { type: "string", format: "uuid" },
+                        title: { type: "string", example: "Complete Web Dev" },
+                      },
+                    },
+                    createdAt: { type: "string", format: "date-time" },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
   },
   tags: [
     { name: "Admin - Auth", description: "Admin login, logout, and token refresh" },
+    { name: "Admin - Dashboard", description: "Admin dashboard metrics, overview KPI cards, charts, and live activities" },
     { name: "Admin - Students", description: "Students management, status toggling, and Excel export" },
     { name: "Admin - Teachers", description: "Teacher verification, application reviews, certificates, and course approvals" },
     { name: "Admin - Categories", description: "Course categories with multilingual translations and icons" },
@@ -1236,6 +1372,40 @@ Include the Bearer JWT token in the Authorization header:
         responses: {
           ...standardResponses[200]({ $ref: "#/components/schemas/SuccessMessageResponse" }),
           401: standardResponses[401],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // ADMIN DASHBOARD & STATS
+    // ═══════════════════════════════════════════════════════════
+    "/api/v1/admin/states": {
+      get: {
+        summary: "Get Admin Dashboard Overview Stats & Analytics",
+        tags: ["Admin - Dashboard"],
+        security: bearerSecurity,
+        parameters: [
+          {
+            in: "query",
+            name: "year",
+            schema: { type: "integer", default: 2026 },
+            description: "Calendar year for charts overview (defaults to current year)",
+            example: 2026,
+          },
+          localeQueryParam,
+        ],
+        responses: {
+          200: {
+            description: "Dashboard stats fetched successfully",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/AdminDashboardStatsResponse" },
+              },
+            },
+          },
+          401: standardResponses[401],
+          403: standardResponses[403],
           500: standardResponses[500],
         },
       },
@@ -6277,7 +6447,6 @@ export const setupSwagger = (app) => {
         docExpansion: "list",
         defaultModelsExpandDepth: 1,
         defaultModelExpandDepth: 1,
-        filter: true,
         persistAuthorization: true,
         displayRequestDuration: true,
         showExtensions: true,
