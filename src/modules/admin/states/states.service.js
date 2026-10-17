@@ -5,6 +5,7 @@ import {
   courseStatusEnum,
   enrollmentStatusEnum,
 } from "../../../utils/Enums/index.js";
+import { sessionStatus } from "../../../utils/Enums/session.enum.js";
 
 const calculateGrowthPercent = (current, previous) => {
   if (!previous || previous === 0) {
@@ -65,13 +66,17 @@ export const getStatesService = async (query = {}, locale = "en") => {
     lastMonthEnrollments,
 
     activeSessionsCount,
-    prevSessionsCount,
+    todaySessionsCount,
+    yesterdaySessionsCount,
 
     yearlyEnrollments,
     categoriesData,
     rawNotifications,
-    recentActivities,
+    recentEnrollments,
+    recentPublishedCourses,
+    recentLiveSessions,
   ] = await Promise.all([
+    // Total students & monthly comparison
     db.count({ model: "student" }),
     db.count({
       model: "student",
@@ -82,6 +87,7 @@ export const getStatesService = async (query = {}, locale = "en") => {
       where: { createdAt: { gte: startOfLastMonth, lt: endOfLastMonth } },
     }),
 
+    // Total teachers, monthly & pending review
     db.count({ model: "teacher" }),
     db.count({
       model: "teacher",
@@ -101,6 +107,7 @@ export const getStatesService = async (query = {}, locale = "en") => {
       },
     }),
 
+    // Active courses (PUBLISHED), draft courses & monthly new courses
     db.count({
       model: "course",
       where: { status: courseStatusEnum.PUBLISHED },
@@ -114,6 +121,7 @@ export const getStatesService = async (query = {}, locale = "en") => {
       where: { createdAt: { gte: startOfCurrentMonth, lt: startOfNextMonth } },
     }),
 
+    // Current & last month enrollments for revenue calculation
     db.findMany({
       model: "courseEnrollment",
       where: {
@@ -141,15 +149,37 @@ export const getStatesService = async (query = {}, locale = "en") => {
       select: { paidAmount: true },
     }),
 
+    // Active sessions right now from the session model
     db.count({
-      model: "activityLog",
-      where: { createdAt: { gte: last24Hours } },
+      model: "session",
+      where: {
+        OR: [
+          { status: sessionStatus.LIVE },
+          {
+            status: sessionStatus.SCHEDULED,
+            startAt: { lte: now.toDate() },
+            endAt: { gte: now.toDate() },
+          },
+        ],
+      },
+    }),
+    // Sessions today vs yesterday for daily comparison (-3.1% vs yesterday)
+    db.count({
+      model: "session",
+      where: {
+        startAt: { gte: last24Hours },
+        status: { not: sessionStatus.CANCELLED },
+      },
     }),
     db.count({
-      model: "activityLog",
-      where: { createdAt: { gte: prev24Hours, lt: last24Hours } },
+      model: "session",
+      where: {
+        startAt: { gte: prev24Hours, lt: last24Hours },
+        status: { not: sessionStatus.CANCELLED },
+      },
     }),
 
+    // Yearly enrollments for line & bar charts
     db.findMany({
       model: "courseEnrollment",
       where: {
@@ -164,6 +194,7 @@ export const getStatesService = async (query = {}, locale = "en") => {
       select: { enrolledAt: true, paidAmount: true },
     }),
 
+    // Categories data with course enrollments count
     db.findMany({
       model: "category",
       include: {
@@ -180,6 +211,7 @@ export const getStatesService = async (query = {}, locale = "en") => {
       },
     }),
 
+    // Recent notifications (5 items)
     db.findMany({
       model: "notification",
       take: 5,
@@ -187,21 +219,83 @@ export const getStatesService = async (query = {}, locale = "en") => {
       include: { notificationTranslations: true },
     }),
 
+    // Recent Activities 1: Recent course enrollments (e.g. "Sarah Johnson enrolled in Complete Web Dev")
     db.findMany({
-      model: "activityLog",
+      model: "courseEnrollment",
       take: 5,
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        userName: true,
-        action: true,
-        module: true,
-        status: true,
-        createdAt: true,
+      orderBy: { enrolledAt: "desc" },
+      include: {
+        student: {
+          select: {
+            id: true,
+            fullName: true,
+            profilePhoto: true,
+          },
+        },
+        course: {
+          select: {
+            id: true,
+            translations: {
+              where: locale ? { locale } : undefined,
+              select: { title: true },
+            },
+          },
+        },
+      },
+    }),
+
+    // Recent Activities 2: Recent published courses (e.g. "New Course 'UI Design' published")
+    db.findMany({
+      model: "course",
+      where: { status: courseStatusEnum.PUBLISHED },
+      take: 5,
+      orderBy: { updatedAt: "desc" },
+      include: {
+        translations: {
+          where: locale ? { locale } : undefined,
+          select: { title: true },
+        },
+        instructor: {
+          select: {
+            id: true,
+            fullName: true,
+            profilePhoto: true,
+          },
+        },
+      },
+    }),
+
+    // Recent Activities 3: Recent live/joined sessions (e.g. "Ahmed joined Advanced React")
+    db.findMany({
+      model: "session",
+      where: {
+        status: {
+          in: [
+            sessionStatus.LIVE,
+            sessionStatus.COMPLETED,
+            sessionStatus.SCHEDULED,
+          ],
+        },
+      },
+      take: 5,
+      orderBy: { updatedAt: "desc" },
+      include: {
+        student: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                fullName: true,
+                profilePhoto: true,
+              },
+            },
+          },
+        },
       },
     }),
   ]);
 
+  // Revenue calculation
   const currentMonthRevenue = currentMonthEnrollments.reduce(
     (sum, item) => sum + Number(item.paidAmount || 0),
     0,
@@ -215,6 +309,7 @@ export const getStatesService = async (query = {}, locale = "en") => {
     lastMonthRevenue,
   );
 
+  // Yearly monthly stats (enrollments & revenue per month)
   const monthlyStats = monthsNames.map((month) => ({
     month,
     enrolledStudents: 0,
@@ -222,13 +317,14 @@ export const getStatesService = async (query = {}, locale = "en") => {
   }));
 
   yearlyEnrollments.forEach((enrollment) => {
-    const monthIndex = dayjs(enrollment.enrolledAt).month(); 
+    const monthIndex = dayjs(enrollment.enrolledAt).month();
     if (monthIndex >= 0 && monthIndex < 12) {
       monthlyStats[monthIndex].enrolledStudents += 1;
       monthlyStats[monthIndex].revenue += Number(enrollment.paidAmount || 0);
     }
   });
 
+  // Category distribution calculation
   let totalCategoryEnrollments = 0;
   const categoriesDistribution = categoriesData.map((cat) => {
     const enrollmentsCount = cat.courses.reduce(
@@ -259,6 +355,7 @@ export const getStatesService = async (query = {}, locale = "en") => {
         : 0;
   });
 
+  // Format notifications
   const formattedNotifications = rawNotifications.map((n) => {
     const trans =
       n.notificationTranslations?.find((t) => t.locale === locale) ||
@@ -276,6 +373,80 @@ export const getStatesService = async (query = {}, locale = "en") => {
       createdAt: n.createdAt,
     };
   });
+
+  // Normalize recent activities from educational models (Enrollments, Published Courses, Sessions)
+  const formattedActivities = [
+    ...recentEnrollments.map((item) => {
+      const studentName = item.student?.fullName || "Student";
+      const courseTitle =
+        item.course?.translations?.[0]?.title || "Course";
+      return {
+        id: `enrollment-${item.id}`,
+        type: "ENROLLMENT",
+        action: "ENROLLED",
+        title: `${studentName} enrolled in ${courseTitle}`,
+        actor: {
+          id: item.student?.id,
+          name: studentName,
+          photo: item.student?.profilePhoto || null,
+        },
+        target: {
+          id: item.course?.id,
+          title: courseTitle,
+        },
+        createdAt: item.enrolledAt,
+      };
+    }),
+
+    ...recentPublishedCourses.map((item) => {
+      const courseTitle =
+        item.translations?.[0]?.title || "Untitled Course";
+      const instructorName = item.instructor?.fullName || "Instructor";
+      return {
+        id: `course-${item.id}`,
+        type: "COURSE_PUBLISHED",
+        action: "PUBLISHED",
+        title: `New Course '${courseTitle}' published`,
+        actor: {
+          id: item.instructor?.id,
+          name: instructorName,
+          photo: item.instructor?.profilePhoto || null,
+        },
+        target: {
+          id: item.id,
+          title: courseTitle,
+        },
+        createdAt: item.updatedAt,
+      };
+    }),
+
+    ...recentLiveSessions.map((item) => {
+      const studentName =
+        item.student?.user?.fullName || "Student";
+      const actionText =
+        item.status === sessionStatus.LIVE
+          ? "is in live session"
+          : "joined";
+      return {
+        id: `session-${item.id}`,
+        type: "SESSION",
+        action: item.status,
+        title: `${studentName} ${actionText} ${item.title}`,
+        actor: {
+          id: item.student?.user?.id,
+          name: studentName,
+          photo: item.student?.user?.profilePhoto || null,
+        },
+        target: {
+          id: item.id,
+          title: item.title,
+        },
+        createdAt: item.studentJoinedAt || item.startAt || item.updatedAt,
+      };
+    }),
+  ]
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 5);
 
   return {
     cards: {
@@ -304,20 +475,21 @@ export const getStatesService = async (query = {}, locale = "en") => {
       },
       activeSessions: {
         count: activeSessionsCount,
+        subTitle: "Right now",
         growthPercent: calculateGrowthPercent(
-          activeSessionsCount,
-          prevSessionsCount,
+          todaySessionsCount,
+          yesterdaySessionsCount,
         ),
       },
     },
 
     charts: {
       selectedYear,
-      yearlyOverview: monthlyStats, 
-      courseCategories: categoriesDistribution, 
+      yearlyOverview: monthlyStats,
+      courseCategories: categoriesDistribution,
     },
 
     recentNotifications: formattedNotifications,
-    recentActivities,
+    recentActivities: formattedActivities,
   };
 };
