@@ -43,12 +43,12 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
       take: 8,
       orderBy: { createdAt: "desc" },
       include: {
-        translations: { where: { locale } },
+        translations: true,
         category: {
           select: {
             id: true,
             slug: true,
-            translations: { where: { locale } },
+            translations: true,
           },
         },
         instructor: {
@@ -67,12 +67,12 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
       take: 8,
       orderBy: { avgRating: "desc" },
       include: {
-        translations: { where: { locale } },
+        translations: true,
         category: {
           select: {
             id: true,
             slug: true,
-            translations: { where: { locale } },
+            translations: true,
           },
         },
         instructor: {
@@ -87,6 +87,9 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
 
     db.findMany({
       model: "teacher",
+      where: {
+        user: { status: "ACTIVE" },
+      },
       take: 10,
       orderBy: { avgRating: "desc" },
       select: {
@@ -101,6 +104,7 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
             id: true,
             fullName: true,
             profilePhoto: true,
+            status: true,
           },
         },
       },
@@ -157,8 +161,21 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
 
   const mapCourse = (c) => {
     const enrollment = enrollmentMap.get(c.id);
+    const trans =
+      c.translations?.find((t) => t.locale === locale) ||
+      c.translations?.[0];
+
+    const categoryTrans =
+      c.category?.translations?.find((t) => t.locale === locale) ||
+      c.category?.translations?.[0];
+
     return {
       ...c,
+      title: trans?.title || c.title || "",
+      description: trans?.description || c.description || "",
+      categoryName: categoryTrans?.name || "",
+      instructorName: c.instructor?.fullName || "",
+      instructorPhoto: c.instructor?.profilePhoto || null,
       type: coursesType.COURSE,
       isEnrolled: !!enrollment,
       progressPercent: enrollment ? Number(enrollment.progressPercent || 0) : 0,
