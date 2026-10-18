@@ -213,6 +213,9 @@ export const bookPlanService = async ({
   }
 
   // Determine requested session count
+  const effectiveSessionsCount = Number(plan.sessionsCount || 1);
+  const isCustomized = false;
+  const sessionUnitPrice = Number(plan.teacher?.sessionPrice50Min || 0);
 
   let basePrice = Number(plan.price);
 

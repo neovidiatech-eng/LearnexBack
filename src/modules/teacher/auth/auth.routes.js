@@ -81,7 +81,7 @@ router.patch(
 
 router.get(
   "/refresh-token",
-  authentication({ tokenType: tokenTypeEnum.refresh }),
+  authentication({ tokenType: tokenTypeEnum.REFRESH }),
   authController.getNewCredentials,
 );
 
