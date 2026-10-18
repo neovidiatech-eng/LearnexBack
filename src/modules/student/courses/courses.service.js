@@ -308,12 +308,12 @@ export const getEnrolledCoursesService = async (userId, query = {}) => {
     include: {
       course: {
         include: {
-          translations: { where: { locale } },
+          translations: true,
           category: {
             select: {
               id: true,
               slug: true,
-              translations: { where: { locale } },
+              translations: true,
             },
           },
           instructor: {
@@ -324,8 +324,31 @@ export const getEnrolledCoursesService = async (userId, query = {}) => {
     },
   });
 
+  const mappedEnrolledCourses = (result.items || []).map((enrollment) => {
+    const c = enrollment.course;
+    if (!c) return enrollment;
+    const trans =
+      c.translations?.find((t) => t.locale === locale) ||
+      c.translations?.[0];
+    const categoryTrans =
+      c.category?.translations?.find((t) => t.locale === locale) ||
+      c.category?.translations?.[0];
+
+    return {
+      ...enrollment,
+      course: {
+        ...c,
+        title: trans?.title || c.title || "",
+        description: trans?.description || c.description || "",
+        categoryName: categoryTrans?.name || "",
+        instructorName: c.instructor?.fullName || "",
+        instructorPhoto: c.instructor?.profilePhoto || null,
+      },
+    };
+  });
+
   return {
-    enrolledCourses: result.items,
+    enrolledCourses: mappedEnrolledCourses,
     pagination: result.pagination,
   };
 };
@@ -393,12 +416,12 @@ export const getCourseCatalogService = async (userId, query = {}) => {
     limit: Number(limit),
     orderBy,
     include: {
-      translations: { where: { locale } },
+      translations: true,
       category: {
         select: {
           id: true,
           slug: true,
-          translations: { where: { locale } },
+          translations: true,
         },
       },
       instructor: {
@@ -427,8 +450,20 @@ export const getCourseCatalogService = async (userId, query = {}) => {
 
   const enrichedCourses = result.items.map((course) => {
     const enrollment = enrollmentMap.get(course.id);
+    const trans =
+      course.translations?.find((t) => t.locale === locale) ||
+      course.translations?.[0];
+    const categoryTrans =
+      course.category?.translations?.find((t) => t.locale === locale) ||
+      course.category?.translations?.[0];
+
     return {
       ...course,
+      title: trans?.title || course.title || "",
+      description: trans?.description || course.description || "",
+      categoryName: categoryTrans?.name || "",
+      instructorName: course.instructor?.fullName || "",
+      instructorPhoto: course.instructor?.profilePhoto || null,
       type: coursesType.COURSE,
       isEnrolled: !!enrollment,
       progressPercent: enrollment ? Number(enrollment.progressPercent || 0) : 0,
@@ -474,12 +509,12 @@ export const getCourseDetailsService = async (userId, courseId, query = {}) => {
     model: "course",
     where: { id: courseId },
     include: {
-      translations: { where: { locale } },
+      translations: true,
       category: {
         select: {
           id: true,
           slug: true,
-          translations: { where: { locale } },
+          translations: true,
         },
       },
       instructor: {
@@ -492,11 +527,11 @@ export const getCourseDetailsService = async (userId, courseId, query = {}) => {
       sections: {
         orderBy: { order: "asc" },
         include: {
-          translations: { where: { locale } },
+          translations: true,
           lessons: {
             orderBy: { order: "asc" },
             include: {
-              translations: { where: { locale } },
+              translations: true,
             },
           },
         },
@@ -516,15 +551,37 @@ export const getCourseDetailsService = async (userId, courseId, query = {}) => {
   });
   const isEnrolled = !!enrollment;
 
+  const courseTrans =
+    (course.translations || []).find((t) => t.locale === locale) ||
+    course.translations?.[0];
+  const categoryTrans =
+    (course.category?.translations || []).find((t) => t.locale === locale) ||
+    course.category?.translations?.[0];
+
   // Gate contentUrl for lessons if not enrolled and not free preview
-  const processedSections = (course.sections || []).map((section) => ({
-    ...section,
-    lessons: (section.lessons || []).map((lesson) => ({
-      ...lesson,
-      contentUrl: isEnrolled || lesson.isFreePreview ? lesson.contentUrl : null,
-      isLocked: !isEnrolled && !lesson.isFreePreview,
-    })),
-  }));
+  const processedSections = (course.sections || []).map((section) => {
+    const secTrans =
+      (section.translations || []).find((t) => t.locale === locale) ||
+      section.translations?.[0];
+
+    return {
+      ...section,
+      title: secTrans?.title || section.title || "",
+      lessons: (section.lessons || []).map((lesson) => {
+        const lesTrans =
+          (lesson.translations || []).find((t) => t.locale === locale) ||
+          lesson.translations?.[0];
+
+        return {
+          ...lesson,
+          title: lesTrans?.title || lesson.title || "",
+          description: lesTrans?.description || lesson.description || "",
+          contentUrl: isEnrolled || lesson.isFreePreview ? lesson.contentUrl : null,
+          isLocked: !isEnrolled && !lesson.isFreePreview,
+        };
+      }),
+    };
+  });
 
   const userReview = await db.findFirst({
     model: "courseReview",
@@ -534,6 +591,11 @@ export const getCourseDetailsService = async (userId, courseId, query = {}) => {
   return {
     course: {
       ...course,
+      title: courseTrans?.title || course.title || "",
+      description: courseTrans?.description || course.description || "",
+      categoryName: categoryTrans?.name || "",
+      instructorName: course.instructor?.fullName || "",
+      instructorPhoto: course.instructor?.profilePhoto || null,
       type: coursesType.COURSE,
       sections: processedSections,
     },
