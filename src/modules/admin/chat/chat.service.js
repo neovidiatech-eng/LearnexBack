@@ -38,7 +38,12 @@ export const getConversationsService = async ({
                     profilePhoto:true,
                     role:{
                         select:{
-                            name:true
+                            slug:true,
+                            roleTranslations:{
+                                select:{
+                                    name:true
+                                },
+                            }
                         },
                     },
                     student:{
@@ -69,7 +74,7 @@ export const getConversationsService = async ({
                 id:conversation.user.id,
                 fullName:conversation.user.fullName,
                 profilePhoto:conversation.user.profilePhoto,
-                role:conversation.user.role?.name??null,
+                role: conversation.user.role?.roleTranslations?.[0]?.name || conversation.user.role?.slug || null,
                 userType:conversation.user.teacher
                 ?"TEACHER"
                 :conversation.user.student
