@@ -205,33 +205,6 @@ export const updateTeacherCourse = async ({
     }
   }
 
-  let requesterId = userId;
-  if (!requesterId && teacherId) {
-    const teacher = await dbService.findFirst({
-      model: "teacher",
-      where: { id: teacherId },
-      select: { userId: true },
-    });
-    requesterId = teacher?.userId;
-  }
-
-  if (requesterId) {
-    await createSystemRequest({
-      tab: requestTabEnum.TEACHER,
-      type: requestTypeEnum.COURSE_UPDATE,
-      priority: requestPriorityEnum.MEDIUM,
-      requesterId,
-      requesterRole: requestTabEnum.TEACHER,
-      referenceId: updateCourse.id,
-      referenceModel: requestReferenceModelEnum.TEACHER_COURSE,
-      details: {
-        courseName: updateCourse.name,
-        price: updateCourse.price,
-        totalHours: updateCourse.totalHours,
-      },
-    });
-  }
-
   return {
     ...updateCourse,
     type: coursesType.TEACHER_COURSE,

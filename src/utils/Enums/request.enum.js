@@ -8,7 +8,6 @@ export const requestTypeEnum = Object.freeze({
   // Teacher Requests
   BECOME_INSTRUCTOR: "BECOME_INSTRUCTOR",
   COURSE_APPROVAL: "COURSE_APPROVAL",
-  COURSE_UPDATE: "COURSE_UPDATE",
   VERIFICATION: "VERIFICATION",
 
   // Student Requests
