@@ -14,6 +14,7 @@
     "seed": "node prisma/seed.js",
     "seed:Permission": "node prisma/seeders/permission.seed.js",
     "seed:sessions": "node prisma/seeders/sessions.seed.js",
+    "seed:chat": "node prisma/seeders/chat.seed.js",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:build": "docker compose build",
@@ -51,6 +52,7 @@
     "nodemailer": "^9.0.6",
     "pg": "^8.23.0",
     "slugify": "^1.6.9",
+    "socket.io": "^4.8.4",
     "swagger-jsdoc": "^6.3.0",
     "swagger-ui-express": "^5.0.1"
   },
