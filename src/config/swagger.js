@@ -1343,6 +1343,54 @@ Include the Bearer JWT token in the Authorization header:
           },
         },
       },
+      AdminConversationUserDTO: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid", example: "450e8400-e29b-41d4-a716-446655440001" },
+          fullName: { type: "string", example: "Youssef Mahmoud" },
+          profilePhoto: { type: "string", nullable: true, example: "https://example.com/avatar.jpg" },
+          role: { type: "string", nullable: true, example: "STUDENT" },
+          userType: { type: "string", enum: ["STUDENT", "TEACHER", "OTHER"], example: "STUDENT" },
+        },
+      },
+      AdminConversationItemDTO: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440000" },
+          userId: { type: "string", format: "uuid", example: "450e8400-e29b-41d4-a716-446655440001" },
+          user: { $ref: "#/components/schemas/AdminConversationUserDTO" },
+          lastMessage: { type: "string", nullable: true, example: "السلام عليكم، هل يمكن تقسيط الدبلومة الشاملة؟" },
+          lastMessageAt: { type: "string", format: "date-time", nullable: true, example: "2026-10-18T12:30:00.000Z" },
+          unreadAdminCount: { type: "integer", example: 1 },
+          unreadUserCount: { type: "integer", example: 0 },
+          createdAt: { type: "string", format: "date-time", example: "2026-10-17T10:00:00.000Z" },
+        },
+      },
+      AdminConversationsResponseDTO: {
+        type: "object",
+        properties: {
+          message: { type: "string", example: "CONVERSATION_RETRIEVED_SUCCESSFULLY" },
+          data: {
+            type: "object",
+            properties: {
+              conversations: {
+                type: "array",
+                items: { $ref: "#/components/schemas/AdminConversationItemDTO" },
+              },
+              pagination: {
+                type: "object",
+                properties: {
+                  page: { type: "integer", example: 1 },
+                  limit: { type: "integer", example: 20 },
+                  totalItems: { type: "integer", example: 5 },
+                  totalPages: { type: "integer", example: 1 },
+                  hasNextPage: { type: "boolean", example: false },
+                },
+              },
+            },
+          },
+        },
+      },
     },
   },
   tags: [
@@ -1362,6 +1410,7 @@ Include the Bearer JWT token in the Authorization header:
     { name: "Admin - Settings & CMS", description: "App metadata, logo branding, and static CMS pages" },
     { name: "Admin - Requests", description: "Admin requests management, overview statistics, approvals, and rejections" },
     { name: "Admin - Sessions", description: "Admin monitoring of sessions (today, upcoming, history)" },
+    { name: "Admin - Chat", description: "Admin customer support conversations, user messaging, and live chat" },
 
     { name: "Teacher - Auth", description: "Teacher registration with CV upload, login, and password recovery" },
     { name: "Teacher - Profile", description: "Teacher bio, hourly session pricing, avatar uploads, and visibility" },
@@ -3631,8 +3680,51 @@ Include the Bearer JWT token in the Authorization header:
     },
 
     // ═══════════════════════════════════════════════════════════
+    // ADMIN CHAT
+    // ═══════════════════════════════════════════════════════════
+    "/api/v1/admin/chat/conversations": {
+      get: {
+        summary: "Get Admin Conversations List",
+        description: "Retrieve paginated list of conversations between admin and users (students & teachers) with unread message counters, latest message preview, and search by user full name.",
+        tags: ["Admin - Chat"],
+        security: bearerSecurity,
+        parameters: [
+          {
+            in: "query",
+            name: "search",
+            schema: { type: "string" },
+            description: "Search keyword matching user full name",
+            example: "Youssef",
+          },
+          {
+            in: "query",
+            name: "page",
+            schema: { type: "integer", minimum: 1, default: 1 },
+            description: "Page number for pagination",
+            example: 1,
+          },
+          {
+            in: "query",
+            name: "limit",
+            schema: { type: "integer", minimum: 1, maximum: 50, default: 20 },
+            description: "Number of records per page (max 50)",
+            example: 20,
+          },
+        ],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/AdminConversationsResponseDTO" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    // ═══════════════════════════════════════════════════════════
     // TEACHER AUTH
     // ═══════════════════════════════════════════════════════════
+
     "/api/v1/teacher/auth/signup": {
       post: {
         summary: "Teacher Signup Application",

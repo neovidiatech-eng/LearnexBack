@@ -474,7 +474,27 @@ export const PERMISSIONS_DATA = [
     resource: "sessionRequests",
     action: "reject",
   },
+  // Chat
+  {
+    code: PERMISSIONS_V2.CHAT.READ,
+    name: "Read Chat Conversations",
+    resource: "chat",
+    action: "read",
+  },
+  {
+    code: PERMISSIONS_V2.CHAT.CREATE,
+    name: "Create Chat Messages",
+    resource: "chat",
+    action: "create",
+  },
+  {
+    code: PERMISSIONS_V2.CHAT.DELETE,
+    name: "Delete Chat Messages",
+    resource: "chat",
+    action: "delete",
+  },
 ];
+
 
 export const ROLE_PERMISSIONS_MAP = {
   ADMIN: ALL_PERMISSION_CODES,
