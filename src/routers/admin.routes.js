@@ -15,6 +15,7 @@ import adminStatesRouter from "../modules/admin/states/states.routes.js";
 import adminPlansRouter from "../modules/admin/Plans/plan.routes.js";
 import adminReviewRouter from "../modules/admin/reviews/reviews.routes.js";
 import adminRequestsRouter from "../modules/admin/requests/requests.routes.js";
+import adminSessionsRouter from "../modules/admin/sessions/session.routes.js";
 
 const router = Router();
 router.use("/auth", adminAuthRouter);
@@ -32,7 +33,6 @@ router.use("/states",adminStatesRouter);
 router.use("/plans",adminPlansRouter);
 router.use("/reviews",adminReviewRouter);
 router.use("/requests", adminRequestsRouter);
+router.use("/sessions", adminSessionsRouter);
 
-
-
-export default router
+export default router;
