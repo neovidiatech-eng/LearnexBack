@@ -1845,51 +1845,7 @@ Include the Bearer JWT token in the Authorization header:
         },
       },
     },
-    "/api/v1/admin/teachers/requests/{teacherId}/approve": {
-      patch: {
-        summary: "Approve Teacher Application",
-        tags: ["Admin - Teachers"],
-        security: bearerSecurity,
-        parameters: [uuidParam("teacherId", "Teacher ID")],
-        responses: {
-          ...standardResponses[200]({ $ref: "#/components/schemas/SuccessMessageResponse" }),
-          401: standardResponses[401],
-          403: standardResponses[403],
-          404: standardResponses[404],
-          500: standardResponses[500],
-        },
-      },
-    },
-    "/api/v1/admin/teachers/requests/{teacherId}/reject": {
-      patch: {
-        summary: "Reject Teacher Application",
-        tags: ["Admin - Teachers"],
-        security: bearerSecurity,
-        parameters: [uuidParam("teacherId", "Teacher ID")],
-        requestBody: {
-          required: true,
-          content: {
-            "application/json": {
-              schema: {
-                type: "object",
-                required: ["rejectionReason"],
-                properties: {
-                  rejectionReason: { type: "string", minLength: 5, example: "Incomplete CV documentation." },
-                },
-              },
-            },
-          },
-        },
-        responses: {
-          ...standardResponses[200]({ $ref: "#/components/schemas/SuccessMessageResponse" }),
-          400: standardResponses[400],
-          401: standardResponses[401],
-          403: standardResponses[403],
-          404: standardResponses[404],
-          500: standardResponses[500],
-        },
-      },
-    },
+  
     "/api/v1/admin/teachers/certificate/{certificateId}/verify": {
       patch: {
         summary: "Verify Teacher Certificate",
