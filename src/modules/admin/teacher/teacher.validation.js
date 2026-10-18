@@ -121,31 +121,6 @@ export const getTeacherRequestDetails = {
     .options({ allowUnknown: false }),
 };
 
-export const approveTeacherConfirm = {
-  params: joi
-    .object({
-      teacherId: generalFields.id.required(),
-    })
-    .required()
-    .options({ allowUnknown: false }),
-};
-
-
-export const rejectTeacherConfirm = {
-  params: joi
-    .object({
-      teacherId: generalFields.id.required(),
-    })
-    .required()
-    .options({ allowUnknown: false }),
-
-  body: joi
-    .object({
-      rejectionReason: joi.string().min(5).max(1000).trim().required(),
-    })
-    .required()
-    .options({ allowUnknown: false }),
-};
 
 export const changeTeacherCourseStatusSchema = {
   params: joi.object({

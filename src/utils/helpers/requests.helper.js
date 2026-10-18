@@ -25,7 +25,7 @@ export const createSystemRequest = async ({
       tab,
       type,
       priority,
-      status: requestStatusEnum.PENDING,
+      status: requestStatusEnum.PENDING_REVIEW,
       requesterId,
       requesterRole,
       referenceId,

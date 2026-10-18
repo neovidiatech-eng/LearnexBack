@@ -20,9 +20,16 @@ export async function seedChat(prisma, students = [], teachers = []) {
     });
   }
 
+  const youssef = allStudents.find((s) => s.fullName?.includes("Youssef")) || allStudents[0];
+  const nour = allStudents.find((s) => s.fullName?.includes("Nour")) || allStudents[1];
+  const karim = allStudents.find((s) => s.fullName?.includes("Karim")) || allStudents[2];
+  const ahmed = allTeachers.find((t) => t.fullName?.includes("Ahmed")) || allTeachers[0];
+  const sara = allTeachers.find((t) => t.fullName?.includes("Sara")) || allTeachers[1];
+
   const sampleConversations = [
     {
-      user: allStudents[0],
+      user: youssef,
+
       lastMessage: "السلام عليكم، هل يمكن تقسيط الدبلومة الشاملة؟",
       unreadAdminCount: 1,
       unreadUserCount: 0,
@@ -38,7 +45,7 @@ export async function seedChat(prisma, students = [], teachers = []) {
       ],
     },
     {
-      user: allStudents[1],
+      user: nour,
       lastMessage: "شكراً جزيلاً للدعم الفني، تم تفعيل الكورس بنجاح.",
       unreadAdminCount: 0,
       unreadUserCount: 0,
@@ -54,7 +61,7 @@ export async function seedChat(prisma, students = [], teachers = []) {
       ],
     },
     {
-      user: allStudents[2],
+      user: karim,
       lastMessage: "ميعاد الجلسة المباشرة القادمة متى سيكون بالضبط؟",
       unreadAdminCount: 2,
       unreadUserCount: 0,
@@ -66,7 +73,7 @@ export async function seedChat(prisma, students = [], teachers = []) {
       ],
     },
     {
-      user: allTeachers[0],
+      user: ahmed,
       lastMessage: "تم رفع محتوى القسم الثالث من كورس Node.js بانتظار المراجعة والاعتماد.",
       unreadAdminCount: 1,
       unreadUserCount: 0,
@@ -82,7 +89,7 @@ export async function seedChat(prisma, students = [], teachers = []) {
       ],
     },
     {
-      user: allTeachers[1],
+      user: sara,
       lastMessage: "أريد تحديث خطة الأسعار وساعات العمل للجلسات الفردية.",
       unreadAdminCount: 0,
       unreadUserCount: 1,

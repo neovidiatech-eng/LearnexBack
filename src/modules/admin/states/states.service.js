@@ -31,8 +31,11 @@ export const getStatesService = async (query = {}, locale = "en") => {
     .startOf("year")
     .toDate();
 
+  // now         ==> 17 oct 8:00 pm
+  // last24Hours ==> 16 oct 8:00 pm
+  // prev24Hours ==> 15 oct 8:00 pm
   const last24Hours = now.subtract(24, "hour").toDate();
-  const prev24Hours = now.subtract(48, "hour").toDate();
+  const prev24Hours = now.subtract(48, "hour").toDate(); //48 from now to clear it & 24 from last24Hours
 
   const monthsNames = [
     "Jan",
@@ -116,6 +119,7 @@ export const getStatesService = async (query = {}, locale = "en") => {
       model: "course",
       where: { status: courseStatusEnum.DRAFT },
     }),
+    //courses in current month
     db.count({
       model: "course",
       where: { createdAt: { gte: startOfCurrentMonth, lt: startOfNextMonth } },
@@ -135,6 +139,7 @@ export const getStatesService = async (query = {}, locale = "en") => {
       },
       select: { paidAmount: true },
     }),
+
     db.findMany({
       model: "courseEnrollment",
       where: {
@@ -219,7 +224,7 @@ export const getStatesService = async (query = {}, locale = "en") => {
       include: { notificationTranslations: true },
     }),
 
-    // Recent Activities 1: Recent course enrollments (e.g. "Sarah Johnson enrolled in Complete Web Dev")
+    // Recent Activities 1: Recent course enrollments
     db.findMany({
       model: "courseEnrollment",
       take: 5,
@@ -244,7 +249,7 @@ export const getStatesService = async (query = {}, locale = "en") => {
       },
     }),
 
-    // Recent Activities 2: Recent published courses (e.g. "New Course 'UI Design' published")
+    // Recent Activities 2: Recent published courses
     db.findMany({
       model: "course",
       where: { status: courseStatusEnum.PUBLISHED },
@@ -265,7 +270,7 @@ export const getStatesService = async (query = {}, locale = "en") => {
       },
     }),
 
-    // Recent Activities 3: Recent live/joined sessions (e.g. "Ahmed joined Advanced React")
+    // Recent Activities 3: Recent live/joined sessions
     db.findMany({
       model: "session",
       where: {
@@ -304,6 +309,8 @@ export const getStatesService = async (query = {}, locale = "en") => {
     (sum, item) => sum + Number(item.paidAmount || 0),
     0,
   );
+
+  //grows +14.8% vs last
   const monthlyRevenueGrowth = calculateGrowthPercent(
     currentMonthRevenue,
     lastMonthRevenue,
@@ -316,6 +323,7 @@ export const getStatesService = async (query = {}, locale = "en") => {
     revenue: 0,
   }));
 
+  //توزيع اشتراكات السنة ع الشهور
   yearlyEnrollments.forEach((enrollment) => {
     const monthIndex = dayjs(enrollment.enrolledAt).month();
     if (monthIndex >= 0 && monthIndex < 12) {
@@ -378,8 +386,7 @@ export const getStatesService = async (query = {}, locale = "en") => {
   const formattedActivities = [
     ...recentEnrollments.map((item) => {
       const studentName = item.student?.fullName || "Student";
-      const courseTitle =
-        item.course?.translations?.[0]?.title || "Course";
+      const courseTitle = item.course?.translations?.[0]?.title || "Course";
       return {
         id: `enrollment-${item.id}`,
         type: "ENROLLMENT",
@@ -399,8 +406,7 @@ export const getStatesService = async (query = {}, locale = "en") => {
     }),
 
     ...recentPublishedCourses.map((item) => {
-      const courseTitle =
-        item.translations?.[0]?.title || "Untitled Course";
+      const courseTitle = item.translations?.[0]?.title || "Untitled Course";
       const instructorName = item.instructor?.fullName || "Instructor";
       return {
         id: `course-${item.id}`,
@@ -421,12 +427,9 @@ export const getStatesService = async (query = {}, locale = "en") => {
     }),
 
     ...recentLiveSessions.map((item) => {
-      const studentName =
-        item.student?.user?.fullName || "Student";
+      const studentName = item.student?.user?.fullName || "Student";
       const actionText =
-        item.status === sessionStatus.LIVE
-          ? "is in live session"
-          : "joined";
+        item.status === sessionStatus.LIVE ? "is in live session" : "joined";
       return {
         id: `session-${item.id}`,
         type: "SESSION",

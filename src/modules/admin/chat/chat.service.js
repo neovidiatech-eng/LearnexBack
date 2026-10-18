@@ -6,10 +6,11 @@ export const getConversationsService = async ({
     limit = 20,
 }) => {
     const where = {};
-    if(search?.trim()){
+    const trimmedSearch = search?.trim();
+    if(trimmedSearch && trimmedSearch !== "undefined" && trimmedSearch !== "null"){
         where.user = {
             fullName:{
-                contains:search.trim(),
+                contains:trimmedSearch,
                 mode:"insensitive",
             }
         }
