@@ -1,0 +1,30 @@
+model conversation{
+    id                String              @id @default(uuid())
+    userId            String              @unique 
+    user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+    lastMessage       String?
+    lastMessageAt     DateTime?
+    unreadAdminCount  Int                 @default(0)
+    unreadUserCount   Int                 @default(0)
+    createdAt         DateTime            @default(now())
+    updatedAt         DateTime            @updatedAt
+    messages          message[]
+    
+    @@index([lastMessageAt])
+    @@map("conversations")
+}
+
+model message{
+    id              String       @id @default(uuid())
+    content         String    
+    conversationId  String
+    senderId        String
+    sender          User    @relation(fields: [senderId], references: [id], onDelete: Cascade)
+    conversation    conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+    createdAt       DateTime     @default(now())
+    updatedAt       DateTime     @updatedAt
+    
+    @@index([conversationId, createdAt])
+    @@index([senderId])
+    @@map("messages")
+}

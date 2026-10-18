@@ -35,6 +35,8 @@ model User {
   @@index([status])
   @@index([email])
   @@map("users")
+  conversations conversation[]
+  messages message[]
 }
 
 model Student {

@@ -131,11 +131,19 @@ export const PERMISSIONS_V2 = {
     START: "sessions:start",
     END: "sessions:end",
   },
-  SESSIONREQUESTS: {
-     CREATE: "sessionRequests:create",
-     CANCEL: "sessionRequests:cancel",
-     VIEW: "sessionRequests:view",
-     ACCEPT: "sessionRequests:accept",
-     REJECT: "sessionRequests:reject",
+   SESSIONREQUESTS: {
+      CREATE: "sessionRequests:create",
+      CANCEL: "sessionRequests:cancel",
+      VIEW: "sessionRequests:view",
+      ACCEPT: "sessionRequests:accept",
+      REJECT: "sessionRequests:reject",
+    },
+ 
+   // Chat Management
+   CHAT: {
+     READ: "chat:read",
+     CREATE: "chat:create",
+     DELETE: "chat:delete",
    },
-};
+ };
+

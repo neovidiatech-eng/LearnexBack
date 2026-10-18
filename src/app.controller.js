@@ -11,6 +11,7 @@ import router from "./routers/index.routes.js";
 import { globalErrorHandling } from "./utils/response.js";
 import { i18nMiddleware } from "./i18n/middleware.js";
 import { getAdmin } from "./utils/firebase/index.js";
+import { Server } from "socket.io";
 
 const bootstrap = async () => {
   const app = express();
