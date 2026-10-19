@@ -12,6 +12,7 @@ import adminCouponRouter from "../modules/admin/coupons/coupon.route.js"
 import adminOfferRouter from "../modules/admin/offers/offers.routes.js";
 import adminSettingsRouter from "../modules/admin/settings/settings.routes.js";
 import adminStatesRouter from "../modules/admin/states/states.routes.js";
+import adminReportsRouter from "../modules/admin/reports/reports.routes.js";
 import adminPlansRouter from "../modules/admin/Plans/plan.routes.js";
 import adminReviewRouter from "../modules/admin/reviews/reviews.routes.js";
 import adminRequestsRouter from "../modules/admin/requests/requests.routes.js";
@@ -31,6 +32,7 @@ router.use("/offers",adminOfferRouter)
 router.use("/coupons",adminCouponRouter);
 router.use("/settings",adminSettingsRouter);
 router.use("/states",adminStatesRouter);
+router.use("/reports",adminReportsRouter);
 router.use("/plans",adminPlansRouter);
 router.use("/reviews",adminReviewRouter);
 router.use("/requests", adminRequestsRouter);

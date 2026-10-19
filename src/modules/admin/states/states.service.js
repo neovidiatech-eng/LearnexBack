@@ -1,41 +1,23 @@
 import * as db from "../../../db/db.service.js";
 import dayjs from "dayjs";
 import {
-  userStatusEnum,
+
   courseStatusEnum,
   enrollmentStatusEnum,
 } from "../../../utils/Enums/index.js";
 import { sessionStatus } from "../../../utils/Enums/session.enum.js";
+import {  getCardsAnalytics } from "../../../utils/helpers/generalStats.js";
 
-const calculateGrowthPercent = (current, previous) => {
-  if (!previous || previous === 0) {
-    return current > 0 ? 100 : 0;
-  }
-  const growth = ((current - previous) / previous) * 100;
-  return Number(growth.toFixed(1));
-};
+
 
 export const getStatesService = async (query = {}, locale = "en") => {
   const now = dayjs();
   const selectedYear = query.year ? Number(query.year) : now.year();
-
-  const startOfCurrentMonth = now.startOf("month").toDate();
-  const startOfNextMonth = now.add(1, "month").startOf("month").toDate();
-
-  const startOfLastMonth = now.subtract(1, "month").startOf("month").toDate();
-  const endOfLastMonth = startOfCurrentMonth;
-
   const startOfYear = dayjs().year(selectedYear).startOf("year").toDate();
   const endOfYear = dayjs()
     .year(selectedYear + 1)
     .startOf("year")
     .toDate();
-
-  // now         ==> 17 oct 8:00 pm
-  // last24Hours ==> 16 oct 8:00 pm
-  // prev24Hours ==> 15 oct 8:00 pm
-  const last24Hours = now.subtract(24, "hour").toDate();
-  const prev24Hours = now.subtract(48, "hour").toDate(); //48 from now to clear it & 24 from last24Hours
 
   const monthsNames = [
     "Jan",
@@ -53,25 +35,7 @@ export const getStatesService = async (query = {}, locale = "en") => {
   ];
 
   const [
-    totalStudentsCount,
-    currentMonthStudentsCount,
-    lastMonthStudentsCount,
-
-    totalTeachersCount,
-    currentMonthTeachersCount,
-    pendingTeachersCount,
-
-    activeCoursesCount,
-    draftCoursesCount,
-    currentMonthCoursesCount,
-
-    currentMonthEnrollments,
-    lastMonthEnrollments,
-
-    activeSessionsCount,
-    todaySessionsCount,
-    yesterdaySessionsCount,
-
+    cards,
     yearlyEnrollments,
     categoriesData,
     rawNotifications,
@@ -79,110 +43,7 @@ export const getStatesService = async (query = {}, locale = "en") => {
     recentPublishedCourses,
     recentLiveSessions,
   ] = await Promise.all([
-    // Total students & monthly comparison
-    db.count({ model: "student" }),
-    db.count({
-      model: "student",
-      where: { createdAt: { gte: startOfCurrentMonth, lt: startOfNextMonth } },
-    }),
-    db.count({
-      model: "student",
-      where: { createdAt: { gte: startOfLastMonth, lt: endOfLastMonth } },
-    }),
-
-    // Total teachers, monthly & pending review
-    db.count({ model: "teacher" }),
-    db.count({
-      model: "teacher",
-      where: { createdAt: { gte: startOfCurrentMonth, lt: startOfNextMonth } },
-    }),
-    db.count({
-      model: "teacher",
-      where: {
-        user: {
-          status: {
-            in: [
-              userStatusEnum.PENDING_REVIEW,
-              userStatusEnum.PENDING_VERIFICATION,
-            ],
-          },
-        },
-      },
-    }),
-
-    // Active courses (PUBLISHED), draft courses & monthly new courses
-    db.count({
-      model: "course",
-      where: { status: courseStatusEnum.PUBLISHED },
-    }),
-    db.count({
-      model: "course",
-      where: { status: courseStatusEnum.DRAFT },
-    }),
-    //courses in current month
-    db.count({
-      model: "course",
-      where: { createdAt: { gte: startOfCurrentMonth, lt: startOfNextMonth } },
-    }),
-
-    // Current & last month enrollments for revenue calculation
-    db.findMany({
-      model: "courseEnrollment",
-      where: {
-        enrolledAt: { gte: startOfCurrentMonth, lt: startOfNextMonth },
-        status: {
-          notIn: [
-            enrollmentStatusEnum.CANCELLED,
-            enrollmentStatusEnum.REFUNDED,
-          ],
-        },
-      },
-      select: { paidAmount: true },
-    }),
-
-    db.findMany({
-      model: "courseEnrollment",
-      where: {
-        enrolledAt: { gte: startOfLastMonth, lt: endOfLastMonth },
-        status: {
-          notIn: [
-            enrollmentStatusEnum.CANCELLED,
-            enrollmentStatusEnum.REFUNDED,
-          ],
-        },
-      },
-      select: { paidAmount: true },
-    }),
-
-    // Active sessions right now from the session model
-    db.count({
-      model: "session",
-      where: {
-        OR: [
-          { status: sessionStatus.LIVE },
-          {
-            status: sessionStatus.SCHEDULED,
-            startAt: { lte: now.toDate() },
-            endAt: { gte: now.toDate() },
-          },
-        ],
-      },
-    }),
-    // Sessions today vs yesterday for daily comparison (-3.1% vs yesterday)
-    db.count({
-      model: "session",
-      where: {
-        startAt: { gte: last24Hours },
-        status: { not: sessionStatus.CANCELLED },
-      },
-    }),
-    db.count({
-      model: "session",
-      where: {
-        startAt: { gte: prev24Hours, lt: last24Hours },
-        status: { not: sessionStatus.CANCELLED },
-      },
-    }),
+getCardsAnalytics({now}),
 
     // Yearly enrollments for line & bar charts
     db.findMany({
@@ -300,21 +161,7 @@ export const getStatesService = async (query = {}, locale = "en") => {
     }),
   ]);
 
-  // Revenue calculation
-  const currentMonthRevenue = currentMonthEnrollments.reduce(
-    (sum, item) => sum + Number(item.paidAmount || 0),
-    0,
-  );
-  const lastMonthRevenue = lastMonthEnrollments.reduce(
-    (sum, item) => sum + Number(item.paidAmount || 0),
-    0,
-  );
-
-  //grows +14.8% vs last
-  const monthlyRevenueGrowth = calculateGrowthPercent(
-    currentMonthRevenue,
-    lastMonthRevenue,
-  );
+ 
 
   // Yearly monthly stats (enrollments & revenue per month)
   const monthlyStats = monthsNames.map((month) => ({
@@ -452,40 +299,7 @@ export const getStatesService = async (query = {}, locale = "en") => {
     .slice(0, 5);
 
   return {
-    cards: {
-      totalStudents: {
-        count: totalStudentsCount,
-        subTitle: "Across all courses",
-        growthPercent: calculateGrowthPercent(
-          currentMonthStudentsCount,
-          lastMonthStudentsCount,
-        ),
-      },
-      totalTeachers: {
-        count: totalTeachersCount,
-        pendingApprovalCount: pendingTeachersCount,
-        thisMonthCount: currentMonthTeachersCount,
-      },
-      activeCourses: {
-        count: activeCoursesCount,
-        draftCount: draftCoursesCount,
-        thisMonthCount: currentMonthCoursesCount,
-      },
-      monthlyRevenue: {
-        amount: currentMonthRevenue,
-        monthName: now.format("MMM YYYY"),
-        growthPercent: monthlyRevenueGrowth,
-      },
-      activeSessions: {
-        count: activeSessionsCount,
-        subTitle: "Right now",
-        growthPercent: calculateGrowthPercent(
-          todaySessionsCount,
-          yesterdaySessionsCount,
-        ),
-      },
-    },
-
+    cards,
     charts: {
       selectedYear,
       yearlyOverview: monthlyStats,
