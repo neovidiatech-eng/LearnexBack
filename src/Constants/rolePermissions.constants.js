@@ -14,6 +14,13 @@ export const PERMISSIONS_DATA = [
     resource: "dashboard",
     action: "read",
   },
+  //reports
+  {
+    code: PERMISSIONS_V2.REPORTS.READ,
+    name: "Read Reports Analytics",
+    resource: "reports",
+    action: "read",
+  },
 
   // Categories
   {

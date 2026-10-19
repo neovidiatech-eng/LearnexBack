@@ -7,7 +7,9 @@ export const PERMISSIONS_V2 = {
   DASHBOARD: {
     READ: "dashboard:read",
   },
-
+  REPORTS: {
+  READ:"reports:read"
+},
   // Category Management
   CATEGORIES: {
     READ: "categories:read",
