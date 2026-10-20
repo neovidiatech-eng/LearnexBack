@@ -128,11 +128,75 @@ export const getTeacherByIdService = async ({ teacherId, lang }) => {
       },
     },
   };
-  const teacher = await db.findFirst({
+  let teacher = await db.findFirst({
     model: "teacher",
-    where: { id: teacherId },
+    where: {
+      OR: [
+        { id: teacherId },
+        { userId: teacherId },
+      ],
+    },
     select,
   });
+
+  if (!teacher) {
+    const user = await db.findFirst({
+      model: "user",
+      where: { id: teacherId },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        phone: true,
+        country: true,
+        status: true,
+        profilePhoto: true,
+        teacher: { select },
+        courses: {
+          where: { status: "PUBLISHED" },
+          select: {
+            id: true,
+            thumbnail: true,
+            originalPrice: true,
+            salePrice: true,
+            durationHours: true,
+            totalLessonsCount: true,
+            translations: true,
+          },
+        },
+      },
+    });
+
+    if (user?.teacher) {
+      teacher = user.teacher;
+    } else if (user) {
+      teacher = {
+        id: user.id,
+        subject: "Instructor",
+        avgRating: 5.0,
+        totalStudentsCount: 0,
+        totalCoursesCount: user.courses?.length || 0,
+        experienceYears: 1,
+        bio: "",
+        linkedinUrl: null,
+        cvUrl: null,
+        introVideoUrl: null,
+        createdAt: new Date(),
+        courses: [],
+        user: {
+          id: user.id,
+          fullName: user.fullName,
+          email: user.email,
+          phone: user.phone,
+          country: user.country,
+          status: user.status,
+          profilePhoto: user.profilePhoto,
+          courses: user.courses || [],
+        },
+        sessionPlans: [],
+      };
+    }
+  }
 
   if (!teacher) {
     const error = new Error("TEACHER_NOT_FOUND");
