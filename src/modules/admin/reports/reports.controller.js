@@ -9,3 +9,19 @@ export const getReports = asyncHandler(async (req, res) => {
     data: result,
   });
 });
+
+
+export const getReportsExcel = asyncHandler(async (req, res) => {
+  const workbook = await studentService.exportReportsToExcelService(req.query);
+
+  const filename = `reports_export_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  );
+  res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+
+  await workbook.xlsx.write(res);
+  res.end();
+});

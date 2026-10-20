@@ -15,7 +15,7 @@ export const ValidEnrollmentStatus = {
   notIn: [enrollmentStatusEnum.CANCELLED, enrollmentStatusEnum.REFUNDED],
 };
 const revenueCalc = (items) =>
-  items.reduce((sum, item) => sum + Number(item.paidAmount||0),0);
+  items.reduce((sum, item) => sum + Number(item.paidAmount || 0), 0);
 
 export const getCardsAnalytics = async ({ now = dayjs() } = {}) => {
   const startOfCurrentMonth = now.startOf("month").toDate();
@@ -26,6 +26,7 @@ export const getCardsAnalytics = async ({ now = dayjs() } = {}) => {
   const prev24Hours = now.subtract(48, "hour").toDate();
   const thisMonth = { gte: startOfCurrentMonth, lt: startOfNextMonth };
   const lastMonth = { gte: startOfLastMonth, lt: endOfLastMonth };
+
   const [
     totalStudentsCount,
     currentMonthStudentsCount,
@@ -76,14 +77,15 @@ export const getCardsAnalytics = async ({ now = dayjs() } = {}) => {
       model: "course",
       where: { status: courseStatusEnum.PUBLISHED, createdAt: thisMonth },
     }),
+
     db.findMany({
       model: "courseEnrollment",
-      where: { enrolledAt: thisMonth, status:ValidEnrollmentStatus },
+      where: { enrolledAt: thisMonth, status: ValidEnrollmentStatus },
       select: { paidAmount: true },
     }),
     db.findMany({
       model: "courseEnrollment",
-      where: { enrolledAt: lastMonth,status: ValidEnrollmentStatus },
+      where: { enrolledAt: lastMonth, status: ValidEnrollmentStatus },
       select: { paidAmount: true },
     }),
     db.count({
@@ -116,40 +118,44 @@ export const getCardsAnalytics = async ({ now = dayjs() } = {}) => {
         status: { not: sessionStatus.CANCELLED },
       },
     }),
-]);
-    const currentMonthRevenue = revenueCalc(currentMonthEnrollments);
-    const lastMonthRevenue = revenueCalc(lastMonthEnrollments)
-    return {
-      totalStudents: {
-        count: totalStudentsCount,
-        subTitle: "Across all courses",
-        growthPercent: calculateGrowthPercent(
-          currentMonthStudentsCount,
-          lastMonthStudentsCount,
-        ),
-      },
-      totalTeachers: {
-        count: totalTeachersCount,
-        pendingApprovalCount: pendingTeachersCount,
-        thisMonthCount: currentMonthTeachersCount,
-      },
-      activeCourses: {
-        count: activeCoursesCount,
-        draftCount: draftCoursesCount,
-        thisMonthCount: currentMonthCoursesCount,
-      },
-      monthlyRevenue: {
-        amount: currentMonthRevenue,
-        monthName: now.format("MMM YYYY"),
-        growthPercent: calculateGrowthPercent(
-          currentMonthRevenue,
-          lastMonthRevenue,
-        ),
-      },
-      activeSessions: {
-        count: activeSessionsCount,
-        subTitle: "Right now",
-        growthPercent: calculateGrowthPercent(todaySessionsCount, yesterdaySessionsCount),
-      },
-    };
+  ]);
+  const currentMonthRevenue = revenueCalc(currentMonthEnrollments);
+  const lastMonthRevenue = revenueCalc(lastMonthEnrollments);
+  
+  return {
+    totalStudents: {
+      count: totalStudentsCount,
+      subTitle: "Across all courses",
+      growthPercent: calculateGrowthPercent(
+        currentMonthStudentsCount,
+        lastMonthStudentsCount,
+      ),
+    },
+    totalTeachers: {
+      count: totalTeachersCount,
+      pendingApprovalCount: pendingTeachersCount,
+      thisMonthCount: currentMonthTeachersCount,
+    },
+    activeCourses: {
+      count: activeCoursesCount,
+      draftCount: draftCoursesCount,
+      thisMonthCount: currentMonthCoursesCount,
+    },
+    monthlyRevenue: {
+      amount: currentMonthRevenue,
+      monthName: now.format("MMM YYYY"),
+      growthPercent: calculateGrowthPercent(
+        currentMonthRevenue,
+        lastMonthRevenue,
+      ),
+    },
+    activeSessions: {
+      count: activeSessionsCount,
+      subTitle: "Right now",
+      growthPercent: calculateGrowthPercent(
+        todaySessionsCount,
+        yesterdaySessionsCount,
+      ),
+    },
+  };
 };
