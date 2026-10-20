@@ -399,13 +399,14 @@ export const getCourseCatalogService = async (userId, query = {}) => {
   };
 
   let orderBy = { createdAt: "desc" };
-  if (sortBy === "rating") {
+  const normalizedSortBy = (sortBy || "newest").toLowerCase();
+  if (normalizedSortBy === "rating" || normalizedSortBy === "rating_desc") {
     orderBy = { avgRating: "desc" };
-  } else if (sortBy === "popular") {
+  } else if (normalizedSortBy === "popular") {
     orderBy = { totalStudentsCount: "desc" };
-  } else if (sortBy === "price_asc") {
+  } else if (normalizedSortBy === "price_asc") {
     orderBy = { originalPrice: "asc" };
-  } else if (sortBy === "price_desc") {
+  } else if (normalizedSortBy === "price_desc") {
     orderBy = { originalPrice: "desc" };
   }
 

@@ -38,7 +38,19 @@ export const getCourseCatalog = {
     maxPrice: joi.number().min(0).optional(),
     sortBy: joi
       .string()
-      .valid("newest", "rating", "popular", "price_asc", "price_desc")
+      .valid(
+        "newest",
+        "rating",
+        "popular",
+        "price_asc",
+        "price_desc",
+        "RATING_DESC",
+        "rating_desc",
+        "NEWEST",
+        "POPULAR",
+        "PRICE_ASC",
+        "PRICE_DESC"
+      )
       .default("newest"),
     page: joi.number().integer().min(1).default(1),
     limit: joi.number().integer().min(1).max(100).default(10),
@@ -67,4 +79,3 @@ export const completeLesson = {
     lessonId: joi.string().uuid().required(),
   }),
 };
-
