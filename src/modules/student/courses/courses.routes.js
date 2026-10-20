@@ -53,6 +53,8 @@ router.post(
   courseController.completeLesson
 );
 
+router.get("/:courseId/reviews", courseController.getCourseReviews);
+
 router.get(
   "/:courseId",
   validation(courseValidation.getCourseDetails),

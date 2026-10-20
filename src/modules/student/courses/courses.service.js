@@ -399,13 +399,14 @@ export const getCourseCatalogService = async (userId, query = {}) => {
   };
 
   let orderBy = { createdAt: "desc" };
-  if (sortBy === "rating") {
+  const normalizedSortBy = (sortBy || "newest").toLowerCase();
+  if (normalizedSortBy === "rating" || normalizedSortBy === "rating_desc") {
     orderBy = { avgRating: "desc" };
-  } else if (sortBy === "popular") {
+  } else if (normalizedSortBy === "popular") {
     orderBy = { totalStudentsCount: "desc" };
-  } else if (sortBy === "price_asc") {
+  } else if (normalizedSortBy === "price_asc") {
     orderBy = { originalPrice: "asc" };
-  } else if (sortBy === "price_desc") {
+  } else if (normalizedSortBy === "price_desc") {
     orderBy = { originalPrice: "desc" };
   }
 
@@ -688,5 +689,66 @@ export const completeLessonService = async (userId, courseId, lessonId) => {
     progressPercent,
     isCompleted,
     completedLessonIds,
+  };
+};
+
+export const getCourseReviewsService = async (courseId, { page = 1, limit = 10 } = {}) => {
+  const [reviews, count, allRatings] = await Promise.all([
+    db.findMany({
+      model: "courseReview",
+      where: { courseId, isHidden: false },
+      take: Number(limit),
+      skip: (Number(page) - 1) * Number(limit),
+      orderBy: { createdAt: "desc" },
+      include: {
+        student: {
+          select: {
+            id: true,
+            fullName: true,
+            profilePhoto: true,
+          },
+        },
+      },
+    }),
+    db.count({
+      model: "courseReview",
+      where: { courseId, isHidden: false },
+    }),
+    db.findMany({
+      model: "courseReview",
+      where: { courseId, isHidden: false },
+      select: { rating: true },
+    }),
+  ]);
+
+  const starCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  allRatings.forEach((r) => {
+    const star = Math.min(5, Math.max(1, Math.round(Number(r.rating || 0))));
+    starCounts[star] = (starCounts[star] || 0) + 1;
+  });
+
+  const total = allRatings.length;
+  const distribution = {};
+  for (let s = 1; s <= 5; s++) {
+    distribution[s] = total > 0 ? Number((starCounts[s] / total).toFixed(2)) : 0.0;
+  }
+
+  const avgRating = total > 0
+    ? Number((allRatings.reduce((acc, r) => acc + Number(r.rating || 0), 0) / total).toFixed(1))
+    : 0.0;
+
+  return {
+    reviews: reviews.map((r) => ({
+      id: r.id,
+      rating: Number(r.rating || 0),
+      comment: r.comment || "",
+      studentName: r.student?.fullName || "طالب",
+      studentPhoto: r.student?.profilePhoto || null,
+      createdAt: r.createdAt,
+    })),
+    totalReviews: count,
+    avgRating,
+    distribution,
+    starCounts,
   };
 };
