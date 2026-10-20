@@ -551,6 +551,12 @@ export const getCourseDetailsService = async (userId, courseId, query = {}) => {
   });
   const isEnrolled = !!enrollment;
 
+  const savedItem = await db.findFirst({
+    model: "saved",
+    where: { studentId: userId, itemId: courseId },
+  });
+  const isSaved = !!savedItem;
+
   const courseTrans =
     (course.translations || []).find((t) => t.locale === locale) ||
     course.translations?.[0];
@@ -598,8 +604,13 @@ export const getCourseDetailsService = async (userId, courseId, query = {}) => {
       instructorPhoto: course.instructor?.profilePhoto || null,
       type: coursesType.COURSE,
       sections: processedSections,
+      isEnrolled,
+      isSaved,
+      progressPercent: enrollment ? Number(enrollment.progressPercent || 0) : 0,
+      enrollmentStatus: enrollment ? enrollment.status : null,
     },
     isEnrolled,
+    isSaved,
     enrollment: enrollment || null,
     progressPercent: enrollment ? Number(enrollment.progressPercent || 0) : 0,
     userReview: userReview || null,
