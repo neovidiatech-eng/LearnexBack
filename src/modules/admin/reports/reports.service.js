@@ -4,7 +4,8 @@ import {
   getCardsAnalytics,
   ValidEnrollmentStatus,
 } from "../../../utils/helpers/generalStats.js";
-
+import ExcelJS from "exceljs";
+import PDFDocument from "pdfkit";
 const MONTHS = [
   "Jan",
   "Feb",
@@ -91,7 +92,7 @@ export const getReportsService = async (query = {}, locale = "en") => {
 
   const topCourses = top.map((t) => {
     const course = courses.find((c) => c.id === t.courseId);
-     const categoryTranslation = course?.category?.translations?.[0];
+    const categoryTranslation = course?.category?.translations?.[0];
     return {
       id: t.courseId,
       title: course?.translations?.[0]?.title,
@@ -113,5 +114,111 @@ export const getReportsService = async (query = {}, locale = "en") => {
   return { cards, studentsGrowth, topCourses };
 };
 
+export const exportReportsToExcelService = async (
+  query = {},
+  locale = "en",
+) => {
+  const { cards, studentsGrowth, topCourses } = await getReportsService(
+    query,
+    locale,
+  );
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "LearnX LMS";
+  const growthSheet = workbook.addWorksheet("Students Growth");
+  growthSheet.columns = [
+    { header: "Month", key: "month", width: 20 },
+    { header: "Total Students", key: "total", width: 20 },
+  ];
+  studentsGrowth.forEach((item) => {
+    growthSheet.addRow(item);
+  });
 
-export const exportReportsToExcelService=async()=>{}
+  const courseSheet = workbook.addWorksheet("Top Courses");
+  courseSheet.columns = [
+    { header: "Course", key: "title", width: 30 },
+    { header: "Students", key: "students", width: 15 },
+    { header: "Category", key: "category", width: 20 },
+    { header: "Instructor", key: "instructor", width: 20 },
+    { header: "Revenue", key: "revenue", width: 18 },
+    { header: "Rating", key: "avgRating", width: 15 },
+    { header: "Progress", key: "progress", width: 15 },
+  ];
+  topCourses.forEach((course) => {
+    courseSheet.addRow({
+      title: course.title || "N/A",
+      students: course.students,
+      revenue: course.revenue,
+      avgRating: course.avgRating,
+      progress: course.progress,
+    });
+  });
+  const summarySheet = workbook.addWorksheet("Summary");
+  summarySheet.columns = [
+    { header: "Metric", key: "metric", width: 25 },
+    { header: "Value", key: "value", width: 20 },
+  ];
+  summarySheet.addRows([
+    { metric: "Total Students", value: cards.totalStudents.count },
+    { metric: "Total Teachers", value: cards.totalTeachers.count },
+    { metric: "Active Courses", value: cards.activeCourses.count },
+    { metric: "Monthly Revenue", value: cards.monthlyRevenue.amount },
+    { metric: "Active Sessions", value: cards.activeSessions.count },
+  ]);
+  [growthSheet, courseSheet, summarySheet].forEach((s) => {
+    s.getRow(1).font = { bold: true };
+  });
+
+  return workbook;
+};
+export const exportReportsToPdfService = async (query = {}, locale = "en") => {
+  const { cards, studentsGrowth, topCourses } = await getReportsService(
+    query,
+    locale,
+  );
+
+  const doc = new PDFDocument({ margin: 40, size: "A4" });
+
+  const title = (text) => {
+    doc.moveDown(1);
+    doc.fillColor("#1e3a5f").font("Helvetica-Bold").fontSize(14).text(text);
+    doc.moveDown(0.3);
+  };
+
+  doc
+    .fillColor("#1e3a5f")
+    .font("Helvetica-Bold")
+    .fontSize(24)
+    .text("LearnX Reports", { align: "center" });
+  doc
+    .fillColor("#6b7280")
+    .font("Helvetica")
+    .fontSize(10)
+    .text(`Generated: ${dayjs().format("DD MMM YYYY")}`, { align: "center" });
+
+  title("Summary");
+  doc.fillColor("#1f2937").font("Helvetica").fontSize(11);
+  doc.text(`Total Students: ${cards.totalStudents.count}`);
+  doc.text(`Total Teachers: ${cards.totalTeachers.count}`);
+  doc.text(`Active Courses: ${cards.activeCourses.count}`);
+  doc.text(`Monthly Revenue: $${cards.monthlyRevenue.amount}`);
+  doc.text(`Active Sessions: ${cards.activeSessions.count}`);
+
+  title("Students Growth");
+  doc.fillColor("#1f2937").font("Helvetica").fontSize(11);
+  studentsGrowth.forEach((row) => doc.text(`${row.month}: ${row.total}`));
+
+  title("Top Selling Courses");
+  doc.fillColor("#1f2937").font("Helvetica").fontSize(11);
+  topCourses.forEach((c, i) => {
+    doc.font("Helvetica-Bold").text(`${i + 1}. ${c.title || "N/A"}`);
+    doc
+      .font("Helvetica")
+      .fillColor("#6b7280")
+      .text(
+        `${c.category?.name || "N/A"} | ${c.instructor?.fullName || "N/A"} | ${c.students} students | $${c.revenue} | ${c.progress}%`,
+      );
+    doc.fillColor("#1f2937").moveDown(0.5);
+  });
+
+  return doc;
+};
