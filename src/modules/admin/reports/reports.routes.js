@@ -10,4 +10,9 @@ router.get(
   authorize(PERMISSIONS_V2.REPORTS.READ),
   reportController.getReports,
 );
+router.get(
+  "/exports",
+  authorize(PERMISSIONS_V2.REPORTS.READ),
+  reportController.getReportsExcel,
+);
 export default router;
