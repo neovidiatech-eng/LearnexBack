@@ -12,6 +12,11 @@ router.get(
   settingController.getAllPages,
 );
 
+router.get(
+  "/app-info",
+  settingController.getAppInfo,
+);
+
 router.patch(
   "/app-info",
   localFileUpload({
