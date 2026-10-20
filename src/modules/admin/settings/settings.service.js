@@ -75,25 +75,24 @@ export const updateAppInfoService = async (body, file, locale = "ar") => {
 };
 
 export const updatePagesService = async (body, slug, locale = "ar") => {
-  const { content, title } = body;
+  const { content, title, type } = body;
+
   const currentPage = await db.findFirst({
     model: "staticPage",
     where: { slug },
+    select: { id: true },
   });
-  if (!currentPage) {
-    const error = new Error("SLUG_ALREADY_EXISTS");
-    error.cause = 409;
-    throw error;
-  }
-  const updatedPage = await db.updateOne({
+
+  return db.upsertOne({
     model: "staticPage",
-    where: { id: currentPage.id },
-    data: {
+    where: { slug },
+    update: {
+      ...(type !== undefined && { type }),
       translations: {
         upsert: {
           where: {
             pageId_locale: {
-              pageId: currentPage.id,
+              pageId: currentPage?.id ?? "",
               locale,
             },
           },
@@ -103,17 +102,25 @@ export const updatePagesService = async (body, slug, locale = "ar") => {
           },
           create: {
             locale,
-            content,
-            title,
+            content: content ?? "",
+            title: title ?? "",
           },
         },
       },
     },
-    include: {
-      translations: true,
+    create: {
+      slug,
+      type: type || "GENERAL",
+      translations: {
+        create: {
+          locale,
+          content: content ?? "",
+          title: title ?? "",
+        },
+      },
     },
+    include: { translations: true },
   });
-  return updatedPage;
 };
 
 export const getAllPagesService = async ({
@@ -163,4 +170,21 @@ export const getAllPagesService = async ({
     pages: result.items,
     pagination: result.pagination,
   };
+};
+
+export const getAppInfoService = async ({ locale } = {}) => {
+  const result = await db.findFirst({
+    model: "appSetting",
+    include: {
+      translations: locale ? { where: { locale } } : true,
+    },
+  });
+
+  if (!result) {
+    const error = new Error("APP_INFO_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+
+  return result;
 };
