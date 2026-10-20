@@ -27,3 +27,8 @@ export const getAllPages = asyncHandler(async (req, res) => {
   return successResponse({ res, data: result });
 });
 
+export const getAppInfo = asyncHandler(async (req, res) => {
+  const result = await settingService.getAppInfoService(req.query);
+  return successResponse({ res, data: result });
+});
+

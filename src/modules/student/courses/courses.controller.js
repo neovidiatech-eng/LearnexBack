@@ -81,3 +81,11 @@ export const completeLesson = asyncHandler(async (req, res) => {
     data: result,
   });
 });
+
+export const getCourseReviews = asyncHandler(async (req, res) => {
+  const result = await studentCourseService.getCourseReviewsService(
+    req.params.courseId,
+    req.query
+  );
+  return successResponse({ res, data: result });
+});
