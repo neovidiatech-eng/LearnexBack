@@ -1,15 +1,16 @@
 import { Router } from "express";
 import teacherAuthRouter from "../modules/teacher/auth/auth.routes.js";
 import teacherCoursesRouter from "../modules/teacher/courses/courses.routes.js";
-import teacherSectionRouter from "../modules/teacher/courses/sections/sections.routes.js"
+import teacherSectionRouter from "../modules/teacher/courses/sections/sections.routes.js";
 import teacherItemsRouter from "../modules/teacher/courses/items/items.routes.js";
 import teacherProfileRouter from "../modules/teacher/profile/profile.routes.js";
 import teacherCertificateRouter from "../modules/teacher/certificates/certificate.routes.js";
-import teacherQuizRouter from "../modules/teacher/courses/quizes/quiz.routes.js"
+import teacherQuizRouter from "../modules/teacher/courses/quizes/quiz.routes.js";
 import teacherReviewsRouter from "../modules/teacher/reviews/reviews.routes.js";
 import teacherOfferRouter from "../modules/teacher/offers/offers.routes.js";
 import teacherPlans from "../modules/teacher/Plans/plan.routes.js";
 import teacherSessionRouter from "../modules/teacher/session/session.routes.js";
+import teacherTicketsRouter from "../modules/teacher/tickets/tickets.routes.js";
 
 const router = Router();
 router.use("/auth", teacherAuthRouter);
@@ -23,5 +24,6 @@ router.use("/reviews", teacherReviewsRouter);
 router.use("/offers", teacherOfferRouter);
 router.use("/plans", teacherPlans);
 router.use("/sessions", teacherSessionRouter);
+router.use("/tickets", teacherTicketsRouter);
 
 export default router;

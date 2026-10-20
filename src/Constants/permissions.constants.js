@@ -147,5 +147,13 @@ export const PERMISSIONS_V2 = {
      CREATE: "chat:create",
      DELETE: "chat:delete",
    },
+   TICKETS: {
+    READ: "tickets:read",
+    CREATE: "tickets:create",
+    UPDATE: "tickets:update",
+    DELETE: "tickets:delete",
+    READ_OWN: "tickets:read_own",
+    
+   }
  };
 

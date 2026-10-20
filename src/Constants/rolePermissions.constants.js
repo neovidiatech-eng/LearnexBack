@@ -500,8 +500,37 @@ export const PERMISSIONS_DATA = [
     resource: "chat",
     action: "delete",
   },
+  {
+    code: PERMISSIONS_V2.TICKETS.READ,
+    name: "Read Support Tickets",
+    resource: "supportTickets",
+    action: "read",
+  },
+  {
+    code: PERMISSIONS_V2.TICKETS.CREATE,
+    name: "Create Support Tickets",
+    resource: "supportTickets",
+    action: "create",
+  },
+  {
+    code: PERMISSIONS_V2.TICKETS.UPDATE,
+    name: "Update Support Tickets",
+    resource: "supportTickets",
+    action: "update",
+  },
+  {
+    code: PERMISSIONS_V2.TICKETS.DELETE,
+    name: "Delete Support Tickets",
+    resource: "supportTickets",
+    action: "delete",
+  },
+  {
+    code: PERMISSIONS_V2.TICKETS.READ_OWN,
+    name: "Read Own Support Tickets",
+    resource: "supportTickets",
+    action: "read_own",
+  },
 ];
-
 
 export const ROLE_PERMISSIONS_MAP = {
   ADMIN: ALL_PERMISSION_CODES,
@@ -512,6 +541,11 @@ export const ROLE_PERMISSIONS_MAP = {
     PERMISSIONS_V2.TEACHERS.UPDATE,
     PERMISSIONS_V2.TEACHERS.DELETE,
     PERMISSIONS_V2.TEACHERS.READ_MY_STUDENTS,
+    // tickets
+    PERMISSIONS_V2.TICKETS.READ,
+    PERMISSIONS_V2.TICKETS.CREATE,
+    PERMISSIONS_V2.TICKETS.UPDATE,
+    PERMISSIONS_V2.TICKETS.READ_OWN,
 
     // Plans
     PERMISSIONS_V2.PLANS.GET_MY_PLANS,

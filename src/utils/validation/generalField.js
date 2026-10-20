@@ -315,7 +315,7 @@ export const generalFields = {
     "number.max": "LIMIT_MAX",
     "any.required": "LIMIT_REQUIRED",
   }),
-  sort: Joi.string().messages({
+  sort: Joi.string().valid("asc", "desc").messages({
     "string.base": "SORT_STRING",
     "string.empty": "SORT_EMPTY",
     "any.required": "SORT_REQUIRED",
