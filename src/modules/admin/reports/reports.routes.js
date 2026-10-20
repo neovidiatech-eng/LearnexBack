@@ -11,8 +11,13 @@ router.get(
   reportController.getReports,
 );
 router.get(
-  "/exports",
+  "/excel",
   authorize(PERMISSIONS_V2.REPORTS.READ),
   reportController.getReportsExcel,
+);
+router.get(
+  "/pdf",
+  authorize(PERMISSIONS_V2.REPORTS.READ),
+  reportController.getReportsPdf,
 );
 export default router;
