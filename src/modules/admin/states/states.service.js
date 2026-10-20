@@ -1,14 +1,10 @@
 import * as db from "../../../db/db.service.js";
 import dayjs from "dayjs";
 import {
-
   courseStatusEnum,
-  enrollmentStatusEnum,
 } from "../../../utils/Enums/index.js";
 import { sessionStatus } from "../../../utils/Enums/session.enum.js";
-import {  getCardsAnalytics } from "../../../utils/helpers/generalStats.js";
-
-
+import { getCardsAnalytics, ValidEnrollmentStatus } from "../../../utils/helpers/generalStats.js";
 
 export const getStatesService = async (query = {}, locale = "en") => {
   const now = dayjs();
@@ -43,19 +39,14 @@ export const getStatesService = async (query = {}, locale = "en") => {
     recentPublishedCourses,
     recentLiveSessions,
   ] = await Promise.all([
-getCardsAnalytics({now}),
+    getCardsAnalytics({ now }),
 
     // Yearly enrollments for line & bar charts
     db.findMany({
       model: "courseEnrollment",
       where: {
         enrolledAt: { gte: startOfYear, lt: endOfYear },
-        status: {
-          notIn: [
-            enrollmentStatusEnum.CANCELLED,
-            enrollmentStatusEnum.REFUNDED,
-          ],
-        },
+        status: ValidEnrollmentStatus
       },
       select: { enrolledAt: true, paidAmount: true },
     }),
@@ -160,8 +151,6 @@ getCardsAnalytics({now}),
       },
     }),
   ]);
-
- 
 
   // Yearly monthly stats (enrollments & revenue per month)
   const monthlyStats = monthsNames.map((month) => ({
