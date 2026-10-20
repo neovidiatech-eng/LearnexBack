@@ -38,6 +38,8 @@ export const getAllTeachersService = async ({
     reviewsCount: true,
     totalCoursesCount: true,
     experienceYears: true,
+    sessionPrice50Min: true,
+    currency: true,
     user: {
       select: {
         id: true,
@@ -70,6 +72,8 @@ export const getTeacherByIdService = async ({ teacherId, lang }) => {
     totalCoursesCount: true,
     experienceYears: true,
     bio: true,
+    sessionPrice50Min: true,
+    currency: true,
     linkedinUrl: true,
     cvUrl: true,
     introVideoUrl: true,
@@ -177,6 +181,8 @@ export const getTeacherByIdService = async ({ teacherId, lang }) => {
         totalStudentsCount: 0,
         totalCoursesCount: user.courses?.length || 0,
         experienceYears: 1,
+        sessionPrice50Min: 50.0,
+        currency: "EGP",
         bio: "",
         linkedinUrl: null,
         cvUrl: null,
@@ -204,7 +210,17 @@ export const getTeacherByIdService = async ({ teacherId, lang }) => {
     throw error;
   }
 
-  return teacher;
+  const sessionPriceNum = teacher.sessionPrice50Min
+    ? Number(teacher.sessionPrice50Min)
+    : 50.0;
+
+  return {
+    ...teacher,
+    sessionPrice50Min: sessionPriceNum,
+    sessionPrice: sessionPriceNum,
+    hourlyRate: sessionPriceNum,
+    currency: teacher.currency || 'EGP',
+  };
 };
 export const bookPlanService = async ({
   planId,
