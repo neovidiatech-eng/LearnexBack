@@ -329,3 +329,101 @@ export const joinSession = async ({ userId, sessionId }) => {
     token,
   };
 };
+
+export const getStudentSessions = async ({
+  userId,
+  status,
+  page = 1,
+  limit = 20,
+}) => {
+  const student = await getStudentByUser(userId);
+
+  const where = {
+    studentId: student.id,
+    ...(status
+      ? { status }
+      : { status: { in: ACTIVE_SESSION }, endAt: { gte: new Date() } }
+    ),
+  };
+
+  return dbService.findManyWithPaginationAndCount({
+    model: "session",
+    where,
+    page,
+    limit,
+    orderBy: { startAt: status === sessionStatus.COMPLETED ? "desc" : "asc" },
+    include: {
+      request: {
+        select: {
+          id: true,
+          title: true,
+          note: true,
+        },
+      },
+      teacherSubscription: {
+        select: {
+          id: true,
+          type: true,
+          status: true,
+          sessionLeft: true,
+          sessionUsed: true,
+        },
+      },
+      teacher: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              profilePhoto: true,
+              email: true,
+            },
+          },
+        },
+      },
+    },
+  });
+};
+
+export const getStudentSessionRequests = async ({
+  userId,
+  status,
+  page = 1,
+  limit = 20,
+}) => {
+  const student = await getStudentByUser(userId);
+
+  return dbService.findManyWithPaginationAndCount({
+    model: "sessionRequest",
+    where: {
+      studentId: student.id,
+      ...(status ? { status } : {}),
+    },
+    page,
+    limit,
+    orderBy: { createdAt: "desc" },
+    include: {
+      teacher: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              profilePhoto: true,
+              email: true,
+            },
+          },
+        },
+      },
+      session: {
+        select: {
+          id: true,
+          status: true,
+          startAt: true,
+          endAt: true,
+          roomName: true,
+        },
+      },
+    },
+  });
+};

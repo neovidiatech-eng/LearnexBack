@@ -95,3 +95,31 @@ export const joinSessionController = asyncHandler(async (req, res) => {
     data: result,
   });
 });
+
+export const getMySessionsController = asyncHandler(async (req, res) => {
+  const result = await sessionService.getStudentSessions({
+    userId: req.user.id,
+    ...req.query,
+  });
+
+  return successResponse({
+    res,
+    status: 200,
+    message: "STUDENT_SESSIONS_FETCHED_SUCCESSFULLY",
+    data: result,
+  });
+});
+
+export const getSessionRequestsController = asyncHandler(async (req, res) => {
+  const result = await sessionService.getStudentSessionRequests({
+    userId: req.user.id,
+    ...req.query,
+  });
+
+  return successResponse({
+    res,
+    status: 200,
+    message: "SESSION_REQUESTS_FETCHED_SUCCESSFULLY",
+    data: result,
+  });
+});
