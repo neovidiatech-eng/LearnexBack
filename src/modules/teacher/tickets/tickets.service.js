@@ -124,17 +124,6 @@ export const createTicketService = async ({ user, body, file }) => {
 
 export const sendMessage = async ({ user, body, file, ticketId }) => {
   const { message } = body;
-  const teacher = await db.findFirst({
-    model: "teacher",
-    where: { userId: user },
-  });
-
-  if (!teacher) {
-    throwError({
-      message: "TEACHER_NOT_FOUND",
-      status: 404,
-    });
-  }
 
   const ticket = await db.findFirst({
     model: "supportTicket",
@@ -197,17 +186,7 @@ export const sendMessage = async ({ user, body, file, ticketId }) => {
 
 export const reopenTicket = async ({ user, body, file, ticketId }) => {
   const { message } = body;
-  const teacher = await db.findFirst({
-    model: "teacher",
-    where: { userId: user },
-  });
 
-  if (!teacher) {
-    throwError({
-      message: "TEACHER_NOT_FOUND",
-      status: 404,
-    });
-  }
 
   const ticket = await db.findFirst({
     model: "supportTicket",
@@ -265,6 +244,62 @@ export const reopenTicket = async ({ user, body, file, ticketId }) => {
         },
       },
     });
+  });
+
+  return result;
+};
+export const getMessagesService = async ({ user,id,createdAt,limit, ticketId }) => {
+
+  const ticket = await db.findFirst({
+    model: "supportTicket",
+    where: {
+      id: ticketId,
+      userId: user,
+    },
+  });
+
+  if (!ticket) {
+    throwError({
+      message: "TICKET_NOT_FOUND",
+      status: 404,
+    });
+  }
+
+  console.log(ticket.status);
+  
+  if (
+    ticket.status === SupportTicketStatus.CLOSED ||
+    ticket.status === SupportTicketStatus.RESOLVED
+  ) {
+    throwError({
+      message: "INVALID_TICKET_STATUS",
+      status: 400,
+    });
+  }
+
+  const result = await db.paginationWithCursor({
+    model: "supportMessage",
+    where: {
+      ticketId,
+    },
+    cursor: {id,createdAt} || null,
+    limit,
+    cursorField: "id",
+    timestampField: "createdAt",
+    orderBy: [
+      { createdAt: "asc" },
+      { id: "asc" },
+    ],
+    include: {
+      sender: {
+        select: {
+          id: true,
+          fullName: true,
+          profilePhoto: true,
+        },
+      },
+      attachments: true,
+    },
   });
 
   return result;

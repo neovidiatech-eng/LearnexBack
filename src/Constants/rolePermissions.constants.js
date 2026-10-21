@@ -530,6 +530,30 @@ export const PERMISSIONS_DATA = [
     resource: "supportTickets",
     action: "read_own",
   },
+  {
+    code: PERMISSIONS_V2.TICKETS.READ_ALL,
+    name: "Read All Support Tickets",
+    resource: "supportTickets",
+    action: "read_all",
+  },
+  {
+    code: PERMISSIONS_V2.TICKETS.CLOSE,
+    name: "Close Support Tickets",
+    resource: "supportTickets",
+    action: "close",
+  },
+  {
+    code: PERMISSIONS_V2.TICKETS.REOPEN,
+    name: "Reopen Support Tickets",
+    resource: "supportTickets",
+    action: "reopen",
+  },
+  {
+    code: PERMISSIONS_V2.TICKETS.ASSIGN,
+    name: "Assign Support Tickets",
+    resource: "supportTickets",
+    action: "assign",
+  },
 ];
 
 export const ROLE_PERMISSIONS_MAP = {

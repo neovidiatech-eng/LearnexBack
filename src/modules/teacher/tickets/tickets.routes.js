@@ -48,7 +48,7 @@ router.post(
 );
 router.post(
   "/:ticketId/reopen",
-  authorize(PERMISSIONS_V2.TICKETS.CREATE),
+  authorize(PERMISSIONS_V2.TICKETS.REOPEN),
   localFileUpload({
     customPath: (req) => `support/attachments/${req.user.id}`,
     maxSizeInMB: "5",
@@ -57,6 +57,15 @@ router.post(
   validation(ticketValidation.reopenTicket),
   ticketController.reopenTicket,
 );
+
+
+router.get("/:ticketId/messages",
+  authorize(PERMISSIONS_V2.TICKETS.READ_OWN),
+  validation(ticketValidation.getMessages),
+  ticketController.getMessages, 
+)
+
+
 
 
 

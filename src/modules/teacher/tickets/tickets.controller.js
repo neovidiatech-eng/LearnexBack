@@ -69,3 +69,19 @@ export const reopenTicket = asyncHandler(async (req, res) => {
     data:ticket,
   });
 });
+export const getMessages = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const { ticketId } = req.params;
+  const { id,createdAt,limit} = req.query;
+  const ticket = await ticketService.getMessagesService({
+    user: userId,
+    id,
+    createdAt,
+    limit,
+    ticketId,
+  });
+  return successResponse({
+    res,
+    data:ticket,
+  });
+});

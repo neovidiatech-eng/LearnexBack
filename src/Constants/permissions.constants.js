@@ -153,7 +153,10 @@ export const PERMISSIONS_V2 = {
     UPDATE: "tickets:update",
     DELETE: "tickets:delete",
     READ_OWN: "tickets:read_own",
-    
+    READ_ALL: "tickets:read_all",
+    CLOSE: "tickets:close",
+    REOPEN: "tickets:reopen",
+    ASSIGN:"tickets:assign"
    }
  };
 

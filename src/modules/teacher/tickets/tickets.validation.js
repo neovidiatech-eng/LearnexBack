@@ -5,16 +5,17 @@ import {
   SupportTicketStatus,
 } from "../../../utils/Enums/index.js";
 
-
-const sendOrOpenSchema ={
+const sendOrOpenSchema = {
   params: joi
     .object({
       ticketId: generalFields.id.required(),
     })
     .required(),
-  body: joi.object({
-    message: joi.string().required(),
-  }).required(),
+  body: joi
+    .object({
+      message: joi.string().required(),
+    })
+    .required(),
 };
 
 export const getMyTickets = {
@@ -49,5 +50,18 @@ export const createTicket = {
     message: joi.string().required(),
   }),
 };
-export const sendMessage =sendOrOpenSchema
-export const reopenTicket =sendOrOpenSchema
+export const sendMessage = sendOrOpenSchema;
+export const reopenTicket = sendOrOpenSchema;
+
+export const getMessages = {
+  params: joi
+    .object({
+      ticketId: generalFields.id.required(),
+    })
+    .required(),
+  query: joi.object({
+    id: generalFields.id.required(),
+    createdAt: generalFields.date.required(),
+    limit: generalFields.limit,
+  }),
+};
