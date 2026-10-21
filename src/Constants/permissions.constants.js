@@ -7,9 +7,14 @@ export const PERMISSIONS_V2 = {
   DASHBOARD: {
     READ: "dashboard:read",
   },
+
   REPORTS: {
-  READ:"reports:read"
-},
+    READ: "reports:read",
+  },
+
+  CALENDAR: {
+    READ: "calendar:read",
+  },
   // Category Management
   CATEGORIES: {
     READ: "categories:read",
@@ -80,7 +85,7 @@ export const PERMISSIONS_V2 = {
     UPDATE: "roles:update",
     DELETE: "roles:delete",
     ASSIGN: "roles:assign",
-    PERMISSION:"roles:permissions"
+    PERMISSION: "roles:permissions",
   },
 
   // Permission Management
@@ -120,8 +125,8 @@ export const PERMISSIONS_V2 = {
     UPDATE: "plans:update",
     DELETE: "plans:delete",
     ASSIGN: "plans:assign",
-    GET_MY_PLANS:"plans:get_my_plans",
-    BUY_PLAN:"plans:buy_plan",
+    GET_MY_PLANS: "plans:get_my_plans",
+    BUY_PLAN: "plans:buy_plan",
   },
 
   SESSIONS: {
@@ -133,27 +138,25 @@ export const PERMISSIONS_V2 = {
     START: "sessions:start",
     END: "sessions:end",
   },
-   SESSIONREQUESTS: {
-      CREATE: "sessionRequests:create",
-      CANCEL: "sessionRequests:cancel",
-      VIEW: "sessionRequests:view",
-      ACCEPT: "sessionRequests:accept",
-      REJECT: "sessionRequests:reject",
-    },
- 
-   // Chat Management
-   CHAT: {
-     READ: "chat:read",
-     CREATE: "chat:create",
-     DELETE: "chat:delete",
-   },
-   TICKETS: {
+  SESSIONREQUESTS: {
+    CREATE: "sessionRequests:create",
+    CANCEL: "sessionRequests:cancel",
+    VIEW: "sessionRequests:view",
+    ACCEPT: "sessionRequests:accept",
+    REJECT: "sessionRequests:reject",
+  },
+
+  // Chat Management
+  CHAT: {
+    READ: "chat:read",
+    CREATE: "chat:create",
+    DELETE: "chat:delete",
+  },
+  TICKETS: {
     READ: "tickets:read",
     CREATE: "tickets:create",
     UPDATE: "tickets:update",
     DELETE: "tickets:delete",
     READ_OWN: "tickets:read_own",
-    
-   }
- };
-
+  },
+};
