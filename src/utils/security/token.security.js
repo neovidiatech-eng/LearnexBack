@@ -77,6 +77,8 @@ export const decodedToken = async ({
               roleTranslations: true,
             },
           },
+          student: true,
+          teacher: true
         }
         : undefined,
   });
