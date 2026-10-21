@@ -79,7 +79,12 @@ export const createTicketService = async ({ user, body, file }) => {
     model: "supportTicket",
     where: {
       userId: user,
-      status: SupportTicketStatus.OPEN,
+      status: {
+        in:[
+          SupportTicketStatus.OPEN,
+          SupportTicketStatus.IN_PROGRESS,
+        ]
+      }
     },
   });
 

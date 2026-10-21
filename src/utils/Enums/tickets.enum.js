@@ -1,7 +1,6 @@
  export const SupportTicketStatus = {
   OPEN: "OPEN",
   IN_PROGRESS: "IN_PROGRESS",
-  WAITING_FOR_TEACHER: "WAITING_FOR_TEACHER",
   RESOLVED: "RESOLVED",
   CLOSED: "CLOSED",
 }
