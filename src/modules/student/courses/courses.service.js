@@ -565,6 +565,17 @@ export const getCourseDetailsService = async (userId, courseId, query = {}) => {
     (course.category?.translations || []).find((t) => t.locale === locale) ||
     course.category?.translations?.[0];
 
+  let completedLessonIds = [];
+  if (isEnrolled) {
+    try {
+      const redisKey = `student_lessons:${userId}:${courseId}`;
+      completedLessonIds = (await redis.smembers(redisKey)) || [];
+    } catch {
+      completedLessonIds = [];
+    }
+  }
+  const completedSet = new Set(completedLessonIds);
+
   // Gate contentUrl for lessons if not enrolled and not free preview
   const processedSections = (course.sections || []).map((section) => {
     const secTrans =
@@ -585,6 +596,7 @@ export const getCourseDetailsService = async (userId, courseId, query = {}) => {
           description: lesTrans?.description || lesson.description || "",
           contentUrl: isEnrolled || lesson.isFreePreview ? lesson.contentUrl : null,
           isLocked: !isEnrolled && !lesson.isFreePreview,
+          isCompleted: completedSet.has(lesson.id),
         };
       }),
     };
@@ -609,12 +621,14 @@ export const getCourseDetailsService = async (userId, courseId, query = {}) => {
       isSaved,
       progressPercent: enrollment ? Number(enrollment.progressPercent || 0) : 0,
       enrollmentStatus: enrollment ? enrollment.status : null,
+      completedLessonIds,
     },
     isEnrolled,
     isSaved,
     enrollment: enrollment || null,
     progressPercent: enrollment ? Number(enrollment.progressPercent || 0) : 0,
     userReview: userReview || null,
+    completedLessonIds,
   };
 };
 
