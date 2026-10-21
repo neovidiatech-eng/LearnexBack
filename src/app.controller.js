@@ -11,10 +11,13 @@ import router from "./routers/index.routes.js";
 import { globalErrorHandling } from "./utils/response.js";
 import { i18nMiddleware } from "./i18n/middleware.js";
 import { getAdmin } from "./utils/firebase/index.js";
-import { Server } from "socket.io";
+import { createServer } from "node:http";
+import { initializeSocket } from "./utils/socket/chat.socket.js";
+
 
 const bootstrap = async () => {
   const app = express();
+  const httpServer = createServer(app);
   const port = process.env.PORT || 3000;
 
   app.set("trust proxy", true);
@@ -29,6 +32,9 @@ const bootstrap = async () => {
         .map((origin) => origin.trim().replace(/\/+$/, ""))
         .filter(Boolean)
     : [];
+
+    initializeSocket(httpServer,allowedOrigins)
+  
 
 
   app.use(cors({
@@ -78,7 +84,7 @@ const bootstrap = async () => {
   // Global error handling middleware
   app.use(globalErrorHandling);
 
-  return app.listen(port, () => {
+  return httpServer.listen(port, () => {
     console.log(`Server is running on port ${port} `);
     console.log(`Swagger Docs available at http://localhost:${port}/api-docs`);
   });

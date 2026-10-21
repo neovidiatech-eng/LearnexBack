@@ -40,6 +40,7 @@ model User {
   @@index([status])
   @@index([email])
   @@map("users")
+  messages message[]
 }
 
 model Student {
@@ -60,6 +61,8 @@ model Student {
   sessionRequests       SessionRequest[]
   sessions              Session[]
   customSessionRequests CustomSessionRequest[]
+  conversations       conversation[]
+
 
   @@index([userId])
   @@map("students")
@@ -100,6 +103,7 @@ model Teacher {
 
   @@index([userId])
   @@map("teachers")
+  conversations conversation[]
 }
 
 model TeacherCertificate {
