@@ -21,6 +21,13 @@ export const PERMISSIONS_DATA = [
     resource: "reports",
     action: "read",
   },
+  //calendar
+  {
+    code: PERMISSIONS_V2.CALENDAR.READ,
+    name: "Read Reports Analytics",
+    resource: "calendar",
+    action: "read",
+  },
 
   // Categories
   {
