@@ -11,6 +11,22 @@ import * as availabilityValidation from "./avialbilty/avilability.validation.js"
 const router = Router();
 
 router.get(
+  "/my-sessions",
+  authentication(),
+  authorize(PERMISSIONS_V2.SESSIONS.READ),
+  validation(sessionValidation.getMySessions),
+  sessionController.getMySessionsController,
+);
+
+router.get(
+  "/requests",
+  authentication(),
+  authorize(PERMISSIONS_V2.SESSIONREQUESTS.VIEW),
+  validation(sessionValidation.getSessionRequests),
+  sessionController.getSessionRequestsController,
+);
+
+router.get(
   "/:teacherId/availability",
   authentication(),
   validation(availabilityValidation.getAvailableSlots),

@@ -40,7 +40,6 @@ model User {
   @@index([status])
   @@index([email])
   @@map("users")
-  messages message[]
 }
 
 model Student {

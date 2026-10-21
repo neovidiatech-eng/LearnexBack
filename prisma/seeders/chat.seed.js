@@ -20,83 +20,90 @@ export async function seedChat(prisma, students = [], teachers = []) {
     });
   }
 
-  const youssef = allStudents.find((s) => s.fullName?.includes("Youssef")) || allStudents[0];
-  const nour = allStudents.find((s) => s.fullName?.includes("Nour")) || allStudents[1];
-  const karim = allStudents.find((s) => s.fullName?.includes("Karim")) || allStudents[2];
-  const ahmed = allTeachers.find((t) => t.fullName?.includes("Ahmed")) || allTeachers[0];
-  const sara = allTeachers.find((t) => t.fullName?.includes("Sara")) || allTeachers[1];
+  const youssefUser = allStudents.find((s) => s.fullName?.includes("Youssef")) || allStudents[0];
+  const nourUser = allStudents.find((s) => s.fullName?.includes("Nour")) || allStudents[1];
+  const karimUser = allStudents.find((s) => s.fullName?.includes("Karim")) || allStudents[2];
+  const ahmedUser = allTeachers.find((t) => t.fullName?.includes("Ahmed")) || allTeachers[0];
+  const saraUser = allTeachers.find((t) => t.fullName?.includes("Sara")) || allTeachers[1];
+
+  const getStudentId = (u) => u?.student?.id || u?.id;
+  const getTeacherId = (u) => u?.teacher?.id || u?.id;
 
   const sampleConversations = [
     {
-      user: youssef,
-
-      lastMessage: "السلام عليكم، هل يمكن تقسيط الدبلومة الشاملة؟",
-      unreadAdminCount: 1,
-      unreadUserCount: 0,
+      studentUser: youssefUser,
+      teacherUser: ahmedUser,
+      unreadStudentCount: 0,
+      unreadTeacherCount: 0,
       messages: [
         {
-          content: "السلام عليكم ورحمة الله، كنت بستفسر عن تفاصيل الدبلومة",
+          senderUser: youssefUser,
+          content: "السلام عليكم يا بشمهندس أحمد، كنت حابب أسألك بخصوص كورس React و Next.js",
           minutesAgo: 120,
         },
         {
-          content: "السلام عليكم، هل يمكن تقسيط الدبلومة الشاملة؟",
-          minutesAgo: 30,
-        },
-      ],
-    },
-    {
-      user: nour,
-      lastMessage: "شكراً جزيلاً للدعم الفني، تم تفعيل الكورس بنجاح.",
-      unreadAdminCount: 0,
-      unreadUserCount: 0,
-      messages: [
-        {
-          content: "واجهت مشكلة في الدفع عبر البطاقة الائتمانية",
-          minutesAgo: 300,
+          senderUser: ahmedUser,
+          content: "وعليكم السلام يا يوسف، أهلاً بيك! اتفضل اسألني في أي وقت وأنا معاك.",
+          minutesAgo: 100,
         },
         {
-          content: "شكراً جزيلاً للدعم الفني، تم تفعيل الكورس بنجاح.",
-          minutesAgo: 60,
+          senderUser: youssefUser,
+          content: "بخصوص الجلسة القادمة، هل هنشرح Server Actions مع Prisma؟",
+          minutesAgo: 45,
         },
-      ],
-    },
-    {
-      user: karim,
-      lastMessage: "ميعاد الجلسة المباشرة القادمة متى سيكون بالضبط؟",
-      unreadAdminCount: 2,
-      unreadUserCount: 0,
-      messages: [
         {
-          content: "ميعاد الجلسة المباشرة القادمة متى سيكون بالضبط؟",
+          senderUser: ahmedUser,
+          content: "أكيد إن شاء الله، ومجهزلكم مشروع عملي كامل هنبنيه سوا.",
           minutesAgo: 15,
         },
       ],
     },
     {
-      user: ahmed,
-      lastMessage: "تم رفع محتوى القسم الثالث من كورس Node.js بانتظار المراجعة والاعتماد.",
-      unreadAdminCount: 1,
-      unreadUserCount: 0,
+      studentUser: nourUser,
+      teacherUser: ahmedUser,
+      unreadStudentCount: 0,
+      unreadTeacherCount: 1,
       messages: [
         {
-          content: "مرحباً إدارة المنصة، انتهيت من تسجيل الفيديوهات الجديدة",
-          minutesAgo: 180,
-        },
-        {
-          content: "تم رفع محتوى القسم الثالث من كورس Node.js بانتظار المراجعة والاعتماد.",
-          minutesAgo: 45,
+          senderUser: nourUser,
+          content: "مساء الخير يا بشمهندس، محتاجة استفسر عن ميعاد سيشن مراجعة قواعد البيانات.",
+          minutesAgo: 30,
         },
       ],
     },
     {
-      user: sara,
-      lastMessage: "أريد تحديث خطة الأسعار وساعات العمل للجلسات الفردية.",
-      unreadAdminCount: 0,
-      unreadUserCount: 1,
+      studentUser: karimUser,
+      teacherUser: saraUser,
+      unreadStudentCount: 0,
+      unreadTeacherCount: 0,
       messages: [
         {
-          content: "أريد تحديث خطة الأسعار وساعات العمل للجلسات الفردية.",
+          senderUser: karimUser,
+          content: "دكتورة سارة، هل سيشن الماشين ليرنينج القادمة محتاجة تسطيب مكتبات معينة مسبقاً؟",
+          minutesAgo: 180,
+        },
+        {
+          senderUser: saraUser,
+          content: "أهلاً يا كريم، ياريت تكون مجهز بيئة Python ومسطب PyTorch و FastAPI.",
           minutesAgo: 90,
+        },
+        {
+          senderUser: karimUser,
+          content: "تمام جداً تم التسطيب، شكراً جزيلاً لحضرتك.",
+          minutesAgo: 60,
+        },
+      ],
+    },
+    {
+      studentUser: youssefUser,
+      teacherUser: saraUser,
+      unreadStudentCount: 1,
+      unreadTeacherCount: 0,
+      messages: [
+        {
+          senderUser: saraUser,
+          content: "مرحباً يا يوسف، تم قبول طلب الجلسة الخاصة بنجاح ومستنياك في الموعد المحدد.",
+          minutesAgo: 20,
         },
       ],
     },
@@ -105,48 +112,64 @@ export async function seedChat(prisma, students = [], teachers = []) {
   const seededConversations = [];
 
   for (const item of sampleConversations) {
-    if (!item.user?.id) continue;
+    const studentId = getStudentId(item.studentUser);
+    const teacherId = getTeacherId(item.teacherUser);
+
+    if (!studentId || !teacherId) continue;
 
     const now = new Date();
-    const lastMessageDate = new Date(now.getTime() - (item.messages[item.messages.length - 1]?.minutesAgo || 10) * 60000);
+    const lastMsg = item.messages[item.messages.length - 1];
+    const lastMessageDate = new Date(now.getTime() - (lastMsg?.minutesAgo || 10) * 60000);
 
-    // Upsert conversation by userId
+    // Upsert conversation by unique compound [studentId, teacherId]
     const conversation = await prisma.conversation.upsert({
-      where: { userId: item.user.id },
+      where: {
+        studentId_teacherId: {
+          studentId,
+          teacherId,
+        },
+      },
       update: {
-        lastMessage: item.lastMessage,
+        lastMessage: lastMsg?.content || null,
         lastMessageAt: lastMessageDate,
-        unreadAdminCount: item.unreadAdminCount,
-        unreadUserCount: item.unreadUserCount,
+        unreadStudentCount: item.unreadStudentCount,
+        unreadTeacherCount: item.unreadTeacherCount,
       },
       create: {
-        userId: item.user.id,
-        lastMessage: item.lastMessage,
+        studentId,
+        teacherId,
+        lastMessage: lastMsg?.content || null,
         lastMessageAt: lastMessageDate,
-        unreadAdminCount: item.unreadAdminCount,
-        unreadUserCount: item.unreadUserCount,
+        unreadStudentCount: item.unreadStudentCount,
+        unreadTeacherCount: item.unreadTeacherCount,
         createdAt: new Date(now.getTime() - 24 * 60 * 60 * 1000),
       },
     });
 
-    // Seed messages
-    for (const msg of item.messages) {
-      const msgDate = new Date(now.getTime() - msg.minutesAgo * 60000);
-      await prisma.message.create({
-        data: {
-          content: msg.content,
-          conversationId: conversation.id,
-          senderId: item.user.id,
-          createdAt: msgDate,
-          updatedAt: msgDate,
-        },
-      });
+    // Seed messages if none exist yet for this conversation
+    const existingMessagesCount = await prisma.message.count({
+      where: { conversationId: conversation.id },
+    });
+
+    if (existingMessagesCount === 0) {
+      for (const msg of item.messages) {
+        const msgDate = new Date(now.getTime() - msg.minutesAgo * 60000);
+        await prisma.message.create({
+          data: {
+            content: msg.content,
+            conversationId: conversation.id,
+            senderId: msg.senderUser.id,
+            createdAt: msgDate,
+            updatedAt: msgDate,
+          },
+        });
+      }
     }
 
     seededConversations.push(conversation);
   }
 
-  console.log(`✅ Seeded ${seededConversations.length} conversations with initial messages`);
+  console.log(`✅ Seeded ${seededConversations.length} student-teacher conversations with initial messages`);
   return seededConversations;
 }
 
