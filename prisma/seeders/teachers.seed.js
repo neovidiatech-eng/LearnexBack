@@ -8,6 +8,7 @@ const teachersData = [
     country: "EG",
     subject: "Web Development",
     experienceYears: 7,
+    sessionPrice50Min: 60.0,
     bio: "Senior full-stack developer with 7 years of experience in React and Node.js. Passionate about teaching modern web technologies.",
     linkedinUrl: "https://linkedin.com/in/ahmed-hassan",
   },
@@ -18,6 +19,7 @@ const teachersData = [
     country: "EG",
     subject: "Data Science",
     experienceYears: 5,
+    sessionPrice50Min: 75.0,
     bio: "Data scientist and ML engineer with expertise in Python and TensorFlow. Loves turning data into insights.",
     linkedinUrl: "https://linkedin.com/in/sara-ibrahim",
   },
@@ -28,6 +30,7 @@ const teachersData = [
     country: "EG",
     subject: "Mobile Development",
     experienceYears: 6,
+    sessionPrice50Min: 50.0,
     bio: "Mobile developer specializing in React Native and Flutter. Built over 20 production apps.",
     linkedinUrl: "https://linkedin.com/in/omar-ali",
   },
@@ -43,7 +46,14 @@ export async function seedTeachers(prisma, roles) {
   for (const t of teachersData) {
     const user = await prisma.user.upsert({
       where: { email: t.email },
-      update: {},
+      update: {
+        teacher: {
+          update: {
+            sessionPrice50Min: t.sessionPrice50Min,
+            currency: "EGP",
+          },
+        },
+      },
       create: {
         email: t.email,
         password: hashedPassword,
@@ -59,6 +69,8 @@ export async function seedTeachers(prisma, roles) {
             headline: `${t.subject} Instructor`,
             bio: t.bio,
             experienceYears: t.experienceYears,
+            sessionPrice50Min: t.sessionPrice50Min,
+            currency: "EGP",
             linkedinUrl: t.linkedinUrl,
           },
         },

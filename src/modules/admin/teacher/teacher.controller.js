@@ -90,27 +90,6 @@ export const exportTeachers = asyncHandler(async (req, res, next) => {
   res.end();
 });
 
-export const approveTeacher = asyncHandler(async (req, res, next) => {
-   await teacherService.approveTeacherService(
-    req.params.teacherId,
-  );
-  return successResponse({
-    res,
-    message: "APPROVED_SUCCESSFULLY",
-  });
-});
-
-export const rejectTeacher = asyncHandler(async (req, res, next) => {
-   await teacherService.rejectTeacherService(
-    req.params.teacherId,
-    req.body
-  );
-  return successResponse({
-    res,
-    message: "REJECTED",
-  });
-});
-
 
 export const verifyCertificate = asyncHandler(async (req, res, next) => {
   const result = await teacherService.verifyCertificateService(

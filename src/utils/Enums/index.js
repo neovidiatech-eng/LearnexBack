@@ -11,4 +11,5 @@ export * from "./offer.enum.js";
 export * from "./teacherCourse.enum.js";
 export * from "./subscriptions.enum.js";
 export * from "./transactions.enum.js";
-export * from "./request.enum.js";
+export * from "./request.enum.js";
+export * from "./tickets.enum.js";

@@ -3,13 +3,54 @@ import { sessionStatus } from "../../src/utils/Enums/sessions.enum.js";
 import { nanoid } from "nanoid";
 
 const DEFAULT_WORK_HOURS = [
-  { day: "mon", slots: [{ startTime: "09:00", endTime: "17:00" }] },
-  { day: "tue", slots: [{ startTime: "09:00", endTime: "17:00" }] },
-  { day: "wed", slots: [{ startTime: "09:00", endTime: "17:00" }] },
-  { day: "thu", slots: [{ startTime: "09:00", endTime: "17:00" }] },
-  { day: "fri", slots: [{ startTime: "09:00", endTime: "17:00" }] },
-  { day: "sat", slots: [{ startTime: "10:00", endTime: "15:00" }] },
-  { day: "sun", slots: [{ startTime: "10:00", endTime: "15:00" }] },
+  {
+    day: "sat",
+    slots: [
+      { startTime: "10:00", endTime: "14:00" },
+      { startTime: "16:00", endTime: "21:00" },
+    ],
+  },
+  {
+    day: "sun",
+    slots: [
+      { startTime: "09:00", endTime: "13:00" },
+      { startTime: "16:00", endTime: "21:00" },
+    ],
+  },
+  {
+    day: "mon",
+    slots: [
+      { startTime: "09:00", endTime: "13:00" },
+      { startTime: "16:00", endTime: "21:00" },
+    ],
+  },
+  {
+    day: "tue",
+    slots: [
+      { startTime: "10:00", endTime: "14:00" },
+      { startTime: "17:00", endTime: "22:00" },
+    ],
+  },
+  {
+    day: "wed",
+    slots: [
+      { startTime: "09:00", endTime: "13:00" },
+      { startTime: "16:00", endTime: "21:00" },
+    ],
+  },
+  {
+    day: "thu",
+    slots: [
+      { startTime: "10:00", endTime: "14:00" },
+      { startTime: "17:00", endTime: "22:00" },
+    ],
+  },
+  {
+    day: "fri",
+    slots: [
+      { startTime: "14:00", endTime: "20:00" },
+    ],
+  },
 ];
 
 export async function seedSessions(prisma, teachers = [], students = []) {

@@ -8,7 +8,6 @@ const pool = new pg.Pool({
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
-
 const getClient = (model, prismaClient = prisma) => {
   const client = prismaClient[model];
   if (!client) {
@@ -22,7 +21,16 @@ const getClient = (model, prismaClient = prisma) => {
  * This lets controllers use tx.findFirst(), tx.create(), tx.updateOne(), etc.
  */
 const createTxWrapper = (prismaClient) => ({
-  findMany: ({ model, where = {}, filter, include, select, orderBy, take, skip }) =>
+  findMany: ({
+    model,
+    where = {},
+    filter,
+    include,
+    select,
+    orderBy,
+    take,
+    skip,
+  }) =>
     getClient(model, prismaClient).findMany({
       where: where || filter || {},
       ...(orderBy ? { orderBy } : {}),
@@ -166,9 +174,9 @@ export const findManyWithPaginationAndCount = async ({
     pagination: { page: p, limit: take, totalItems, totalPages, hasNextPage },
   };
 };
-export const queryRaw = (query,...values)=>{
-    return prisma.$queryRaw(query,...values);
-}
+export const queryRaw = (query, ...values) => {
+  return prisma.$queryRaw(query, ...values);
+};
 
 export const create = ({ model, data, include, select }) => {
   return getClient(model).create({
@@ -201,6 +209,99 @@ export const findFirst = ({ model, where, filter, include, select }) => {
     ...(select ? { select } : {}),
   });
 };
+
+
+
+
+export const paginationWithCursor = async ({
+  model,
+  where = {},
+  filter = {},
+  orderBy,
+  include,
+  select,
+  cursor,
+  limit = 20,
+  cursorField = "id",
+  timestampField = "createdAt",
+}) => {
+  const client = getClient(model);
+
+  if (include && select) {
+    throw new Error("Use either include or select, not both");
+  }
+
+  const pageSize = Math.min(
+    Math.max(Number(limit) || 20, 1),
+    100
+  );
+
+  const finalWhere = {
+    AND: [where, filter],
+  };
+
+  const sorting = orderBy ?? [
+    { [timestampField]: "asc" },
+    { [cursorField]: "asc" },
+  ];
+
+  if (cursor) {
+    if (!cursor.id || !cursor.createdAt) {
+      throw new Error("Cursor must contain id and createdAt");
+    }
+
+    const cursorDate = new Date(cursor.createdAt);
+
+    if (Number.isNaN(cursorDate.getTime())) {
+      throw new Error("Invalid cursor createdAt");
+    }
+
+    finalWhere.AND.push({
+      OR: [
+        {
+          [timestampField]: {
+            gt: cursorDate,
+          },
+        },
+        {
+          [timestampField]: cursorDate,
+          [cursorField]: {
+            gt: cursor.id,
+          },
+        },
+      ],
+    });
+  }
+
+  const records = await client.findMany({
+    where: finalWhere,
+    orderBy: sorting,
+    take: pageSize + 1,
+    ...(include ? { include } : {}),
+    ...(select ? { select } : {}),
+  });
+
+  const hasMore = records.length > pageSize;
+  const data = records.slice(0, pageSize);
+  const lastRecord = data.at(-1);
+
+  return {
+    data,
+    pagination: {
+      limit: pageSize,
+      hasMore,
+      nextCursor: lastRecord
+        ? {
+            id: lastRecord[cursorField],
+            createdAt: lastRecord[timestampField],
+          }
+        : null,
+    },
+  };
+};
+
+
+
 
 export const updateOne = ({ model, where, filter, data, include, select }) => {
   return getClient(model).update({
@@ -288,5 +389,5 @@ export default {
   deleteOne,
   count,
   groupBy,
-  queryRaw
+  queryRaw,
 };

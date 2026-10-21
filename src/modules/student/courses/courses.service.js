@@ -4,7 +4,12 @@ import { enrollmentTypeEnum } from "../../../utils/Enums/enrollmentType.enum.js"
 import { coursesType } from "../../../utils/Enums/teacherCourse.enum.js";
 import redis from "../../../config/redis.config.js";
 import { createSystemRequest } from "../../../utils/helpers/requests.helper.js";
-import { requestPriorityEnum, requestReferenceModelEnum, requestTabEnum, requestTypeEnum } from "../../../utils/Enums/request.enum.js";
+import {
+  requestPriorityEnum,
+  requestReferenceModelEnum,
+  requestTabEnum,
+  requestTypeEnum,
+} from "../../../utils/Enums/request.enum.js";
 
 export const toggleFavouriteService = async (
   userId,
@@ -253,21 +258,21 @@ export const enrollFreeCourseService = async (userId, courseId) => {
     },
   });
 
-   await createSystemRequest({
-            tab: requestTabEnum.STUDENT,
-            type: requestTypeEnum.COURSE_ENROLLMENT,
-            priority: requestPriorityEnum.HIGH,
-            requesterId: userId,
-            requesterRole: requestTabEnum.STUDENT,
-            referenceId: enrollment.id,
-            referenceModel: requestReferenceModelEnum.COURSE_ENROLLMENT,
-            details: {
-              courseId: course.id,
-              amount: enrollment.paidAmount,
-              status: enrollment.status,
-            },
-   });
-  
+  await createSystemRequest({
+    tab: requestTabEnum.STUDENT,
+    type: requestTypeEnum.COURSE_ENROLLMENT,
+    priority: requestPriorityEnum.HIGH,
+    requesterId: userId,
+    requesterRole: requestTabEnum.STUDENT,
+    referenceId: enrollment.id,
+    referenceModel: requestReferenceModelEnum.COURSE_ENROLLMENT,
+    details: {
+      courseId: course.id,
+      amount: enrollment.paidAmount,
+      status: enrollment.status,
+    },
+  });
+
   return enrollment;
 };
 
@@ -303,12 +308,12 @@ export const getEnrolledCoursesService = async (userId, query = {}) => {
     include: {
       course: {
         include: {
-          translations: { where: { locale } },
+          translations: true,
           category: {
             select: {
               id: true,
               slug: true,
-              translations: { where: { locale } },
+              translations: true,
             },
           },
           instructor: {
@@ -319,8 +324,31 @@ export const getEnrolledCoursesService = async (userId, query = {}) => {
     },
   });
 
+  const mappedEnrolledCourses = (result.items || []).map((enrollment) => {
+    const c = enrollment.course;
+    if (!c) return enrollment;
+    const trans =
+      c.translations?.find((t) => t.locale === locale) ||
+      c.translations?.[0];
+    const categoryTrans =
+      c.category?.translations?.find((t) => t.locale === locale) ||
+      c.category?.translations?.[0];
+
+    return {
+      ...enrollment,
+      course: {
+        ...c,
+        title: trans?.title || c.title || "",
+        description: trans?.description || c.description || "",
+        categoryName: categoryTrans?.name || "",
+        instructorName: c.instructor?.fullName || "",
+        instructorPhoto: c.instructor?.profilePhoto || null,
+      },
+    };
+  });
+
   return {
-    enrolledCourses: result.items,
+    enrolledCourses: mappedEnrolledCourses,
     pagination: result.pagination,
   };
 };
@@ -371,13 +399,14 @@ export const getCourseCatalogService = async (userId, query = {}) => {
   };
 
   let orderBy = { createdAt: "desc" };
-  if (sortBy === "rating") {
+  const normalizedSortBy = (sortBy || "newest").toLowerCase();
+  if (normalizedSortBy === "rating" || normalizedSortBy === "rating_desc") {
     orderBy = { avgRating: "desc" };
-  } else if (sortBy === "popular") {
+  } else if (normalizedSortBy === "popular") {
     orderBy = { totalStudentsCount: "desc" };
-  } else if (sortBy === "price_asc") {
+  } else if (normalizedSortBy === "price_asc") {
     orderBy = { originalPrice: "asc" };
-  } else if (sortBy === "price_desc") {
+  } else if (normalizedSortBy === "price_desc") {
     orderBy = { originalPrice: "desc" };
   }
 
@@ -388,12 +417,12 @@ export const getCourseCatalogService = async (userId, query = {}) => {
     limit: Number(limit),
     orderBy,
     include: {
-      translations: { where: { locale } },
+      translations: true,
       category: {
         select: {
           id: true,
           slug: true,
-          translations: { where: { locale } },
+          translations: true,
         },
       },
       instructor: {
@@ -422,8 +451,20 @@ export const getCourseCatalogService = async (userId, query = {}) => {
 
   const enrichedCourses = result.items.map((course) => {
     const enrollment = enrollmentMap.get(course.id);
+    const trans =
+      course.translations?.find((t) => t.locale === locale) ||
+      course.translations?.[0];
+    const categoryTrans =
+      course.category?.translations?.find((t) => t.locale === locale) ||
+      course.category?.translations?.[0];
+
     return {
       ...course,
+      title: trans?.title || course.title || "",
+      description: trans?.description || course.description || "",
+      categoryName: categoryTrans?.name || "",
+      instructorName: course.instructor?.fullName || "",
+      instructorPhoto: course.instructor?.profilePhoto || null,
       type: coursesType.COURSE,
       isEnrolled: !!enrollment,
       progressPercent: enrollment ? Number(enrollment.progressPercent || 0) : 0,
@@ -469,12 +510,12 @@ export const getCourseDetailsService = async (userId, courseId, query = {}) => {
     model: "course",
     where: { id: courseId },
     include: {
-      translations: { where: { locale } },
+      translations: true,
       category: {
         select: {
           id: true,
           slug: true,
-          translations: { where: { locale } },
+          translations: true,
         },
       },
       instructor: {
@@ -487,11 +528,11 @@ export const getCourseDetailsService = async (userId, courseId, query = {}) => {
       sections: {
         orderBy: { order: "asc" },
         include: {
-          translations: { where: { locale } },
+          translations: true,
           lessons: {
             orderBy: { order: "asc" },
             include: {
-              translations: { where: { locale } },
+              translations: true,
             },
           },
         },
@@ -511,15 +552,55 @@ export const getCourseDetailsService = async (userId, courseId, query = {}) => {
   });
   const isEnrolled = !!enrollment;
 
+  const savedItem = await db.findFirst({
+    model: "saved",
+    where: { studentId: userId, itemId: courseId },
+  });
+  const isSaved = !!savedItem;
+
+  const courseTrans =
+    (course.translations || []).find((t) => t.locale === locale) ||
+    course.translations?.[0];
+  const categoryTrans =
+    (course.category?.translations || []).find((t) => t.locale === locale) ||
+    course.category?.translations?.[0];
+
+  let completedLessonIds = [];
+  if (isEnrolled) {
+    try {
+      const redisKey = `student_lessons:${userId}:${courseId}`;
+      completedLessonIds = (await redis.smembers(redisKey)) || [];
+    } catch {
+      completedLessonIds = [];
+    }
+  }
+  const completedSet = new Set(completedLessonIds);
+
   // Gate contentUrl for lessons if not enrolled and not free preview
-  const processedSections = (course.sections || []).map((section) => ({
-    ...section,
-    lessons: (section.lessons || []).map((lesson) => ({
-      ...lesson,
-      contentUrl: isEnrolled || lesson.isFreePreview ? lesson.contentUrl : null,
-      isLocked: !isEnrolled && !lesson.isFreePreview,
-    })),
-  }));
+  const processedSections = (course.sections || []).map((section) => {
+    const secTrans =
+      (section.translations || []).find((t) => t.locale === locale) ||
+      section.translations?.[0];
+
+    return {
+      ...section,
+      title: secTrans?.title || section.title || "",
+      lessons: (section.lessons || []).map((lesson) => {
+        const lesTrans =
+          (lesson.translations || []).find((t) => t.locale === locale) ||
+          lesson.translations?.[0];
+
+        return {
+          ...lesson,
+          title: lesTrans?.title || lesson.title || "",
+          description: lesTrans?.description || lesson.description || "",
+          contentUrl: isEnrolled || lesson.isFreePreview ? lesson.contentUrl : null,
+          isLocked: !isEnrolled && !lesson.isFreePreview,
+          isCompleted: completedSet.has(lesson.id),
+        };
+      }),
+    };
+  });
 
   const userReview = await db.findFirst({
     model: "courseReview",
@@ -529,13 +610,25 @@ export const getCourseDetailsService = async (userId, courseId, query = {}) => {
   return {
     course: {
       ...course,
+      title: courseTrans?.title || course.title || "",
+      description: courseTrans?.description || course.description || "",
+      categoryName: categoryTrans?.name || "",
+      instructorName: course.instructor?.fullName || "",
+      instructorPhoto: course.instructor?.profilePhoto || null,
       type: coursesType.COURSE,
       sections: processedSections,
+      isEnrolled,
+      isSaved,
+      progressPercent: enrollment ? Number(enrollment.progressPercent || 0) : 0,
+      enrollmentStatus: enrollment ? enrollment.status : null,
+      completedLessonIds,
     },
     isEnrolled,
+    isSaved,
     enrollment: enrollment || null,
     progressPercent: enrollment ? Number(enrollment.progressPercent || 0) : 0,
     userReview: userReview || null,
+    completedLessonIds,
   };
 };
 
@@ -610,5 +703,66 @@ export const completeLessonService = async (userId, courseId, lessonId) => {
     progressPercent,
     isCompleted,
     completedLessonIds,
+  };
+};
+
+export const getCourseReviewsService = async (courseId, { page = 1, limit = 10 } = {}) => {
+  const [reviews, count, allRatings] = await Promise.all([
+    db.findMany({
+      model: "courseReview",
+      where: { courseId, isHidden: false },
+      take: Number(limit),
+      skip: (Number(page) - 1) * Number(limit),
+      orderBy: { createdAt: "desc" },
+      include: {
+        student: {
+          select: {
+            id: true,
+            fullName: true,
+            profilePhoto: true,
+          },
+        },
+      },
+    }),
+    db.count({
+      model: "courseReview",
+      where: { courseId, isHidden: false },
+    }),
+    db.findMany({
+      model: "courseReview",
+      where: { courseId, isHidden: false },
+      select: { rating: true },
+    }),
+  ]);
+
+  const starCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  allRatings.forEach((r) => {
+    const star = Math.min(5, Math.max(1, Math.round(Number(r.rating || 0))));
+    starCounts[star] = (starCounts[star] || 0) + 1;
+  });
+
+  const total = allRatings.length;
+  const distribution = {};
+  for (let s = 1; s <= 5; s++) {
+    distribution[s] = total > 0 ? Number((starCounts[s] / total).toFixed(2)) : 0.0;
+  }
+
+  const avgRating = total > 0
+    ? Number((allRatings.reduce((acc, r) => acc + Number(r.rating || 0), 0) / total).toFixed(1))
+    : 0.0;
+
+  return {
+    reviews: reviews.map((r) => ({
+      id: r.id,
+      rating: Number(r.rating || 0),
+      comment: r.comment || "",
+      studentName: r.student?.fullName || "طالب",
+      studentPhoto: r.student?.profilePhoto || null,
+      createdAt: r.createdAt,
+    })),
+    totalReviews: count,
+    avgRating,
+    distribution,
+    starCounts,
   };
 };

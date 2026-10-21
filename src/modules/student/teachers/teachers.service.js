@@ -38,6 +38,8 @@ export const getAllTeachersService = async ({
     reviewsCount: true,
     totalCoursesCount: true,
     experienceYears: true,
+    sessionPrice50Min: true,
+    currency: true,
     user: {
       select: {
         id: true,
@@ -70,6 +72,8 @@ export const getTeacherByIdService = async ({ teacherId, lang }) => {
     totalCoursesCount: true,
     experienceYears: true,
     bio: true,
+    sessionPrice50Min: true,
+    currency: true,
     linkedinUrl: true,
     cvUrl: true,
     introVideoUrl: true,
@@ -128,11 +132,77 @@ export const getTeacherByIdService = async ({ teacherId, lang }) => {
       },
     },
   };
-  const teacher = await db.findFirst({
+  let teacher = await db.findFirst({
     model: "teacher",
-    where: { id: teacherId },
+    where: {
+      OR: [
+        { id: teacherId },
+        { userId: teacherId },
+      ],
+    },
     select,
   });
+
+  if (!teacher) {
+    const user = await db.findFirst({
+      model: "user",
+      where: { id: teacherId },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        phone: true,
+        country: true,
+        status: true,
+        profilePhoto: true,
+        teacher: { select },
+        courses: {
+          where: { status: "PUBLISHED" },
+          select: {
+            id: true,
+            thumbnail: true,
+            originalPrice: true,
+            salePrice: true,
+            durationHours: true,
+            totalLessonsCount: true,
+            translations: true,
+          },
+        },
+      },
+    });
+
+    if (user?.teacher) {
+      teacher = user.teacher;
+    } else if (user) {
+      teacher = {
+        id: user.id,
+        subject: "Instructor",
+        avgRating: 5.0,
+        totalStudentsCount: 0,
+        totalCoursesCount: user.courses?.length || 0,
+        experienceYears: 1,
+        sessionPrice50Min: 50.0,
+        currency: "EGP",
+        bio: "",
+        linkedinUrl: null,
+        cvUrl: null,
+        introVideoUrl: null,
+        createdAt: new Date(),
+        courses: [],
+        user: {
+          id: user.id,
+          fullName: user.fullName,
+          email: user.email,
+          phone: user.phone,
+          country: user.country,
+          status: user.status,
+          profilePhoto: user.profilePhoto,
+          courses: user.courses || [],
+        },
+        sessionPlans: [],
+      };
+    }
+  }
 
   if (!teacher) {
     const error = new Error("TEACHER_NOT_FOUND");
@@ -140,7 +210,17 @@ export const getTeacherByIdService = async ({ teacherId, lang }) => {
     throw error;
   }
 
-  return teacher;
+  const sessionPriceNum = teacher.sessionPrice50Min
+    ? Number(teacher.sessionPrice50Min)
+    : 50.0;
+
+  return {
+    ...teacher,
+    sessionPrice50Min: sessionPriceNum,
+    sessionPrice: sessionPriceNum,
+    hourlyRate: sessionPriceNum,
+    currency: teacher.currency || 'EGP',
+  };
 };
 export const bookPlanService = async ({
   planId,
@@ -213,6 +293,9 @@ export const bookPlanService = async ({
   }
 
   // Determine requested session count
+  const effectiveSessionsCount = Number(plan.sessionsCount || 1);
+  const isCustomized = false;
+  const sessionUnitPrice = Number(plan.teacher?.sessionPrice50Min || 0);
 
   let basePrice = Number(plan.price);
 

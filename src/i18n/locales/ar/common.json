@@ -26,7 +26,7 @@
   "ROLE_NAME_OR_TRANSLATIONS_REQUIRED": "اسم الدور أو الترجمات مطلوبة.",
   "ROLE_SLUG_ALREADY_EXISTS": "اسم الدور المصغر (Slug) موجود بالفعل.",
   "SOME_PERMISSIONS_NOT_FOUND": "بعض الصلاحيات المحددة غير موجودة.",
-  
+
   "CANNOT_DELETE_ROLE_ASSIGNED_TO_USERS": "لا يمكن حذف دور مسند لمستخدمين نشطين.",
   "ROLE_CREATED_SUCCESSFULLY": "تم إنشاء الدور بنجاح.",
   "ROLES_FETCHED_SUCCESSFULLY": "تم جلب الأدوار بنجاح.",
@@ -93,5 +93,13 @@
   "INVALID_SESSION_COUNT": "عدد الجلسات المطلوب غير صالح.",
   "PAYMENT_ALREADY_PROCESSED": "تمت معالجة الدفع مسبقاً.",
   "INVALID_TRANSACTION_STATUS": "المعاملة ليست قيد الانتظار.",
-  "TRANSACTION_NOT_FOUND": "المعاملة غير موجودة."
+  "TRANSACTION_NOT_FOUND": "المعاملة غير موجودة.",
+
+  "TICKET_CREATED": "تم إنشاء التذكرة بنجاح.",
+  "TICKET_NOT_CREATED": "لم يتم إنشاء التذكرة.",
+
+  "TICKET_NOT_FOUND": "لم يتم العثور على التذكرة.",
+  "TICKET_DETAILS_FETCHED_SUCCESSFULLY": "تم جلب تفاصيل التذكرة بنجاح.",
+  "TEACHER_OPEN_TICKET": "المعلم لديه بالفعل تذكرتان مفتوحتان",
+  "NOT_AUTHORIZED_TO_SEND_MESSAGE":"لست مخولاً بإرسال رسالة إلى هذه التذكرة"
 }

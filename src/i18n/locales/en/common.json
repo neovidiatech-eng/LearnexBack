@@ -92,5 +92,13 @@
   "INVALID_SESSION_COUNT": "Invalid session count provided.",
   "PAYMENT_ALREADY_PROCESSED": "Payment has already been processed.",
   "INVALID_TRANSACTION_STATUS": "Transaction is not in pending status.",
-  "TRANSACTION_NOT_FOUND": "Transaction not found."
+  "TRANSACTION_NOT_FOUND": "Transaction not found.",
+
+  "TICKET_CREATED": "Ticket created successfully.",
+  "TICKET_NOT_CREATED": "Ticket not created.",
+
+  "TICKET_NOT_FOUND": "Ticket not found.",
+  "TICKET_DETAILS_FETCHED_SUCCESSFULLY": "Ticket details fetched successfully.",
+  "TEACHER_OPEN_TICKET":"Teacher already has an 2 open ticket.",
+  "NOT_AUTHORIZED_TO_SEND_MESSAGE":"You are not authorized to send a message to this ticket."
 }

@@ -20,16 +20,21 @@ model User {
   student Student?
   teacher Teacher?
 
-  courses           Course[]           @relation("TutorCourses")
-  courseEnrollments CourseEnrollment[] @relation("StudentEnrollments")
-  courseReviews     CourseReview[]     @relation("StudentCourseReviews")
-  coupunRedemptions CoupunRedemption[]
-  teacherReviews    TeacherReview[]    @relation("StudentTeacherReviews")
-  cart              Cart?
-  saveds            Saved[]
-  transactions      Transaction[]
-  wallet            wallet?
-  systemRequests    SystemRequest[]
+  courses             Course[]           @relation("TutorCourses")
+  courseEnrollments   CourseEnrollment[] @relation("StudentEnrollments")
+  courseReviews       CourseReview[]     @relation("StudentCourseReviews")
+  coupunRedemptions   CoupunRedemption[]
+  teacherReviews      TeacherReview[]    @relation("StudentTeacherReviews")
+  cart                Cart?
+  saveds              Saved[]
+  transactions        Transaction[]
+  wallet              wallet?
+  systemRequests      SystemRequest[]
+  conversations       conversation[]
+  messages            message[]
+  userSupportTickets  supportTicket[]    @relation("userTicket")
+  staffSupportTickets supportTicket[]    @relation("staffTicket")
+  supportMessages     SupportMessage[]   @relation("SupportMessageSender")
 
   @@index([roleId])
   @@index([status])
@@ -39,20 +44,20 @@ model User {
 }
 
 model Student {
-  id                  String                @id @default(uuid())
-  userId              String                @unique
-  user                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  dateOfBirth         DateTime?
-  notes               String?               @db.Text
-  planId              String?
-  plan                SessionPlan?          @relation(fields: [planId], references: [id], onDelete: SetNull)
-  sessionCount        Int                   @default(0)
-  sessionLeft         Int                   @default(0)
-  sessionUsed         Int                   @default(0)
-  courseFavorites     CourseFavorite[]      @relation("StudentFavorites")
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
-  teacherSubscription teacherSubscription[]
+  id                    String                 @id @default(uuid())
+  userId                String                 @unique
+  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dateOfBirth           DateTime?
+  notes                 String?                @db.Text
+  planId                String?
+  plan                  SessionPlan?           @relation(fields: [planId], references: [id], onDelete: SetNull)
+  sessionCount          Int                    @default(0)
+  sessionLeft           Int                    @default(0)
+  sessionUsed           Int                    @default(0)
+  courseFavorites       CourseFavorite[]       @relation("StudentFavorites")
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  teacherSubscription   teacherSubscription[]
   sessionRequests       SessionRequest[]
   sessions              Session[]
   customSessionRequests CustomSessionRequest[]
@@ -90,7 +95,7 @@ model Teacher {
   workHours           TeacherWorkHours[]
   teacherSubscription teacherSubscription[]
 
-  courses         TeacherCourse[]
+  courses               TeacherCourse[]
   sessionPlans          SessionPlan[]
   sessions              Session[]
   sessionRequests       SessionRequest[]

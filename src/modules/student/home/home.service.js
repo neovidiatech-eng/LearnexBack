@@ -24,6 +24,7 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
     instructorsRaw,
     cart,
     todaySessionsRaw,
+    activeOffersRaw,
   ] = await Promise.all([
     db.findMany({
       model: "category",
@@ -43,12 +44,12 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
       take: 8,
       orderBy: { createdAt: "desc" },
       include: {
-        translations: { where: { locale } },
+        translations: true,
         category: {
           select: {
             id: true,
             slug: true,
-            translations: { where: { locale } },
+            translations: true,
           },
         },
         instructor: {
@@ -67,12 +68,12 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
       take: 8,
       orderBy: { avgRating: "desc" },
       include: {
-        translations: { where: { locale } },
+        translations: true,
         category: {
           select: {
             id: true,
             slug: true,
-            translations: { where: { locale } },
+            translations: true,
           },
         },
         instructor: {
@@ -87,6 +88,9 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
 
     db.findMany({
       model: "teacher",
+      where: {
+        user: { status: "ACTIVE" },
+      },
       take: 10,
       orderBy: { avgRating: "desc" },
       select: {
@@ -101,6 +105,7 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
             id: true,
             fullName: true,
             profilePhoto: true,
+            status: true,
           },
         },
       },
@@ -133,6 +138,27 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
         },
       },
     }),
+
+    db.findMany({
+      model: "offer",
+      where: {
+        status: "ACTIVE",
+        startDate: { lte: new Date() },
+        endDate: { gte: new Date() },
+      },
+      take: 5,
+      include: {
+        translations: { where: { locale } },
+        course: {
+          select: {
+            id: true,
+            thumbnail: true,
+            translations: { where: { locale } },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
   ]);
 
   const allCourseIds = Array.from(
@@ -157,8 +183,21 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
 
   const mapCourse = (c) => {
     const enrollment = enrollmentMap.get(c.id);
+    const trans =
+      c.translations?.find((t) => t.locale === locale) ||
+      c.translations?.[0];
+
+    const categoryTrans =
+      c.category?.translations?.find((t) => t.locale === locale) ||
+      c.category?.translations?.[0];
+
     return {
       ...c,
+      title: trans?.title || c.title || "",
+      description: trans?.description || c.description || "",
+      categoryName: categoryTrans?.name || "",
+      instructorName: c.instructor?.fullName || "",
+      instructorPhoto: c.instructor?.profilePhoto || null,
       type: coursesType.COURSE,
       isEnrolled: !!enrollment,
       progressPercent: enrollment ? Number(enrollment.progressPercent || 0) : 0,
@@ -192,32 +231,55 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
     };
   });
 
-  const banners = [
+  const offerBanners = (activeOffersRaw || []).map((o) => {
+    const trans = o.translations?.find((t) => t.locale === locale) || o.translations?.[0];
+    const courseTrans = o.course?.translations?.find((t) => t.locale === locale) || o.course?.translations?.[0];
+    const discountText = o.discount ? `${Number(o.discount)}%` : "";
+    return {
+      id: o.id,
+      title: trans?.name || (discountText ? (locale === "ar" ? `خصم حصري ${discountText}` : `Exclusive ${discountText} Off`) : (locale === "ar" ? "عرض حصري" : "Special Offer")),
+      subtitle: trans?.offerDesc || courseTrans?.title || (locale === "ar" ? "عرض خاص لفترة محدودة على أفضل الكورسات" : "Limited time exclusive offer"),
+      imageUrl: o.course?.thumbnail || "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1000&auto=format&fit=crop",
+      actionType: o.courseId ? "COURSE" : "DISCOUNT",
+      targetId: o.courseId || null,
+      buttonText: locale === "ar" ? "استفد من العرض" : "Claim Offer",
+    };
+  });
+
+  const defaultBanners = [
     {
       id: "b1",
-      title: "خصم يصل إلى 50%",
-      subtitle: "على جميع دورات تطوير البرمجيات والذكاء الاصطناعي",
+      title: locale === "ar" ? "خصم يصل إلى 50%" : "Up to 50% Off",
+      subtitle: locale === "ar" ? "على جميع دورات تطوير البرمجيات والذكاء الاصطناعي" : "On all software engineering & AI courses",
       imageUrl:
         "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1000&auto=format&fit=crop",
       actionType: "DISCOUNT",
+      targetId: null,
+      buttonText: locale === "ar" ? "تصفح العروض" : "Explore Offers",
     },
     {
       id: "b2",
-      title: "تعلم مع نخبة المدربين",
-      subtitle: "دورات عملية تؤهلك لسوق العمل فوراً",
+      title: locale === "ar" ? "تعلم مع نخبة المدربين" : "Learn from Top Instructors",
+      subtitle: locale === "ar" ? "دورات عملية تؤهلك لسوق العمل فوراً" : "Practical courses tailored for the job market",
       imageUrl:
         "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=1000&auto=format&fit=crop",
       actionType: "INSTRUCTORS",
+      targetId: null,
+      buttonText: locale === "ar" ? "اكتشف المدربين" : "View Instructors",
     },
     {
       id: "b3",
-      title: "مسارات احترافية جديدة",
-      subtitle: "أحدث المناهج التعليمية في التصميم والبرمجة",
+      title: locale === "ar" ? "مسارات احترافية جديدة" : "New Professional Tracks",
+      subtitle: locale === "ar" ? "أحدث المناهج التعليمية في التصميم والبرمجة" : "Latest curriculum in design and development",
       imageUrl:
         "https://images.unsplash.com/photo-1501504905252-473c47e087f8?q=80&w=1000&auto=format&fit=crop",
       actionType: "CATEGORIES",
+      targetId: null,
+      buttonText: locale === "ar" ? "تصفح الأقسام" : "Browse Categories",
     },
   ];
+
+  const banners = offerBanners.length > 0 ? [...offerBanners, ...defaultBanners] : defaultBanners;
 
   return {
     banners,

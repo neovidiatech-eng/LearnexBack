@@ -15,7 +15,7 @@ const ensurePermissions = (req) => {
         req.permissions = new Set(
           req.user.role.rolePermissions
             .map((rp) => rp.permission?.code)
-            .filter(Boolean)
+            .filter(Boolean),
         );
       } else {
         req.permissions = new Set();
@@ -75,10 +75,9 @@ export const authorizeResource = (resourceName) => {
   });
 };
 
-
-//authentication  مين ال باعت الريكوست معاك توكن ولا لاء يعم 
+//authentication  مين ال باعت الريكوست معاك توكن ولا لاء يعم
 // authorization هل مسموح له ينفذ الاكشن دي ولا لاء ع اساس الرول يعني
-// authorize هنا بحدد الاكشن ال ممكن يعمله اليوزر وبسكيب الادمن زالسوبر ادمن يعملوا ال هم عايزينه يعدي علطول 
+// authorize هنا بحدد الاكشن ال ممكن يعمله اليوزر وبسكيب الادمن زالسوبر ادمن يعملوا ال هم عايزينه يعدي علطول
 // يعني مثلا عايز شخص يعمل دليت بس اديله الاكشن دا بس
 // authorizeResource بديله الCrud كامل
 // ويعمل ماب عليهم ويختار الاكشن من خلال الماب دا

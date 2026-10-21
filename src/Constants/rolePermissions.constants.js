@@ -14,6 +14,20 @@ export const PERMISSIONS_DATA = [
     resource: "dashboard",
     action: "read",
   },
+  //reports
+  {
+    code: PERMISSIONS_V2.REPORTS.READ,
+    name: "Read Reports Analytics",
+    resource: "reports",
+    action: "read",
+  },
+  //calendar
+  {
+    code: PERMISSIONS_V2.CALENDAR.READ,
+    name: "Read Reports Analytics",
+    resource: "calendar",
+    action: "read",
+  },
 
   // Categories
   {
@@ -493,8 +507,61 @@ export const PERMISSIONS_DATA = [
     resource: "chat",
     action: "delete",
   },
+  {
+    code: PERMISSIONS_V2.TICKETS.READ,
+    name: "Read Support Tickets",
+    resource: "supportTickets",
+    action: "read",
+  },
+  {
+    code: PERMISSIONS_V2.TICKETS.CREATE,
+    name: "Create Support Tickets",
+    resource: "supportTickets",
+    action: "create",
+  },
+  {
+    code: PERMISSIONS_V2.TICKETS.UPDATE,
+    name: "Update Support Tickets",
+    resource: "supportTickets",
+    action: "update",
+  },
+  {
+    code: PERMISSIONS_V2.TICKETS.DELETE,
+    name: "Delete Support Tickets",
+    resource: "supportTickets",
+    action: "delete",
+  },
+  {
+    code: PERMISSIONS_V2.TICKETS.READ_OWN,
+    name: "Read Own Support Tickets",
+    resource: "supportTickets",
+    action: "read_own",
+  },
+  {
+    code: PERMISSIONS_V2.TICKETS.READ_ALL,
+    name: "Read All Support Tickets",
+    resource: "supportTickets",
+    action: "read_all",
+  },
+  {
+    code: PERMISSIONS_V2.TICKETS.CLOSE,
+    name: "Close Support Tickets",
+    resource: "supportTickets",
+    action: "close",
+  },
+  {
+    code: PERMISSIONS_V2.TICKETS.REOPEN,
+    name: "Reopen Support Tickets",
+    resource: "supportTickets",
+    action: "reopen",
+  },
+  {
+    code: PERMISSIONS_V2.TICKETS.ASSIGN,
+    name: "Assign Support Tickets",
+    resource: "supportTickets",
+    action: "assign",
+  },
 ];
-
 
 export const ROLE_PERMISSIONS_MAP = {
   ADMIN: ALL_PERMISSION_CODES,
@@ -505,6 +572,12 @@ export const ROLE_PERMISSIONS_MAP = {
     PERMISSIONS_V2.TEACHERS.UPDATE,
     PERMISSIONS_V2.TEACHERS.DELETE,
     PERMISSIONS_V2.TEACHERS.READ_MY_STUDENTS,
+    // tickets
+    PERMISSIONS_V2.TICKETS.READ,
+    PERMISSIONS_V2.TICKETS.CREATE,
+    PERMISSIONS_V2.TICKETS.UPDATE,
+    PERMISSIONS_V2.TICKETS.READ_OWN,
+    PERMISSIONS_V2.TICKETS.REOPEN,
 
     // Plans
     PERMISSIONS_V2.PLANS.GET_MY_PLANS,
@@ -560,6 +633,11 @@ export const ROLE_PERMISSIONS_MAP = {
     PERMISSIONS_V2.CATEGORIES.READ,
     PERMISSIONS_V2.REVIEWS.READ,
     PERMISSIONS_V2.PLANS.BUY_PLAN,
+    PERMISSIONS_V2.TICKETS.READ,
+    PERMISSIONS_V2.TICKETS.CREATE,
+    PERMISSIONS_V2.TICKETS.UPDATE,
+    PERMISSIONS_V2.TICKETS.READ_OWN,
+    PERMISSIONS_V2.TICKETS.REOPEN,
 
     // Session Requests (student creates and manages own requests)
     PERMISSIONS_V2.SESSIONREQUESTS.CREATE,
