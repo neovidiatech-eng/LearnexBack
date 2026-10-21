@@ -1391,6 +1391,330 @@ Include the Bearer JWT token in the Authorization header:
           },
         },
       },
+
+      // ═══════════════════════════════════════════════════════════
+      // Support Tickets Schemas
+      // ═══════════════════════════════════════════════════════════
+      SupportTicketUserDTO: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440001" },
+          fullName: { type: "string", example: "Dr. Ahmed Hassan" },
+          email: { type: "string", format: "email", example: "ahmed.hassan@learnex.com" },
+          profilePhoto: { type: "string", nullable: true, example: "/uploads/avatars/user.jpg" },
+        },
+      },
+      SupportTicketUserDetailDTO: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440001" },
+          fullName: { type: "string", example: "Dr. Ahmed Hassan" },
+          email: { type: "string", format: "email", example: "ahmed.hassan@learnex.com" },
+          phone: { type: "string", nullable: true, example: "+201001234567" },
+          profilePhoto: { type: "string", nullable: true, example: "/uploads/avatars/user.jpg" },
+          role: {
+            type: "object",
+            properties: {
+              slug: { type: "string", example: "teacher" },
+              roleTranslations: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    name: { type: "string", example: "Teacher" },
+                    lang: { type: "string", example: "en" },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      SupportAttachmentDTO: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440002" },
+          messageId: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440003" },
+          fileName: { type: "string", example: "screenshot.png" },
+          storageKey: { type: "string", example: "uploads/support/attachments/uuid/screenshot.png" },
+          mimeType: { type: "string", example: "image/png" },
+          size: { type: "integer", example: 1048576 },
+          createdAt: { type: "string", format: "date-time" },
+        },
+      },
+      SupportMessageSenderDTO: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440001" },
+          fullName: { type: "string", example: "Support Agent" },
+          email: { type: "string", nullable: true, example: "support@learnex.com" },
+          profilePhoto: { type: "string", nullable: true, example: "/uploads/avatars/agent.jpg" },
+        },
+      },
+      SupportMessageDTO: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440003" },
+          ticketId: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440000" },
+          senderId: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440001" },
+          body: { type: "string", example: "Hello, we have reviewed your request and resolved the issue." },
+          createdAt: { type: "string", format: "date-time" },
+          sender: { $ref: "#/components/schemas/SupportMessageSenderDTO" },
+          attachments: {
+            type: "array",
+            items: { $ref: "#/components/schemas/SupportAttachmentDTO" },
+          },
+        },
+      },
+      AdminTicketListItemDTO: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440000" },
+          ticketNumber: { type: "integer", example: 1001 },
+          subject: { type: "string", example: "Issue with course video upload" },
+          status: {
+            type: "string",
+            enum: ["OPEN", "IN_PROGRESS", "WAITING_FOR_TEACHER", "RESOLVED", "CLOSED"],
+            example: "OPEN",
+          },
+          priority: {
+            type: "string",
+            enum: ["LOW", "NORMAL", "HIGH", "URGENT"],
+            example: "NORMAL",
+          },
+          userId: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440001" },
+          assignedStaffId: { type: "string", format: "uuid", nullable: true, example: "550e8400-e29b-41d4-a716-446655440005" },
+          lastMessageAt: { type: "string", format: "date-time", nullable: true },
+          resolvedAt: { type: "string", format: "date-time", nullable: true },
+          closedAt: { type: "string", format: "date-time", nullable: true },
+          createdAt: { type: "string", format: "date-time" },
+          updatedAt: { type: "string", format: "date-time" },
+          user: { $ref: "#/components/schemas/SupportTicketUserDTO" },
+          staff: { $ref: "#/components/schemas/SupportTicketUserDTO", nullable: true },
+        },
+      },
+      AdminTicketDetailDTO: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440000" },
+          ticketNumber: { type: "integer", example: 1001 },
+          subject: { type: "string", example: "Issue with course video upload" },
+          status: {
+            type: "string",
+            enum: ["OPEN", "IN_PROGRESS", "WAITING_FOR_TEACHER", "RESOLVED", "CLOSED"],
+            example: "OPEN",
+          },
+          priority: {
+            type: "string",
+            enum: ["LOW", "NORMAL", "HIGH", "URGENT"],
+            example: "NORMAL",
+          },
+          userId: { type: "string", format: "uuid" },
+          assignedStaffId: { type: "string", format: "uuid", nullable: true },
+          lastMessageAt: { type: "string", format: "date-time", nullable: true },
+          resolvedAt: { type: "string", format: "date-time", nullable: true },
+          closedAt: { type: "string", format: "date-time", nullable: true },
+          createdAt: { type: "string", format: "date-time" },
+          updatedAt: { type: "string", format: "date-time" },
+          user: { $ref: "#/components/schemas/SupportTicketUserDetailDTO" },
+          staff: { $ref: "#/components/schemas/SupportTicketUserDTO", nullable: true },
+          supportMessages: {
+            type: "array",
+            items: { $ref: "#/components/schemas/SupportMessageDTO" },
+          },
+        },
+      },
+      AdminTicketListResponseDTO: {
+        type: "object",
+        properties: {
+          message: { type: "string", example: "SUCCESS" },
+          data: {
+            type: "object",
+            properties: {
+              data: {
+                type: "array",
+                items: { $ref: "#/components/schemas/AdminTicketListItemDTO" },
+              },
+              pagination: { $ref: "#/components/schemas/PaginationMeta" },
+            },
+          },
+        },
+      },
+      AdminTicketDetailResponseDTO: {
+        type: "object",
+        properties: {
+          message: { type: "string", example: "SUCCESS" },
+          data: { $ref: "#/components/schemas/AdminTicketDetailDTO" },
+        },
+      },
+      TicketMessagesCursorResponseDTO: {
+        type: "object",
+        properties: {
+          message: { type: "string", example: "SUCCESS" },
+          data: {
+            type: "object",
+            properties: {
+              items: {
+                type: "array",
+                items: { $ref: "#/components/schemas/SupportMessageDTO" },
+              },
+              nextCursor: {
+                type: "object",
+                nullable: true,
+                properties: {
+                  id: { type: "string", format: "uuid" },
+                  createdAt: { type: "string", format: "date-time" },
+                },
+              },
+              hasMore: { type: "boolean", example: false },
+            },
+          },
+        },
+      },
+      AdminAssignTicketDTO: {
+        type: "object",
+        required: ["staffId"],
+        properties: {
+          staffId: {
+            type: "string",
+            format: "uuid",
+            nullable: true,
+            example: "550e8400-e29b-41d4-a716-446655440005",
+            description: "Staff User UUID to assign the ticket to, or null to unassign",
+          },
+        },
+      },
+      AdminChangeTicketStatusDTO: {
+        type: "object",
+        required: ["status"],
+        properties: {
+          status: {
+            type: "string",
+            enum: ["OPEN", "IN_PROGRESS", "WAITING_FOR_TEACHER", "RESOLVED", "CLOSED"],
+            example: "IN_PROGRESS",
+            description: "New status of the support ticket",
+          },
+        },
+      },
+      TeacherCreateTicketDTO: {
+        type: "object",
+        required: ["subject", "priority", "message"],
+        properties: {
+          subject: { type: "string", example: "Question regarding monthly payout" },
+          priority: {
+            type: "string",
+            enum: ["LOW", "NORMAL", "HIGH", "URGENT"],
+            example: "NORMAL",
+          },
+          message: { type: "string", example: "Hello, when will the monthly session payouts be processed?" },
+          attachment: {
+            type: "string",
+            format: "binary",
+            description: "Optional file attachment (image or document up to 5MB)",
+          },
+        },
+      },
+      TicketSendMessageDTO: {
+        type: "object",
+        required: ["message"],
+        properties: {
+          message: { type: "string", example: "Here is the screenshot of the error." },
+          attachment: {
+            type: "string",
+            format: "binary",
+            description: "Optional file attachment (image or document up to 5MB)",
+          },
+        },
+      },
+      TeacherReopenTicketDTO: {
+        type: "object",
+        required: ["message"],
+        properties: {
+          message: { type: "string", example: "The issue occurred again today, reopening this ticket." },
+          attachment: {
+            type: "string",
+            format: "binary",
+            description: "Optional file attachment (image or document up to 5MB)",
+          },
+        },
+      },
+      TeacherTicketListItemDTO: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440000" },
+          ticketNumber: { type: "integer", example: 1001 },
+          subject: { type: "string", example: "Question regarding monthly payout" },
+          status: {
+            type: "string",
+            enum: ["OPEN", "IN_PROGRESS", "WAITING_FOR_TEACHER", "RESOLVED", "CLOSED"],
+            example: "OPEN",
+          },
+          priority: {
+            type: "string",
+            enum: ["LOW", "NORMAL", "HIGH", "URGENT"],
+            example: "NORMAL",
+          },
+          userId: { type: "string", format: "uuid" },
+          assignedStaffId: { type: "string", format: "uuid", nullable: true },
+          lastMessageAt: { type: "string", format: "date-time", nullable: true },
+          resolvedAt: { type: "string", format: "date-time", nullable: true },
+          closedAt: { type: "string", format: "date-time", nullable: true },
+          createdAt: { type: "string", format: "date-time" },
+          updatedAt: { type: "string", format: "date-time" },
+        },
+      },
+      TeacherTicketListResponseDTO: {
+        type: "object",
+        properties: {
+          message: { type: "string", example: "SUCCESS" },
+          data: {
+            type: "object",
+            properties: {
+              data: {
+                type: "array",
+                items: { $ref: "#/components/schemas/TeacherTicketListItemDTO" },
+              },
+              pagination: { $ref: "#/components/schemas/PaginationMeta" },
+            },
+          },
+        },
+      },
+      TeacherTicketDetailResponseDTO: {
+        type: "object",
+        properties: {
+          message: { type: "string", example: "SUCCESS" },
+          data: {
+            type: "object",
+            properties: {
+              id: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440000" },
+              ticketNumber: { type: "integer", example: 1001 },
+              subject: { type: "string", example: "Question regarding monthly payout" },
+              status: {
+                type: "string",
+                enum: ["OPEN", "IN_PROGRESS", "WAITING_FOR_TEACHER", "RESOLVED", "CLOSED"],
+                example: "OPEN",
+              },
+              priority: {
+                type: "string",
+                enum: ["LOW", "NORMAL", "HIGH", "URGENT"],
+                example: "NORMAL",
+              },
+              userId: { type: "string", format: "uuid" },
+              assignedStaffId: { type: "string", format: "uuid", nullable: true },
+              lastMessageAt: { type: "string", format: "date-time", nullable: true },
+              resolvedAt: { type: "string", format: "date-time", nullable: true },
+              closedAt: { type: "string", format: "date-time", nullable: true },
+              createdAt: { type: "string", format: "date-time" },
+              updatedAt: { type: "string", format: "date-time" },
+              staff: { $ref: "#/components/schemas/SupportTicketUserDTO", nullable: true },
+              supportMessages: {
+                type: "array",
+                items: { $ref: "#/components/schemas/SupportMessageDTO" },
+              },
+            },
+          },
+        },
+      },
     },
   },
   tags: [
@@ -1411,6 +1735,7 @@ Include the Bearer JWT token in the Authorization header:
     { name: "Admin - Requests", description: "Admin requests management, overview statistics, approvals, and rejections" },
     { name: "Admin - Sessions", description: "Admin monitoring of sessions (today, upcoming, history)" },
     { name: "Admin - Chat", description: "Admin customer support conversations, user messaging, and live chat" },
+    { name: "Admin - Tickets", description: "Admin support tickets management, status updates, staff assignment, and messaging" },
 
     { name: "Teacher - Auth", description: "Teacher registration with CV upload, login, and password recovery" },
     { name: "Teacher - Profile", description: "Teacher bio, hourly session pricing, avatar uploads, and visibility" },
@@ -1423,6 +1748,7 @@ Include the Bearer JWT token in the Authorization header:
     { name: "Teacher - Sessions", description: "Teacher session requests management (view, accept, reject) and live sessions (start, end)" },
     { name: "Teacher - Offers", description: "Teacher personal course promotional offers" },
     { name: "Teacher - Reviews", description: "Teacher session and course reviews overview" },
+    { name: "Teacher - Tickets", description: "Teacher support ticket creation, messaging, ticket reopen, and tracking" },
 
     { name: "Student - Auth", description: "Student signup, OTP email verification, login, and password recovery" },
     { name: "Student - Profile", description: "Personal data, avatar/cover images, password change, and deletion" },
@@ -3678,6 +4004,210 @@ Include the Bearer JWT token in the Authorization header:
     },
 
     // ═══════════════════════════════════════════════════════════
+    // ADMIN TICKETS
+    // ═══════════════════════════════════════════════════════════
+    "/api/v1/admin/tickets": {
+      get: {
+        summary: "Get All Support Tickets",
+        description: "Retrieve paginated list of support tickets with status, priority, assigned staff filtering, and search across subject, ticketNumber, user name or email.",
+        tags: ["Admin - Tickets"],
+        security: bearerSecurity,
+        parameters: [
+          ...paginationQueryParams,
+          {
+            in: "query",
+            name: "status",
+            schema: {
+              type: "string",
+              enum: ["OPEN", "IN_PROGRESS", "WAITING_FOR_TEACHER", "RESOLVED", "CLOSED"],
+            },
+            description: "Filter by ticket status",
+          },
+          {
+            in: "query",
+            name: "priority",
+            schema: {
+              type: "string",
+              enum: ["LOW", "NORMAL", "HIGH", "URGENT"],
+            },
+            description: "Filter by ticket priority",
+          },
+          {
+            in: "query",
+            name: "assignedStaffId",
+            schema: { type: "string", format: "uuid" },
+            description: "Filter by assigned staff UUID (pass null or omit for unassigned)",
+          },
+          {
+            in: "query",
+            name: "sort",
+            schema: { type: "string", enum: ["asc", "desc"], default: "desc" },
+            description: "Sort order by creation date (asc or desc)",
+          },
+        ],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/AdminTicketListResponseDTO" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/admin/tickets/{ticketId}": {
+      get: {
+        summary: "Get Support Ticket by ID",
+        description: "Retrieve comprehensive details of a single support ticket including ticket creator (with role info), assigned staff, and all support messages with attachments.",
+        tags: ["Admin - Tickets"],
+        security: bearerSecurity,
+        parameters: [uuidParam("ticketId", "Support Ticket UUID")],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/AdminTicketDetailResponseDTO" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/admin/tickets/{ticketId}/messages": {
+      get: {
+        summary: "Get Ticket Messages with Cursor Pagination",
+        description: "Retrieve messages of a ticket sorted chronologically using cursor-based pagination (id and createdAt).",
+        tags: ["Admin - Tickets"],
+        security: bearerSecurity,
+        parameters: [
+          uuidParam("ticketId", "Support Ticket UUID"),
+          {
+            in: "query",
+            name: "id",
+            schema: { type: "string", format: "uuid" },
+            description: "Cursor message UUID for pagination",
+          },
+          {
+            in: "query",
+            name: "createdAt",
+            schema: { type: "string", format: "date-time" },
+            description: "Cursor creation timestamp for pagination",
+          },
+          {
+            in: "query",
+            name: "limit",
+            schema: { type: "integer", minimum: 1, maximum: 100, default: 10 },
+            description: "Number of messages per page",
+          },
+        ],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/TicketMessagesCursorResponseDTO" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/admin/tickets/{ticketId}/send-message": {
+      post: {
+        summary: "Reply to Support Ticket",
+        description: "Admin sends a message response to a ticket with an optional attachment (image/document up to 5MB). Changes ticket status to IN_PROGRESS and auto-assigns current staff if unassigned.",
+        tags: ["Admin - Tickets"],
+        security: bearerSecurity,
+        parameters: [uuidParam("ticketId", "Support Ticket UUID")],
+        requestBody: {
+          required: true,
+          content: {
+            "multipart/form-data": {
+              schema: { $ref: "#/components/schemas/TicketSendMessageDTO" },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/admin/tickets/{ticketId}/close": {
+      post: {
+        summary: "Close Support Ticket",
+        description: "Explicitly close a support ticket. Sets status to CLOSED, closedAt and resolvedAt timestamps.",
+        tags: ["Admin - Tickets"],
+        security: bearerSecurity,
+        parameters: [uuidParam("ticketId", "Support Ticket UUID")],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/admin/tickets/{ticketId}/status": {
+      patch: {
+        summary: "Change Ticket Status",
+        description: "Update the lifecycle status of a support ticket (OPEN, IN_PROGRESS, WAITING_FOR_TEACHER, RESOLVED, CLOSED).",
+        tags: ["Admin - Tickets"],
+        security: bearerSecurity,
+        parameters: [uuidParam("ticketId", "Support Ticket UUID")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/AdminChangeTicketStatusDTO" },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/admin/tickets/{ticketId}/assign": {
+      patch: {
+        summary: "Assign Ticket to Staff Member",
+        description: "Assign or reassign ticket to a staff member (or set staffId to null to unassign).",
+        tags: ["Admin - Tickets"],
+        security: bearerSecurity,
+        parameters: [uuidParam("ticketId", "Support Ticket UUID")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/AdminAssignTicketDTO" },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    // ═══════════════════════════════════════════════════════════
     // TEACHER AUTH
     // ═══════════════════════════════════════════════════════════
 
@@ -4752,6 +5282,191 @@ Include the Bearer JWT token in the Authorization header:
     },
 
     // ═══════════════════════════════════════════════════════════
+    // TEACHER TICKETS
+    // ═══════════════════════════════════════════════════════════
+    "/api/v1/teacher/tickets": {
+      get: {
+        summary: "Get Teacher Support Tickets",
+        description: "Retrieve paginated list of support tickets submitted by the authenticated teacher, filterable by status and priority.",
+        tags: ["Teacher - Tickets"],
+        security: bearerSecurity,
+        parameters: [
+          ...paginationQueryParams.slice(0, 2),
+          {
+            in: "query",
+            name: "status",
+            schema: {
+              type: "string",
+              enum: ["OPEN", "IN_PROGRESS", "WAITING_FOR_TEACHER", "RESOLVED", "CLOSED"],
+            },
+            description: "Filter by ticket status",
+          },
+          {
+            in: "query",
+            name: "priority",
+            schema: {
+              type: "string",
+              enum: ["LOW", "NORMAL", "HIGH", "URGENT"],
+            },
+            description: "Filter by ticket priority",
+          },
+          {
+            in: "query",
+            name: "sort",
+            schema: { type: "string", enum: ["asc", "desc"], default: "desc" },
+            description: "Sort order by creation date (asc or desc)",
+          },
+        ],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/TeacherTicketListResponseDTO" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/teacher/tickets/create": {
+      post: {
+        summary: "Create Support Ticket",
+        description: "Teacher creates a new support ticket. Note: A maximum of 2 OPEN tickets are allowed simultaneously per teacher. Returns message TICKET_CREATED on success.",
+        tags: ["Teacher - Tickets"],
+        security: bearerSecurity,
+        requestBody: {
+          required: true,
+          content: {
+            "multipart/form-data": {
+              schema: { $ref: "#/components/schemas/TeacherCreateTicketDTO" },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[200]({
+            type: "object",
+            properties: {
+              message: { type: "string", example: "TICKET_CREATED" },
+            },
+          }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/teacher/tickets/{ticketId}": {
+      get: {
+        summary: "Get Teacher Ticket Details",
+        description: "Retrieve support ticket details by ID for the authenticated teacher, including assigned staff and message thread.",
+        tags: ["Teacher - Tickets"],
+        security: bearerSecurity,
+        parameters: [uuidParam("ticketId", "Support Ticket UUID")],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/TeacherTicketDetailResponseDTO" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/teacher/tickets/{ticketId}/send-message": {
+      post: {
+        summary: "Send Message in Support Ticket",
+        description: "Teacher adds a message reply with an optional file attachment (image/document up to 5MB) to an open support ticket.",
+        tags: ["Teacher - Tickets"],
+        security: bearerSecurity,
+        parameters: [uuidParam("ticketId", "Support Ticket UUID")],
+        requestBody: {
+          required: true,
+          content: {
+            "multipart/form-data": {
+              schema: { $ref: "#/components/schemas/TicketSendMessageDTO" },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/teacher/tickets/{ticketId}/reopen": {
+      post: {
+        summary: "Reopen Closed Support Ticket",
+        description: "Reopen a previously CLOSED or RESOLVED ticket with a message and an optional file attachment (image/document up to 5MB).",
+        tags: ["Teacher - Tickets"],
+        security: bearerSecurity,
+        parameters: [uuidParam("ticketId", "Support Ticket UUID")],
+        requestBody: {
+          required: true,
+          content: {
+            "multipart/form-data": {
+              schema: { $ref: "#/components/schemas/TeacherReopenTicketDTO" },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/teacher/tickets/{ticketId}/messages": {
+      get: {
+        summary: "Get Teacher Ticket Messages with Cursor Pagination",
+        description: "Retrieve messages of a ticket sorted chronologically using cursor pagination (requires id and createdAt). Ticket must not be CLOSED or RESOLVED.",
+        tags: ["Teacher - Tickets"],
+        security: bearerSecurity,
+        parameters: [
+          uuidParam("ticketId", "Support Ticket UUID"),
+          {
+            in: "query",
+            name: "id",
+            required: true,
+            schema: { type: "string", format: "uuid" },
+            description: "Cursor message UUID for pagination",
+          },
+          {
+            in: "query",
+            name: "createdAt",
+            required: true,
+            schema: { type: "string", format: "date-time" },
+            description: "Cursor creation timestamp for pagination",
+          },
+          {
+            in: "query",
+            name: "limit",
+            schema: { type: "integer", minimum: 1, maximum: 100, default: 10 },
+            description: "Number of messages per page",
+          },
+        ],
+        responses: {
+          ...standardResponses[200]({ $ref: "#/components/schemas/TicketMessagesCursorResponseDTO" }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    // ═══════════════════════════════════════════════════════════
     // STUDENT AUTH
     // ═══════════════════════════════════════════════════════════
     "/api/v1/student/auth/signup": {
@@ -5777,15 +6492,6 @@ Include the Bearer JWT token in the Authorization header:
         tags: ["Student - Sessions"],
         security: bearerSecurity,
         parameters: [uuidParam("teacherId", "Teacher UUID")],
-    // ───────────────────────────────────────────────────────────
-    // STUDENT REVIEWS (/api/v1/student/reviews)
-    // ───────────────────────────────────────────────────────────
-    "/api/v1/student/reviews": {
-      post: {
-        summary: "Add review for course or teacher session",
-        description: "Submit a review with rating and optional comment for a Course (requires enrollment) or a Teacher (session). Exactly one of courseId or teacherId must be provided.",
-        tags: ["Student - Reviews"],
-        security: bearerSecurity,
         requestBody: {
           required: true,
           content: {
@@ -6282,6 +6988,21 @@ Include the Bearer JWT token in the Authorization header:
           403: standardResponses[403],
           404: standardResponses[404],
           409: { description: "Request is not PENDING" },
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/student/reviews": {
+      post: {
+        summary: "Create Course or Teacher Review",
+        description: "Submit a review and rating for an enrolled course or a completed teacher session.",
+        tags: ["Student - Reviews"],
+        security: bearerSecurity,
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
               schema: {
                 type: "object",
                 required: ["type", "rating"],
@@ -6377,8 +7098,7 @@ Include the Bearer JWT token in the Authorization header:
       },
     },
   },
-};
-
+}
 // ═══════════════════════════════════════════════════════════════
 //  Clean Dark Mode Theme with Blue Highlights
 // ═══════════════════════════════════════════════════════════
