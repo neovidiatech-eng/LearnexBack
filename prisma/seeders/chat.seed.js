@@ -26,8 +26,9 @@ export async function seedChat(prisma, students = [], teachers = []) {
   const ahmedUser = allTeachers.find((t) => t.fullName?.includes("Ahmed")) || allTeachers[0];
   const saraUser = allTeachers.find((t) => t.fullName?.includes("Sara")) || allTeachers[1];
 
-  const getStudentId = (u) => u?.student?.id || u?.id;
-  const getTeacherId = (u) => u?.teacher?.id || u?.id;
+  const getStudentId = (u) => u?.student?.id || null;
+  const getTeacherId = (u) => u?.teacher?.id || null;
+
 
   const sampleConversations = [
     {
