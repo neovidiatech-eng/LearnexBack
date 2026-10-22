@@ -2709,10 +2709,135 @@ Include the Bearer JWT token in the Authorization header:
           },
         },
       },
+
+      // Chat Schemas
+      ChatStartConversationDTO: {
+        type: "object",
+        description: "Pass either teacherId (if student) or studentId (if teacher)",
+        properties: {
+          teacherId: {
+            type: "string",
+            format: "uuid",
+            example: "550e8400-e29b-41d4-a716-446655440000",
+          },
+          studentId: {
+            type: "string",
+            format: "uuid",
+            example: "550e8400-e29b-41d4-a716-446655440001",
+          },
+        },
+      },
+      ChatParticipantDTO: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          userId: { type: "string", format: "uuid" },
+          fullName: { type: "string", example: "Dr. Ahmed Hassan" },
+          profilePhoto: {
+            type: "string",
+            nullable: true,
+            example: "https://example.com/avatar.jpg",
+          },
+        },
+      },
+      ChatConversationItemDTO: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          lastMessage: {
+            type: "string",
+            example: "Hello, when is our next session?",
+          },
+          lastMessageAt: { type: "string", format: "date-time" },
+          unreadCount: { type: "integer", example: 2 },
+          participant: { $ref: "#/components/schemas/ChatParticipantDTO" },
+        },
+      },
+      ChatMessageDTO: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          content: { type: "string", example: "Hello, can you help me with this quiz?" },
+          senderId: { type: "string", format: "uuid" },
+          createdAt: { type: "string", format: "date-time" },
+          isMine: { type: "boolean", example: true },
+          sender: {
+            type: "object",
+            properties: {
+              id: { type: "string", format: "uuid" },
+              fullName: { type: "string", example: "Youssef Mahmoud" },
+              profilePhoto: { type: "string", nullable: true },
+            },
+          },
+        },
+      },
+      ChatUnreadCountResponse: {
+        type: "object",
+        properties: {
+          message: { type: "string", example: "UNREAD_COUNT_RETRIEVED_SUCCESSFULLY" },
+          status: { type: "integer", example: 200 },
+          data: {
+            type: "object",
+            properties: {
+              totalUnread: { type: "integer", example: 5 },
+            },
+          },
+        },
+      },
+      ChatConversationsListResponse: {
+        type: "object",
+        properties: {
+          message: { type: "string", example: "CONVERSATIONS_RETRIEVED_SUCCESSFULLY" },
+          status: { type: "integer", example: 200 },
+          data: {
+            type: "object",
+            properties: {
+              conversations: {
+                type: "array",
+                items: { $ref: "#/components/schemas/ChatConversationItemDTO" },
+              },
+              pagination: { $ref: "#/components/schemas/PaginationMeta" },
+            },
+          },
+        },
+      },
+      ChatMessageHistoryResponse: {
+        type: "object",
+        properties: {
+          message: { type: "string", example: "MESSAGES_RETRIEVED_SUCCESSFULLY" },
+          status: { type: "integer", example: 200 },
+          data: {
+            type: "object",
+            properties: {
+              messages: {
+                type: "array",
+                items: { $ref: "#/components/schemas/ChatMessageDTO" },
+              },
+              nextCursor: {
+                type: "string",
+                format: "uuid",
+                nullable: true,
+                example: "550e8400-e29b-41d4-a716-446655440000",
+              },
+              hasMore: { type: "boolean", example: false },
+            },
+          },
+        },
+      },
+      ChatConversationDetailResponse: {
+        type: "object",
+        properties: {
+          message: { type: "string", example: "CONVERSATION_INITIALIZED_SUCCESSFULLY" },
+          status: { type: "integer", example: 200 },
+          data: { $ref: "#/components/schemas/ChatConversationItemDTO" },
+        },
+      },
     },
   },
   tags: [
+    { name: "Chat", description: "Direct real-time messaging between students and teachers" },
     { name: "Admin - Auth", description: "Admin login, logout, and token refresh" },
+
     { name: "Admin - Dashboard", description: "Admin dashboard metrics, overview KPI cards, charts, and live activities" },
     { name: "Admin - Students", description: "Students management, status toggling, and Excel export" },
     { name: "Admin - Teachers", description: "Teacher verification, application reviews, certificates, and course approvals" },
@@ -9406,8 +9531,127 @@ Include the Bearer JWT token in the Authorization header:
         },
       },
     },
+
+    // ───────────────────────────────────────────────────────────
+    //  Chat Management Endpoints
+    // ───────────────────────────────────────────────────────────
+    "/chat/unread-count": {
+      get: {
+        summary: "Get total unread messages count",
+        description: "Returns the sum of all unread messages for the authenticated student or teacher across all conversations.",
+        tags: ["Chat"],
+        security: bearerSecurity,
+        responses: {
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/ChatUnreadCountResponse",
+          }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/chat/conversations": {
+      get: {
+        summary: "Get all conversations",
+        description: "Returns paginated list of conversations for the authenticated student or teacher with participant details, last message, and unread counts.",
+        tags: ["Chat"],
+        security: bearerSecurity,
+        parameters: [
+          ...paginationQueryParams,
+        ],
+        responses: {
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/ChatConversationsListResponse",
+          }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+      post: {
+        summary: "Start or get existing conversation",
+        description: "Starts a new conversation between student and teacher (requires an active teacher subscription if new) or returns the existing conversation.",
+        tags: ["Chat"],
+        security: bearerSecurity,
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ChatStartConversationDTO" },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/ChatConversationDetailResponse",
+          }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/chat/conversations/{conversationId}/messages": {
+      get: {
+        summary: "Get message history for a conversation",
+        description: "Returns paginated messages in reverse chronological order using cursor-based pagination for smooth scrolling.",
+        tags: ["Chat"],
+        security: bearerSecurity,
+        parameters: [
+          uuidParam("conversationId", "Conversation UUID"),
+          {
+            in: "query",
+            name: "cursor",
+            schema: { type: "string", format: "uuid" },
+            description: "Message ID cursor for pagination (nextCursor from previous response)",
+          },
+          {
+            in: "query",
+            name: "limit",
+            schema: { type: "integer", default: 30, minimum: 1, maximum: 100 },
+            description: "Number of messages to fetch per page",
+          },
+        ],
+        responses: {
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/ChatMessageHistoryResponse",
+          }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/chat/conversations/{conversationId}/read": {
+      patch: {
+        summary: "Mark conversation as read",
+        description: "Updates read timestamp and resets unread count for the authenticated user in this conversation.",
+        tags: ["Chat"],
+        security: bearerSecurity,
+        parameters: [
+          uuidParam("conversationId", "Conversation UUID"),
+        ],
+        responses: {
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/GenericSuccessDataResponse",
+          }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
   },
 }
+
 // ═══════════════════════════════════════════════════════════════
 //  Clean Dark Mode Theme with Blue Highlights
 // ═══════════════════════════════════════════════════════════
