@@ -18,7 +18,6 @@ model conversation{
     @@index([studentId, lastMessageAt])
     @@index([teacherId, lastMessageAt])
     @@map("conversations")
-    users User[]
 }
 
 model message{

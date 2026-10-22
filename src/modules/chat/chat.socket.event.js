@@ -98,58 +98,75 @@ socket.on("send_message",async(payload,ack)=>{
             return reply({ ok: false, code: "MESSAGE_TOO_LONG" });
 
         }
-        const message = await dbService.transaction(async(tx)=>{
+        const result = await dbService.transaction(async (tx) => {
             const conversation = await tx.findFirst({
-                model:"conversation",
+                model: "conversation",
                 where,
-                select:{id:true}
+                select: {
+                    id: true,
+                    student: { select: { userId: true } },
+                    teacher: { select: { userId: true } },
+                },
             });
-            if(!conversation){
+            if (!conversation) {
                 return null;
             }
             const createdMessage = await tx.create({
-                model:"message",
-                data:{
-                    conversationId:conversation.id,
-                    senderId:userId,
-                    content:messageContent
+                model: "message",
+                data: {
+                    conversationId: conversation.id,
+                    senderId: userId,
+                    content: messageContent,
                 },
-                include:{
-                    sender:{
-                        select:{
-                            id:true,
-                            fullName:true,
-                            profilePhoto:true,
-                        }
-                    }
-                    
-                }
-                
+                include: {
+                    sender: {
+                        select: {
+                            id: true,
+                            fullName: true,
+                            profilePhoto: true,
+                        },
+                    },
+                },
             });
             await tx.updateOne({
-                model:"conversation",
-                where:{id:conversation.id},
-                data:{
-                    lastMessage:messageContent.slice(0,100),
-                    lastMessageAt:createdMessage.createdAt,
+                model: "conversation",
+                where: { id: conversation.id },
+                data: {
+                    lastMessage: messageContent.slice(0, 100),
+                    lastMessageAt: createdMessage.createdAt,
                     ...(accountType === "student"
-                        ?{unreadTeacherCount:{increment:1}}
-                        :{unreadStudentCount:{increment:1}}
+                        ? { unreadTeacherCount: { increment: 1 } }
+                        : { unreadStudentCount: { increment: 1 } }
                     ),
-                }
+                },
             });
-            return createdMessage
 
-        })
-        if(!message){
-            return reply({ok:false,code:"CONVERSATION_NOT_FOUND"})
+            const recipientUserId =
+                accountType === "student"
+                    ? conversation.teacher?.userId
+                    : conversation.student?.userId;
+
+            return { message: createdMessage, recipientUserId };
+        });
+
+        if (!result) {
+            return reply({ ok: false, code: "CONVERSATION_NOT_FOUND" });
         }
 
+        const { message, recipientUserId } = result;
         const roomName = `conversation:${conversationId}`;
 
-        socket.to(roomName).emit("new_message",message);
+        socket.to(roomName).emit("new_message", message);
+
+        if (recipientUserId) {
+            io.to(`user:${recipientUserId}`).emit("new_message_notification", {
+                conversationId,
+                message,
+            });
+        }
 
         return reply({ ok: true, message });
+
 
         
         
