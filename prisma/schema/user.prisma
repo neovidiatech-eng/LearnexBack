@@ -30,7 +30,6 @@ model User {
   transactions        Transaction[]
   wallet              wallet?
   systemRequests      SystemRequest[]
-  conversations       conversation[]
   messages            message[]
   userSupportTickets  supportTicket[]    @relation("userTicket")
   staffSupportTickets supportTicket[]    @relation("staffTicket")

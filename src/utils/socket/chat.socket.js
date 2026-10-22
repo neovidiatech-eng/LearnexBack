@@ -19,7 +19,12 @@ export const initializeSocket = (httpServer, allowedOrigins) => {
     io.on("connection", (socket) => {
         console.log(`Chat socket connected ${socket.id}`);
 
+        if (socket.data?.user?.id) {
+            socket.join(`user:${socket.data.user.id}`);
+        }
+
         registerChatSocketEvents(io,socket);
+
 
         socket.on("disconnect", (reason) => {
             console.log(`Chat socket disconnected : ${reason}`, reason);
