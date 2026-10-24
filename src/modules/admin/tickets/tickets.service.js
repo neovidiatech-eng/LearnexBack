@@ -1,4 +1,5 @@
 import * as db from "../../../db/db.service.js";
+import { baseRoleEnum } from "../../../utils/Enums/role.enum.js";
 import {
   SupportTicketStatus,
   SupportTicketPriority,
@@ -6,7 +7,8 @@ import {
 import { throwError } from "../../../utils/response.js";
 
 export const getAllTicketsService = async ({ user, query = {} }) => {
-  const { page, limit, sort, status, priority, assignedStaffId, search } = query;
+  const { page, limit, sort, status, priority, assignedStaffId, search } =
+    query;
 
   const where = {};
 
@@ -136,12 +138,29 @@ export const getTicketByIdService = async ({ ticketId }) => {
 export const sendMessage = async ({ user, body, file, ticketId }) => {
   const { message } = body;
 
+  const isAdmin =
+    user?.role?.name === baseRoleEnum.ADMIN ||
+    user?.role?.name === baseRoleEnum.SUPER_ADMIN;
+
+    console.log(!isAdmin);
+    
+
   const ticket = await db.findFirst({
     model: "supportTicket",
     where: {
       id: ticketId,
     },
   });
+
+  console.log(!isAdmin && ticket.assignedStaffId !== user.id);
+  
+
+  if (!isAdmin && ticket.assignedStaffId !== user.id) {
+    throwError({
+      message: "UNAUTHORIZED",
+      status: 401,
+    });
+  }
 
   if (!ticket) {
     throwError({
@@ -166,10 +185,13 @@ export const sendMessage = async ({ user, body, file, ticketId }) => {
       data: {
         lastMessageAt: new Date(),
         status: SupportTicketStatus.IN_PROGRESS,
-        ...(!ticket.assignedStaffId ? { assignedStaffId: user } : {}),
+        ...(!isAdmin &&
+          !ticket.assignedStaffId && {
+            assignedStaffId: user.id,
+          }),
         supportMessages: {
           create: {
-            senderId: user,
+            adminSenderId: user.id,
             body: message,
             ...(file
               ? {
@@ -192,11 +214,11 @@ export const sendMessage = async ({ user, body, file, ticketId }) => {
           take: 1,
           include: {
             attachments: true,
-            sender: {
+            admin: {
               select: {
                 id: true,
                 fullName: true,
-                profilePhoto: true,
+                email:true
               },
             },
           },
@@ -319,12 +341,14 @@ export const changeStatusService = async ({ status, ticketId }) => {
     });
   }
 
-  const isClosing = status === SupportTicketStatus.CLOSED;
-  const isResolving = status === SupportTicketStatus.RESOLVED;
-  const isReopening =
-    status === SupportTicketStatus.OPEN ||
-    status === SupportTicketStatus.IN_PROGRESS;
+  if(status === SupportTicketStatus.CLOSED){
+    throwError({
+      message: "CANT_CLOSE_TICKET",
+      status: 400,
+    });
+  }
 
+  const isResolving = status === SupportTicketStatus.RESOLVED;
   const result = await db.updateOne({
     model: "supportTicket",
     where: {
@@ -332,18 +356,16 @@ export const changeStatusService = async ({ status, ticketId }) => {
     },
     data: {
       status,
-      closedAt: isClosing ? new Date() : isReopening ? null : ticket.closedAt,
       resolvedAt: isResolving
         ? new Date()
         : isReopening
-        ? null
-        : ticket.resolvedAt,
+          ? null
+          : ticket.resolvedAt,
     },
   });
 
   return result;
 };
-
 
 export const assignTicketService = async ({ staffId, ticketId }) => {
   const ticket = await db.findFirst({

@@ -1,7 +1,19 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import dotenv from "dotenv";
 import {
   PERMISSIONS_DATA,
   ROLE_PERMISSIONS_MAP,
 } from "../../src/Constants/rolePermissions.constants.js";
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+dotenv.config();
 
 export async function seedPermissions(prisma, roles) {
   console.log("🌱 Seeding permissions...");
@@ -45,12 +57,16 @@ export async function seedPermissions(prisma, roles) {
 }
 
 async function standalone() {
-  const { PrismaClient } = await import("@prisma/client");
-  const { PrismaPg } = await import("@prisma/adapter-pg");
-  const { default: pg } = await import("pg");
-  await import("dotenv/config");
+  if (!process.env.DATABASE_URL) {
+    console.error("❌ DATABASE_URL is not set in environment or .env file.");
+    process.exitCode = 1;
+    return;
+  }
 
-  const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+  const pool = new pg.Pool({
+    connectionString: process.env.DATABASE_URL,
+  });
+
   const adapter = new PrismaPg(pool);
   const prisma = new PrismaClient({ adapter });
 

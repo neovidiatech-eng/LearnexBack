@@ -561,6 +561,12 @@ export const PERMISSIONS_DATA = [
     resource: "supportTickets",
     action: "assign",
   },
+  {
+    code: PERMISSIONS_V2.TICKETS.SEND_MESSAGE,
+    name: "Send Message in Support Ticket",
+    resource: "supportTickets",
+    action: "send_message",
+  }
 ];
 
 export const ROLE_PERMISSIONS_MAP = {
@@ -578,7 +584,7 @@ export const ROLE_PERMISSIONS_MAP = {
     PERMISSIONS_V2.TICKETS.UPDATE,
     PERMISSIONS_V2.TICKETS.READ_OWN,
     PERMISSIONS_V2.TICKETS.REOPEN,
-
+    PERMISSIONS_V2.TICKETS.SEND_MESSAGE,
     // Plans
     PERMISSIONS_V2.PLANS.GET_MY_PLANS,
     PERMISSIONS_V2.PLANS.CREATE,
@@ -638,6 +644,7 @@ export const ROLE_PERMISSIONS_MAP = {
     PERMISSIONS_V2.TICKETS.UPDATE,
     PERMISSIONS_V2.TICKETS.READ_OWN,
     PERMISSIONS_V2.TICKETS.REOPEN,
+    PERMISSIONS_V2.TICKETS.SEND_MESSAGE,
 
     // Session Requests (student creates and manages own requests)
     PERMISSIONS_V2.SESSIONREQUESTS.CREATE,

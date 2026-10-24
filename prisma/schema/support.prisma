@@ -7,8 +7,8 @@ model supportTicket {
     priority        String
     userId          String
     assignedStaffId String?
-    user            User?   @relation(name: "userTicket",fields: [userId], references: [id], onDelete: Cascade)
-    staff           User?   @relation(name:"staffTicket",fields: [assignedStaffId], references: [id], onDelete: Cascade)
+    user            User?   @relation(name: "userTicket", fields: [userId], references: [id], onDelete: Cascade)
+    staff           User?   @relation(name: "staffTicket", fields: [assignedStaffId], references: [id], onDelete: Cascade)
 
     lastMessageAt   DateTime?
     resolvedAt      DateTime?
@@ -17,7 +17,6 @@ model supportTicket {
     updatedAt       DateTime         @updatedAt
     supportMessages SupportMessage[]
 
-
     @@index([userId, status, updatedAt])
     @@index([status, priority, lastMessageAt])
     @@index([assignedStaffId, status, updatedAt])
@@ -25,19 +24,22 @@ model supportTicket {
 }
 
 model SupportMessage {
-    id       String @id @default(uuid())
-    ticketId String
-    senderId String
-    body     String @db.Text
+    id            String  @id @default(uuid())
+    ticketId      String
+    senderId      String?
+    adminSenderId String?
+    body          String  @db.Text
 
     ticket      supportTicket       @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-    sender      User                @relation("SupportMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+    sender      User?               @relation("SupportMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
     attachments SupportAttachment[]
+    admin       Admin?              @relation("SupportMessageAdmin", fields: [adminSenderId], references: [id], onDelete: Cascade)
 
     createdAt DateTime @default(now())
 
     @@index([ticketId, createdAt, id])
     @@index([senderId, createdAt])
+    @@index([adminSenderId, createdAt,id]) 
     @@map("support_messages")
 }
 
