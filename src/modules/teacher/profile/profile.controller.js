@@ -90,3 +90,12 @@ export const getWorkHours = asyncHandler(async (req, res) => {
     data: workHours,
   });
 });
+
+
+export const getAnalytics = asyncHandler(async (req, res) => {
+  const analytics = await profileService.getAnalyticsService(req.user.id);
+  return successResponse({
+    res,
+    data: analytics,
+  });
+});

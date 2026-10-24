@@ -19,6 +19,7 @@ router.use("/sections", teacherSectionRouter);
 router.use("/quizes", teacherQuizRouter);
 router.use("/items", teacherItemsRouter);
 router.use("/me", teacherProfileRouter);
+router.use("/analytics", teacherProfileRouter);
 router.use("/certificates", teacherCertificateRouter);
 router.use("/reviews", teacherReviewsRouter);
 router.use("/offers", teacherOfferRouter);
