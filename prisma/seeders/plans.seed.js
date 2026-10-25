@@ -282,51 +282,97 @@ export async function seedPlans(prisma, teachers) {
     );
   }
 
-  if (sayed) {
+    if (sayed) {
     plansData.push(
       {
         teacherId: sayed.id,
-        sessionsCount: 4,
-        price: 120.0,
+        sessionsCount: 1,
+        price: 150.0,
         discountType: null,
         discountValue: null,
-        color: "#059669",
+        color: "#10B981",
         isActive: true,
         translations: [
           {
             lang: "ar",
-            title: "باقة هندسة البرمجيات والتوجيه (4 جلسات)",
-            description: "جلسات استشارية مكثفة تغطي معمارية التطبيقات، كود ريفيو، وهندسة البرمجيات النظيفة Clean Architecture.",
-            slug: "sayed-software-engineering-ar",
+            title: "جلسة استشارية وتوجيه تقني مباشر (جلسة واحدة)",
+            description: "جلسة خاصة فردية لحل مشكلة برمجية محددة، مراجعة معمارية الكود، أو مناقشة خيارات التصميم التقني لمشروعك.",
+            slug: "sayed-quick-consultation-ar",
           },
           {
             lang: "en",
-            title: "Software Engineering Mentorship (4 Sessions)",
-            description: "Intensive 1-on-1 mentorship covering architecture, code reviews, and Clean Architecture best practices.",
-            slug: "sayed-software-engineering-en",
+            title: "1-on-1 Quick Technical Consultation (1 Session)",
+            description: "One-on-one focused session to debug a critical issue, review architecture decisions, or get tech stack guidance.",
+            slug: "sayed-quick-consultation-en",
+          },
+        ],
+      },
+      {
+        teacherId: sayed.id,
+        sessionsCount: 4,
+        price: 540.0,
+        discountType: "PERCENTAGE",
+        discountValue: 10.0,
+        color: "#3B82F6",
+        isActive: true,
+        translations: [
+          {
+            lang: "ar",
+            title: "باقة مراجعة الكود وهندسة المعمارية (4 جلسات)",
+            description: "فحص معماري شامل لتطبيقك، تدقيق الأداء، إعادة هيكلة الطبقات Domain/Data/Presentation، وتطبيق Clean Architecture.",
+            slug: "sayed-code-audit-ar",
+          },
+          {
+            lang: "en",
+            title: "Code Audit & Clean Architecture Package (4 Sessions)",
+            description: "Comprehensive architectural review, performance profiling, layer refactoring, and Clean Architecture best practices.",
+            slug: "sayed-code-audit-en",
           },
         ],
       },
       {
         teacherId: sayed.id,
         sessionsCount: 8,
-        price: 220.0,
+        price: 960.0,
         discountType: "PERCENTAGE",
-        discountValue: 15.0,
-        color: "#2563EB",
+        discountValue: 20.0,
+        color: "#8B5CF6",
         isActive: true,
         translations: [
           {
             lang: "ar",
-            title: "المسار الشامل للاحتراف وتطوير الموبايل (8 جلسات)",
-            description: "برنامج تدريبي متكامل لبناء وتوسيع تطبيقات Flutter و Node.js وإعدادك للوظائف العليا والشركات العالمية.",
+            title: "المسار الاحترافي الشامل لتطوير البرمجيات (8 جلسات)",
+            description: "برنامج تدريبي متقدم لبناء وتوسيع أنظمة Flutter و Node.js المتكاملة، اختبارات الكود، ومحاكاة بيئات العمل الواقعية.",
             slug: "sayed-mobile-mastery-ar",
           },
           {
             lang: "en",
-            title: "Full Mobile & Backend Pro Track (8 Sessions)",
-            description: "Comprehensive hands-on roadmap building scalable Flutter & Node.js apps and preparing for senior roles.",
+            title: "Full Mobile & Backend Mastery Track (8 Sessions)",
+            description: "Advanced hands-on program covering Flutter & Node.js microservices, automated testing, and production deployments.",
             slug: "sayed-mobile-mastery-en",
+          },
+        ],
+      },
+      {
+        teacherId: sayed.id,
+        sessionsCount: 12,
+        price: 1350.0,
+        discountType: "PERCENTAGE",
+        discountValue: 25.0,
+        color: "#F59E0B",
+        isActive: true,
+        translations: [
+          {
+            lang: "ar",
+            title: "برنامج الإرشاد الهندسي للوظائف المتقدمة (12 جلسة)",
+            description: "توجيه مهني وفني طويل المدى، إعداد لمقابلات الشركات العالمية، تصميم الأنظمة الموزعة، وبناء بورتفوليو قوي.",
+            slug: "sayed-senior-mentorship-ar",
+          },
+          {
+            lang: "en",
+            title: "Senior Engineering & Career Mentorship (12 Sessions)",
+            description: "Long-term technical mentorship, system design fundamentals, technical interview simulation, and career advancement.",
+            slug: "sayed-senior-mentorship-en",
           },
         ],
       }

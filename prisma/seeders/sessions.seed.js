@@ -137,6 +137,7 @@ export async function seedSessions(prisma, teachers = [], students = []) {
   const t1 = teacherIds[0];
   const t2 = teacherIds[1] || teacherIds[0];
   const t3 = teacherIds[2] || teacherIds[0];
+  const t4 = teacherIds[3] || teacherIds[0];
 
   const s1 = studentIds[0];
   const s2 = studentIds[1] || studentIds[0];
@@ -144,7 +145,7 @@ export async function seedSessions(prisma, teachers = [], students = []) {
   const s4 = studentIds[3] || studentIds[1] || studentIds[0];
   const s5 = studentIds[4] || studentIds[2] || studentIds[0];
 
-  const activeTeachers = [...new Set([t1, t2, t3].filter(Boolean))];
+  const activeTeachers = [...new Set([t1, t2, t3, t4].filter(Boolean))];
   const activeStudents = [...new Set([s1, s2, s3, s4, s5].filter(Boolean))];
 
   // 4. Seed active teacherSubscriptions so all students have active session balance with each teacher
@@ -199,6 +200,89 @@ export async function seedSessions(prisma, teachers = [], students = []) {
   // - Session Statuses: LIVE, SCHEDULED, COMPLETED, CANCELLED
   // - Request Statuses: PENDING, ACCEPTED, REJECTED, CANCELLED
   const requestsToSeed = [
+    // ── Sayed Atef (MR Sayed) Sessions ──
+    {
+      teacherId: t4,
+      studentId: s2,
+      title: "🔴 Live Mentoring: Clean Architecture & Flutter Performance Tuning",
+      startAt: addMinutes(-25),
+      endAt: addMinutes(25),
+      note: "Live 1-on-1 session: Layer separation, BLoC pattern best practices, and memory profiling.",
+      status: requestStatus.ACCEPTED,
+      respondedAt: addMinutes(-200),
+      session: {
+        title: "🔴 Live Mentoring: Clean Architecture & Flutter Performance Tuning",
+        status: sessionStatus.LIVE,
+        startAt: addMinutes(-25),
+        endAt: addMinutes(25),
+        actualStartAt: addMinutes(-25),
+        studentJoinedAt: addMinutes(-22),
+        roomName: `session_live_${nanoid(8)}`,
+      },
+    },
+    {
+      teacherId: t4,
+      studentId: s1,
+      title: "📅 Upcoming: Flutter Clean Architecture Code Audit & DI Setup",
+      startAt: addDays(1, 11, 0),
+      endAt: addDays(1, 11, 50),
+      note: "Reviewing presentation layer and GetIt dependency injection graph.",
+      status: requestStatus.ACCEPTED,
+      respondedAt: addMinutes(-300),
+      session: {
+        title: "📅 Upcoming: Flutter Clean Architecture Code Audit & DI Setup",
+        status: sessionStatus.SCHEDULED,
+        startAt: addDays(1, 11, 0),
+        endAt: addDays(1, 11, 50),
+        roomName: `session_sched_${nanoid(8)}`,
+      },
+    },
+    {
+      teacherId: t4,
+      studentId: s3,
+      title: "📅 Upcoming: Senior Career Mentorship & System Design",
+      startAt: addDays(3, 16, 0),
+      endAt: addDays(3, 16, 50),
+      note: "Distributed microservices design review and FAANG interview mock.",
+      status: requestStatus.ACCEPTED,
+      respondedAt: addMinutes(-400),
+      session: {
+        title: "📅 Upcoming: Senior Career Mentorship & System Design",
+        status: sessionStatus.SCHEDULED,
+        startAt: addDays(3, 16, 0),
+        endAt: addDays(3, 16, 50),
+        roomName: `session_sched_${nanoid(8)}`,
+      },
+    },
+    {
+      teacherId: t4,
+      studentId: s4,
+      title: "✅ Completed: Mobile App Security & Token Refresh Interceptors",
+      startAt: addDays(-2, 14, 0),
+      endAt: addDays(-2, 14, 50),
+      note: "Covered Dio interceptors and secure token storage.",
+      status: requestStatus.ACCEPTED,
+      respondedAt: addDays(-3, 10, 0),
+      session: {
+        title: "✅ Completed: Mobile App Security & Token Refresh Interceptors",
+        status: sessionStatus.COMPLETED,
+        startAt: addDays(-2, 14, 0),
+        endAt: addDays(-2, 14, 50),
+        actualStartAt: addDays(-2, 14, 0),
+        actualEndAt: addDays(-2, 14, 50),
+        roomName: `session_comp_${nanoid(8)}`,
+      },
+    },
+    {
+      teacherId: t4,
+      studentId: s5,
+      title: "⏳ Pending Request: Flutter Microservices Integration Consultation",
+      startAt: addDays(2, 18, 0),
+      endAt: addDays(2, 18, 50),
+      note: "Student requested session for NestJS backend integration with Flutter app.",
+      status: requestStatus.PENDING,
+    },
+
     // ══════════════════════════════════════════════════════════════════
     // 1. LIVE SESSIONS (Happening RIGHT NOW)
     // ══════════════════════════════════════════════════════════════════

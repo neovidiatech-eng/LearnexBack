@@ -253,9 +253,15 @@ export async function seedReviews(prisma, students = [], teachers = [], courses 
 
   const teacherReviewsData = [];
 
+  const findTeacher = (email) => teacherList.find((t) => (t.email || t.user?.email) === email);
+  const ahmedT = findTeacher("ahmed.hassan@learnex.com") || teacherList[0];
+  const saraT = findTeacher("sara.ibrahim@learnex.com") || teacherList[1];
+  const omarT = findTeacher("omar.ali@learnex.com") || teacherList[2];
+  const sayedT = findTeacher("elsayedatef469@gmail.com") || teacherList[3];
+
   if (teacherList.length > 0) {
     // Teacher 0 (Ahmed Hassan)
-    const teacher0Id = resolveTeacherId(teacherList[0]);
+    const teacher0Id = ahmedT ? resolveTeacherId(ahmedT) : null;
     if (teacher0Id) {
       if (studentUsers[0]) {
         teacherReviewsData.push({
@@ -290,8 +296,8 @@ export async function seedReviews(prisma, students = [], teachers = [], courses 
     }
 
     // Teacher 1 (Sara Ibrahim)
-    if (teacherList[1]) {
-      const teacher1Id = resolveTeacherId(teacherList[1]);
+    if (saraT) {
+      const teacher1Id = resolveTeacherId(saraT);
       if (teacher1Id) {
         if (studentUsers[1]) {
           teacherReviewsData.push({
@@ -327,8 +333,8 @@ export async function seedReviews(prisma, students = [], teachers = [], courses 
     }
 
     // Teacher 2 (Omar Ali)
-    if (teacherList[2]) {
-      const teacher2Id = resolveTeacherId(teacherList[2]);
+    if (omarT) {
+      const teacher2Id = resolveTeacherId(omarT);
       if (teacher2Id) {
         if (studentUsers[2]) {
           teacherReviewsData.push({
@@ -347,6 +353,53 @@ export async function seedReviews(prisma, students = [], teachers = [], courses 
             rating: 4,
             comment: "مدرس رائع وخبرته العملية واضحة، ساعدني في تهيئة تطبيق React Native للرفع على المتاجر.",
             bookingId: "b003a333-7777-4444-9999-000000000008",
+            isHidden: false,
+          });
+        }
+      }
+    }
+
+    // Teacher 3 (MR Sayed)
+    if (sayedT) {
+      const teacher3Id = resolveTeacherId(sayedT);
+      if (teacher3Id) {
+        if (studentUsers[0]) {
+          teacherReviewsData.push({
+            studentId: studentUsers[0].id,
+            teacherId: teacher3Id,
+            rating: 5,
+            comment: "مستر سيد من أفضل المعلمين والموجهين التقنيين. الجلسات الفردية معاه أضافتلي خبرة عملية كبيرة جداً في معمارية الأنظمة ومشاكل الأداء.",
+            bookingId: "b004a444-7777-4444-9999-000000000010",
+            isHidden: false,
+          });
+        }
+        if (studentUsers[2]) {
+          teacherReviewsData.push({
+            studentId: studentUsers[2].id,
+            teacherId: teacher3Id,
+            rating: 5,
+            comment: "استشارة ممتازة ومثمرة جداً، حل معايا مشكلة معقدة في كود Flutter كان متبقي عليها أسابيع، متمكن لأقصى درجة.",
+            bookingId: "b004a444-7777-4444-9999-000000000011",
+            isHidden: false,
+          });
+        }
+        if (studentUsers[3]) {
+          teacherReviewsData.push({
+            studentId: studentUsers[3].id,
+            teacherId: teacher3Id,
+            rating: 5,
+            comment: "أسلوبه في الشرح راقي ومنظم، بيشرح أسباب اختيار كل حل هندسي مش مجرد كود وخلاص. ربنا يبارك فيه.",
+            bookingId: "b004a444-7777-4444-9999-000000000012",
+            isHidden: false,
+          });
+        }
+        if (studentUsers[1]) {
+          teacherReviewsData.push({
+            studentId: studentUsers[1].id,
+            teacherId: teacher3Id,
+            rating: 5,
+            comment: "توجيه مهني رائع ونصائح ذهبية ساعدتني في التحضير لمقابلات العمل التقنية وهندسة الأنظمة.",
+            bookingId: "b004a444-7777-4444-9999-000000000013",
             isHidden: false,
           });
         }

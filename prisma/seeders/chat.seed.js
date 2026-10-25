@@ -25,12 +25,78 @@ export async function seedChat(prisma, students = [], teachers = []) {
   const karimUser = allStudents.find((s) => s.fullName?.includes("Karim")) || allStudents[2];
   const ahmedUser = allTeachers.find((t) => t.fullName?.includes("Ahmed")) || allTeachers[0];
   const saraUser = allTeachers.find((t) => t.fullName?.includes("Sara")) || allTeachers[1];
+  const sayedUser = allTeachers.find((t) => t.email === "elsayedatef469@gmail.com" || t.fullName?.includes("Sayed")) || allTeachers[3];
 
   const getStudentId = (u) => u?.student?.id || null;
   const getTeacherId = (u) => u?.teacher?.id || null;
 
 
   const sampleConversations = [
+    {
+      studentUser: youssefUser,
+      teacherUser: sayedUser,
+      unreadStudentCount: 0,
+      unreadTeacherCount: 0,
+      messages: [
+        {
+          senderUser: youssefUser,
+          content: "السلام عليكم مستر سيد، أنا متابع كورس Clean Architecture ومستمتع جداً بالتطبيق العملي.",
+          minutesAgo: 150,
+        },
+        {
+          senderUser: sayedUser,
+          content: "وعليكم السلام يا يوسف، مرحب بيك دائماً! أي جزئية في المعمارية أو الـ Domain Layer محتاج نراجعها أنا جاهز.",
+          minutesAgo: 110,
+        },
+        {
+          senderUser: youssefUser,
+          content: "تسلم يا هندسة، حجزت جلسة الأسبوع القادم لمراجعة معمارية مشروعي النهائي.",
+          minutesAgo: 50,
+        },
+        {
+          senderUser: sayedUser,
+          content: "ممتاز جداً، جهز الكود والـ Git Repository وهنعمل مراجعة شاملة إن شاء الله.",
+          minutesAgo: 20,
+        },
+      ],
+    },
+    {
+      studentUser: karimUser,
+      teacherUser: sayedUser,
+      unreadStudentCount: 0,
+      unreadTeacherCount: 0,
+      messages: [
+        {
+          senderUser: karimUser,
+          content: "مساء الخير يا مستر سيد، بخصوص كورس الـ BLoC هل الأفضل استخدام Cubit ولا BLoC في العمليات البسيطة؟",
+          minutesAgo: 180,
+        },
+        {
+          senderUser: sayedUser,
+          content: "مساء النور يا كريم، قاعدة عامة: لو الحالة بسيطة ومافيهاش تحويلات معقدة زي debounce استخدم Cubit، ولو فيها Events متسلسلة BLoC أفضل.",
+          minutesAgo: 95,
+        },
+        {
+          senderUser: karimUser,
+          content: "تمام وضحت جداً، شكراً جزيلاً لحضرتك على سرعة الرد!",
+          minutesAgo: 30,
+        },
+      ],
+    },
+    {
+      studentUser: nourUser,
+      teacherUser: sayedUser,
+      unreadStudentCount: 0,
+      unreadTeacherCount: 1,
+      messages: [
+        {
+          senderUser: nourUser,
+          content: "أهلاً مستر سيد، كنت بستفسر عن مواعيد جلسات الاستشارة المتاحة هذا الأسبوع لمراجعة كود الباك إند.",
+          minutesAgo: 45,
+        },
+      ],
+    },
+
     {
       studentUser: youssefUser,
       teacherUser: ahmedUser,
