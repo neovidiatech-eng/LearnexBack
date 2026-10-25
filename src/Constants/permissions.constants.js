@@ -22,7 +22,13 @@ export const PERMISSIONS_V2 = {
     UPDATE: "categories:update",
     DELETE: "categories:delete",
   },
-
+  //Banners
+  BANNERS: {
+    READ: "banners:read",
+    CREATE: "banners:create",
+    UPDATE: "banners:update",
+    DELETE: "banners:delete",
+  },
   // Course Management
   COURSES: {
     READ: "courses:read",
@@ -161,8 +167,8 @@ export const PERMISSIONS_V2 = {
     READ_ALL: "tickets:read_all",
     CLOSE: "tickets:close",
     REOPEN: "tickets:reopen",
-    ASSIGN:"tickets:assign",
-    SEND_MESSAGE:"tickets:send_message"
-   }
- };
+    ASSIGN: "tickets:assign",
+    SEND_MESSAGE: "tickets:send_message",
+  },
+};
 

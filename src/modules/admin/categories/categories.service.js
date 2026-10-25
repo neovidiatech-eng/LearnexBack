@@ -1,6 +1,7 @@
 import * as DBService from "../../../db/db.service.js";
 import { deleteFile } from "../../../utils/multer/file.utils.js";
 
+
 export const getAllCategoriesService = async ({
   page = 1,
   limit = 10,
@@ -35,10 +36,9 @@ export const getAllCategoriesService = async ({
     id: true,
     slug: true,
     image: true,
-    coursesCount: true,
-    studentsCount: true,
     createdAt: true,
     updatedAt: true,
+    _count: { select: { courses: true } },
     translations: {
       where: locale ? { locale } : undefined,
       select: {
@@ -48,7 +48,7 @@ export const getAllCategoriesService = async ({
         description: true,
       },
     },
-   
+  
   };
 
   const result = await DBService.findManyWithPaginationAndCount({
@@ -60,8 +60,13 @@ export const getAllCategoriesService = async ({
     select,
   });
 
+  const categories = result.items.map(({ _count, ...category }) => ({
+    ...category,
+    coursesCount: _count.courses,
+  }));
+
   return {
-    categories: result.items,
+    categories,
     pagination: result.pagination,
   };
 };
@@ -80,7 +85,6 @@ export const getCategoryByIdService = async (categoryId, locale) => {
           level: true,
           status: true,
           originalPrice: true,
-          totalStudentsCount: true,
           translations: {
             where: locale ? { locale } : undefined,
           },
@@ -101,9 +105,6 @@ export const getCategoryByIdService = async (categoryId, locale) => {
 
 export const createCategoryService = async (body, file, query = {}) => {
   const { name, description, locale = "en" } = body;
-  const coursesCount = Number(body.coursesCount) || 0;
-  const studentsCount = Number(body.studentsCount) || 0;
-
   const slug = (
     body.slug ||
     query.slug ||
@@ -144,8 +145,6 @@ export const createCategoryService = async (body, file, query = {}) => {
     data: {
       slug,
       image,
-      coursesCount,
-      studentsCount,
       translations: {
         create: [
           {
@@ -165,7 +164,7 @@ export const createCategoryService = async (body, file, query = {}) => {
 };
 
 export const editCategoryService = async (categoryId, body, file) => {
-  const { name, description, coursesCount, studentsCount, locale = "en" } = body;
+  const { name, description, locale = "en" } = body;
 
   const categoryExists = await DBService.findFirst({
     model: "category",
@@ -201,8 +200,6 @@ export const editCategoryService = async (categoryId, body, file) => {
       ...(file && {
         image: file.relativeDestination,
       }),
-      ...(coursesCount !== undefined && { coursesCount: Number(coursesCount) }),
-      ...(studentsCount !== undefined && { studentsCount: Number(studentsCount) }),
 
       translations: {
         update: {

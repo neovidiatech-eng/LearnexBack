@@ -1,0 +1,25 @@
+model Banner {
+  id           String              @id @default(uuid())
+  isActive     Boolean             @default(true)
+  imageUrl     String
+  targetId     String?
+  actionType   String              @default("DISCOUNT")
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  translations BannerTranslation[]
+
+  @@map("banners")
+}
+
+model BannerTranslation {
+  id         String @id @default(uuid())
+  bannerId   String
+  banner     Banner @relation(fields: [bannerId], references: [id], onDelete: Cascade)
+  title      String
+  subtitle   String @db.Text
+  buttonText String
+  locale     String
+
+  @@unique([bannerId, locale])
+  @@map("banner_translations")
+}
