@@ -1,58 +1,57 @@
 model supportTicket {
-    id           String @id @default(uuid())
-    ticketNumber Int    @unique @default(autoincrement())
-    subject      String
-    status       String
+  id           String @id @default(uuid())
+  ticketNumber Int    @unique @default(autoincrement())
+  subject      String
+  status       String
 
-    priority        String
-    userId          String
-    assignedStaffId String?
-    user            User?   @relation(name: "userTicket",fields: [userId], references: [id], onDelete: Cascade)
-    staff           User?   @relation(name:"staffTicket",fields: [assignedStaffId], references: [id], onDelete: Cascade)
+  priority        String
+  userId          String
+  assignedStaffId String?
+  user            User?   @relation(name: "userTicket", fields: [userId], references: [id], onDelete: Cascade)
+  staff           User?   @relation(name: "staffTicket", fields: [assignedStaffId], references: [id], onDelete: Cascade)
 
-    lastMessageAt   DateTime?
-    resolvedAt      DateTime?
-    closedAt        DateTime?
-    createdAt       DateTime         @default(now())
-    updatedAt       DateTime         @updatedAt
-    supportMessages SupportMessage[]
+  lastMessageAt   DateTime?
+  resolvedAt      DateTime?
+  closedAt        DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  supportMessages SupportMessage[]
 
-
-    @@index([userId, status, updatedAt])
-    @@index([status, priority, lastMessageAt])
-    @@index([assignedStaffId, status, updatedAt])
-    @@map("support_tickets")
+  @@index([userId, status, updatedAt])
+  @@index([status, priority, lastMessageAt])
+  @@index([assignedStaffId, status, updatedAt])
+  @@map("support_tickets")
 }
 
 model SupportMessage {
-    id       String @id @default(uuid())
-    ticketId String
-    senderId String
-    body     String @db.Text
+  id       String @id @default(uuid())
+  ticketId String
+  senderId String
+  body     String @db.Text
 
-    ticket      supportTicket       @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-    sender      User                @relation("SupportMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
-    attachments SupportAttachment[]
+  ticket      supportTicket       @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  sender      User                @relation("SupportMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  attachments SupportAttachment[]
 
-    createdAt DateTime @default(now())
+  createdAt DateTime @default(now())
 
-    @@index([ticketId, createdAt, id])
-    @@index([senderId, createdAt])
-    @@map("support_messages")
+  @@index([ticketId, createdAt, id])
+  @@index([senderId, createdAt])
+  @@map("support_messages")
 }
 
 model SupportAttachment {
-    id         String @id @default(uuid())
-    messageId  String
-    fileName   String @db.VarChar(255)
-    storageKey String @unique
-    mimeType   String @db.VarChar(100)
-    size       Int
+  id         String @id @default(uuid())
+  messageId  String
+  fileName   String @db.VarChar(255)
+  storageKey String @unique
+  mimeType   String @db.VarChar(100)
+  size       Int
 
-    message SupportMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  message SupportMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
-    createdAt DateTime @default(now())
+  createdAt DateTime @default(now())
 
-    @@index([messageId])
-    @@map("support_attachments")
+  @@index([messageId])
+  @@map("support_attachments")
 }

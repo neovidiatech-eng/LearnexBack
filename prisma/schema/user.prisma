@@ -20,20 +20,23 @@ model User {
   student Student?
   teacher Teacher?
 
-  courses             Course[]           @relation("TutorCourses")
-  courseEnrollments   CourseEnrollment[] @relation("StudentEnrollments")
-  courseReviews       CourseReview[]     @relation("StudentCourseReviews")
-  coupunRedemptions   CoupunRedemption[]
-  teacherReviews      TeacherReview[]    @relation("StudentTeacherReviews")
-  cart                Cart?
-  saveds              Saved[]
-  transactions        Transaction[]
-  wallet              wallet?
-  systemRequests      SystemRequest[]
-  messages            message[]
-  userSupportTickets  supportTicket[]    @relation("userTicket")
-  staffSupportTickets supportTicket[]    @relation("staffTicket")
-  supportMessages     SupportMessage[]   @relation("SupportMessageSender")
+  courses                      Course[]                      @relation("TutorCourses")
+  courseEnrollments            CourseEnrollment[]            @relation("StudentEnrollments")
+  courseReviews                CourseReview[]                @relation("StudentCourseReviews")
+  coupunRedemptions            CoupunRedemption[]
+  teacherReviews               TeacherReview[]               @relation("StudentTeacherReviews")
+  cart                         Cart?
+  saveds                       Saved[]
+  transactions                 Transaction[]
+  wallet                       wallet?
+  systemRequests               SystemRequest[]
+  messages                     message[]
+  userSupportTickets           supportTicket[]               @relation("userTicket")
+  staffSupportTickets          supportTicket[]               @relation("staffTicket")
+  supportMessages              SupportMessage[]              @relation("SupportMessageSender")
+  teacherCourseEnrollments     TeacherCourseEnrollment[]     @relation("StudentTeacherCourseEnrollments")
+  teacherCourseReviews         TeacherCourseReview[]         @relation("StudentTeacherCourseReviews")
+  teacherCourseQuizSubmissions TeacherCourseQuizSubmission[] @relation("StudentQuizSubmissions")
 
   @@index([roleId])
   @@index([status])
@@ -59,8 +62,7 @@ model Student {
   sessionRequests       SessionRequest[]
   sessions              Session[]
   customSessionRequests CustomSessionRequest[]
-  conversations       conversation[]
-
+  conversations         conversation[]
 
   @@index([userId])
   @@map("students")
@@ -98,10 +100,10 @@ model Teacher {
   sessions              Session[]
   sessionRequests       SessionRequest[]
   customSessionRequests CustomSessionRequest[]
+  conversations         conversation[]
 
   @@index([userId])
   @@map("teachers")
-  conversations conversation[]
 }
 
 model TeacherCertificate {

@@ -1,5 +1,6 @@
 import Joi from "joi";
 import { generalFields } from "../../../utils/validation/generalField.js";
+import { courseLevelEnum } from "../../../utils/Enums/courseLevel.enum.js";
 
 export const createCourseSchema = {
   body: Joi.object({
@@ -15,14 +16,24 @@ export const createCourseSchema = {
       "number.min": "TOTAL_HOURS_MIN",
       "any.required": "TOTAL_HOURS_REQUIRED",
     }),
-
-
-  })
-}
+    categoryId: generalFields.id.optional(),
+    previewVideoUrl: generalFields.url.optional(),
+    level: Joi.string()
+      .valid(...Object.values(courseLevelEnum))
+      .default(courseLevelEnum.BEGINNER)
+      .optional(),
+    language: Joi.string().trim().default("english").optional(),
+  }),
+};
 
 export const getTeacherCoursesSchema = {
   query: Joi.object({
     search: Joi.string().trim().optional(),
+    categoryId: generalFields.id.optional(),
+    level: Joi.string()
+      .valid(...Object.values(courseLevelEnum))
+      .optional(),
+    language: Joi.string().trim().optional(),
     page: generalFields.page.optional(),
     limit: generalFields.limit.optional(),
   }),
@@ -57,5 +68,11 @@ export const updateCourseSchema = {
         "number.integer": "TOTAL_HOURS_INTEGER",
         "number.min": "TOTAL_HOURS_MIN",
       }),
-  })
+    categoryId: generalFields.id.optional(),
+    previewVideoUrl: generalFields.url.optional(),
+    level: Joi.string()
+      .valid(...Object.values(courseLevelEnum))
+      .optional(),
+    language: Joi.string().trim().optional(),
+  }),
 };
