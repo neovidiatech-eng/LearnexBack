@@ -2,18 +2,6 @@ import bcrypt from "bcryptjs";
 
 const teachersData = [
   {
-    email: "elsayedatef469@gmail.com",
-    fullName: "MR Sayed",
-    password: "01023888997Aa@",
-    phone: "+201023888997",
-    country: "EG",
-    subject: "Computer Science & Software Engineering",
-    experienceYears: 8,
-    sessionPrice50Min: 150.0,
-    bio: "خبير تعليمي واستشاري هندسة البرمجيات وتطوير النظم وتطبيقات الموبايل. شغوف بتمكين الطلاب ونقل الخبرة العملية وبناء الكفاءات البرمجية المتقدمة.",
-    linkedinUrl: "https://linkedin.com/in/elsayed-atef",
-  },
-  {
     email: "ahmed.hassan@learnex.com",
     fullName: "Ahmed Hassan",
     password: "Teacher@123456",
@@ -48,6 +36,18 @@ const teachersData = [
     sessionPrice50Min: 50.0,
     bio: "Mobile developer specializing in React Native and Flutter. Built over 20 production apps.",
     linkedinUrl: "https://linkedin.com/in/omar-ali",
+  },
+  {
+    email: "elsayedatef469@gmail.com",
+    fullName: "MR Sayed",
+    password: "01023888997Aa@",
+    phone: "+201023888997",
+    country: "EG",
+    subject: "Computer Science & Software Engineering",
+    experienceYears: 8,
+    sessionPrice50Min: 150.0,
+    bio: "خبير تعليمي واستشاري هندسة البرمجيات وتطوير النظم وتطبيقات الموبايل. شغوف بتمكين الطلاب ونقل الخبرة العملية وبناء الكفاءات البرمجية المتقدمة.",
+    linkedinUrl: "https://linkedin.com/in/elsayed-atef",
   },
 ];
 

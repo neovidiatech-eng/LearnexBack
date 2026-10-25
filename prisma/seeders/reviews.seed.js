@@ -197,9 +197,14 @@ export async function seedReviews(prisma, students = [], teachers = [], courses 
   // ═══════════════════════════════════════════════════════════
   const teacherReviewsData = [];
 
+  const findTeacher = (email) => teacherList.find((t) => (t.email || t.user?.email) === email);
+  const ahmedT = findTeacher("ahmed.hassan@learnex.com") || teacherList[0];
+  const saraT = findTeacher("sara.ibrahim@learnex.com") || teacherList[1];
+  const omarT = findTeacher("omar.ali@learnex.com") || teacherList[2];
+
   if (teacherList.length > 0) {
     // Teacher 0 (Ahmed Hassan)
-    const teacher0Id = resolveTeacherId(teacherList[0]);
+    const teacher0Id = ahmedT ? resolveTeacherId(ahmedT) : null;
     if (teacher0Id) {
       if (studentUsers[0]) {
         teacherReviewsData.push({
@@ -234,8 +239,8 @@ export async function seedReviews(prisma, students = [], teachers = [], courses 
     }
 
     // Teacher 1 (Sara Ibrahim)
-    if (teacherList[1]) {
-      const teacher1Id = resolveTeacherId(teacherList[1]);
+    if (saraT) {
+      const teacher1Id = resolveTeacherId(saraT);
       if (teacher1Id) {
         if (studentUsers[1]) {
           teacherReviewsData.push({
@@ -271,8 +276,8 @@ export async function seedReviews(prisma, students = [], teachers = [], courses 
     }
 
     // Teacher 2 (Omar Ali)
-    if (teacherList[2]) {
-      const teacher2Id = resolveTeacherId(teacherList[2]);
+    if (omarT) {
+      const teacher2Id = resolveTeacherId(omarT);
       if (teacher2Id) {
         if (studentUsers[2]) {
           teacherReviewsData.push({
@@ -300,29 +305,33 @@ export async function seedReviews(prisma, students = [], teachers = [], courses 
 
   const seededTeacherReviews = [];
   for (const review of teacherReviewsData) {
-    const created = await prisma.teacherReview.upsert({
-      where: {
-        studentId_teacherId: {
+    try {
+      const created = await prisma.teacherReview.upsert({
+        where: {
+          studentId_teacherId: {
+            studentId: review.studentId,
+            teacherId: review.teacherId,
+          },
+        },
+        update: {
+          rating: review.rating,
+          comment: review.comment,
+          bookingId: review.bookingId ?? null,
+          isHidden: review.isHidden ?? false,
+        },
+        create: {
           studentId: review.studentId,
           teacherId: review.teacherId,
+          rating: review.rating,
+          comment: review.comment,
+          bookingId: review.bookingId ?? null,
+          isHidden: review.isHidden ?? false,
         },
-      },
-      update: {
-        rating: review.rating,
-        comment: review.comment,
-        bookingId: review.bookingId ?? null,
-        isHidden: review.isHidden ?? false,
-      },
-      create: {
-        studentId: review.studentId,
-        teacherId: review.teacherId,
-        rating: review.rating,
-        comment: review.comment,
-        bookingId: review.bookingId ?? null,
-        isHidden: review.isHidden ?? false,
-      },
-    });
-    seededTeacherReviews.push(created);
+      });
+      seededTeacherReviews.push(created);
+    } catch (e) {
+      console.warn(`⚠️ Warning: skipping teacher review for booking ${review.bookingId}: ${e.message}`);
+    }
   }
 
   // Recalculate Teacher avgRating and reviewsCount
