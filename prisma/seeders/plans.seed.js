@@ -33,6 +33,7 @@ export async function seedPlans(prisma, teachers) {
   const ahmed = resolvedTeachers.find((t) => t.email === "ahmed.hassan@learnex.com");
   const sara = resolvedTeachers.find((t) => t.email === "sara.ibrahim@learnex.com");
   const omar = resolvedTeachers.find((t) => t.email === "omar.ali@learnex.com");
+  const sayed = resolvedTeachers.find((t) => t.email === "elsayedatef469@gmail.com");
 
   const plansData = [];
 
@@ -275,6 +276,57 @@ export async function seedPlans(prisma, teachers) {
             title: "Mobile Technical Interview Prep (2 Sessions)",
             description: "Mock technical interviews for mobile engineering roles covering CS fundamentals, system design, and algorithms.",
             slug: "omar-mobile-interview-en",
+          },
+        ],
+      }
+    );
+  }
+
+  if (sayed) {
+    plansData.push(
+      {
+        teacherId: sayed.id,
+        sessionsCount: 4,
+        price: 120.0,
+        discountType: null,
+        discountValue: null,
+        color: "#059669",
+        isActive: true,
+        translations: [
+          {
+            lang: "ar",
+            title: "باقة هندسة البرمجيات والتوجيه (4 جلسات)",
+            description: "جلسات استشارية مكثفة تغطي معمارية التطبيقات، كود ريفيو، وهندسة البرمجيات النظيفة Clean Architecture.",
+            slug: "sayed-software-engineering-ar",
+          },
+          {
+            lang: "en",
+            title: "Software Engineering Mentorship (4 Sessions)",
+            description: "Intensive 1-on-1 mentorship covering architecture, code reviews, and Clean Architecture best practices.",
+            slug: "sayed-software-engineering-en",
+          },
+        ],
+      },
+      {
+        teacherId: sayed.id,
+        sessionsCount: 8,
+        price: 220.0,
+        discountType: "PERCENTAGE",
+        discountValue: 15.0,
+        color: "#2563EB",
+        isActive: true,
+        translations: [
+          {
+            lang: "ar",
+            title: "المسار الشامل للاحتراف وتطوير الموبايل (8 جلسات)",
+            description: "برنامج تدريبي متكامل لبناء وتوسيع تطبيقات Flutter و Node.js وإعدادك للوظائف العليا والشركات العالمية.",
+            slug: "sayed-mobile-mastery-ar",
+          },
+          {
+            lang: "en",
+            title: "Full Mobile & Backend Pro Track (8 Sessions)",
+            description: "Comprehensive hands-on roadmap building scalable Flutter & Node.js apps and preparing for senior roles.",
+            slug: "sayed-mobile-mastery-en",
           },
         ],
       }

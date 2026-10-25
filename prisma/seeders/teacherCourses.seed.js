@@ -5,6 +5,7 @@ export async function seedTeacherCourses(prisma, teachers) {
   const ahmedTeacher = teachers.find((t) => t.email === "ahmed.hassan@learnex.com")?.teacher;
   const saraTeacher = teachers.find((t) => t.email === "sara.ibrahim@learnex.com")?.teacher;
   const omarTeacher = teachers.find((t) => t.email === "omar.ali@learnex.com")?.teacher;
+  const sayedTeacher = teachers.find((t) => t.email === "elsayedatef469@gmail.com")?.teacher;
 
   if (!ahmedTeacher || !saraTeacher || !omarTeacher) {
     console.log("⚠️ Teacher profiles not found, skipping teacher courses seed.");
@@ -271,6 +272,59 @@ export async function seedTeacherCourses(prisma, teachers) {
         },
       ],
     },
+    ...(sayedTeacher
+      ? [
+          {
+            teacherId: sayedTeacher.id,
+            name: "Mastering Clean Architecture in Flutter & Node.js",
+            description: "A production-grade guide to building scalable, enterprise mobile applications with Flutter, Bloc, and scalable Node.js microservices.",
+            price: 499.99,
+            totalHours: 50,
+            status: "APPROVED",
+            wallPaper: "uploads/teacherCourse/clean-architecture-flutter.jpg",
+            sections: [
+              {
+                name: "Section 1: Enterprise System Design & Clean Architecture",
+                order: 1,
+                items: [
+                  {
+                    title: "Clean Architecture Principles & Layers",
+                    description: "Separation of concerns: Domain, Data, and Presentation layers in Flutter.",
+                    materialType: "VIDEO",
+                    materialLink: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                    order: 1,
+                  },
+                  {
+                    title: "Architecture Blueprint & Cheatsheet (PDF)",
+                    description: "Downloadable PDF guide with folder structures and dependency injection maps.",
+                    materialType: "PDF",
+                    materialLink: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+                    order: 2,
+                  },
+                ],
+                quiz: {
+                  title: "Architecture Fundamentals Assessment",
+                  description: "Validate your understanding of Clean Architecture boundaries.",
+                  duration: 20,
+                  passingScore: 80,
+                  questions: [
+                    {
+                      type: "MCQ",
+                      text: "In Clean Architecture, which layer should NEVER depend on external frameworks?",
+                      order: 1,
+                      options: [
+                        { text: "Domain Layer", isCorrect: true, order: 1 },
+                        { text: "Data Layer", isCorrect: false, order: 2 },
+                        { text: "Presentation Layer", isCorrect: false, order: 3 },
+                      ],
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        ]
+      : []),
   ];
 
   const createdCourses = [];
@@ -369,7 +423,7 @@ export async function seedTeacherCourses(prisma, teachers) {
   }
 
   // Update totalCoursesCount on teacher profile
-  for (const t of [ahmedTeacher, saraTeacher, omarTeacher]) {
+  for (const t of [ahmedTeacher, saraTeacher, omarTeacher, sayedTeacher].filter(Boolean)) {
     const count = await prisma.teacherCourse.count({
       where: { teacherId: t.id },
     });

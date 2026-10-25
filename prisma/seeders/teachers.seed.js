@@ -2,8 +2,21 @@ import bcrypt from "bcryptjs";
 
 const teachersData = [
   {
+    email: "elsayedatef469@gmail.com",
+    fullName: "MR Sayed",
+    password: "01023888997Aa@",
+    phone: "+201023888997",
+    country: "EG",
+    subject: "Computer Science & Software Engineering",
+    experienceYears: 8,
+    sessionPrice50Min: 150.0,
+    bio: "خبير تعليمي واستشاري هندسة البرمجيات وتطوير النظم وتطبيقات الموبايل. شغوف بتمكين الطلاب ونقل الخبرة العملية وبناء الكفاءات البرمجية المتقدمة.",
+    linkedinUrl: "https://linkedin.com/in/elsayed-atef",
+  },
+  {
     email: "ahmed.hassan@learnex.com",
     fullName: "Ahmed Hassan",
+    password: "Teacher@123456",
     phone: "+201001234567",
     country: "EG",
     subject: "Web Development",
@@ -15,6 +28,7 @@ const teachersData = [
   {
     email: "sara.ibrahim@learnex.com",
     fullName: "Sara Ibrahim",
+    password: "Teacher@123456",
     phone: "+201112345678",
     country: "EG",
     subject: "Data Science",
@@ -26,6 +40,7 @@ const teachersData = [
   {
     email: "omar.ali@learnex.com",
     fullName: "Omar Ali",
+    password: "Teacher@123456",
     phone: "+201223456789",
     country: "EG",
     subject: "Mobile Development",
@@ -40,17 +55,30 @@ export async function seedTeachers(prisma, roles) {
   console.log("🌱 Seeding teachers...");
 
   const teacherRole = roles.find((r) => r.name === "TEACHER");
-  const hashedPassword = await bcrypt.hash("Teacher@123456", 10);
 
   const teachers = [];
   for (const t of teachersData) {
+    const passwordToHash = t.password || "Teacher@123456";
+    const hashedPassword = await bcrypt.hash(passwordToHash, 10);
+
     const user = await prisma.user.upsert({
       where: { email: t.email },
       update: {
+        fullName: t.fullName,
+        password: hashedPassword,
+        phone: t.phone,
+        status: "ACTIVE",
+        confirmEmail: true,
+        roleId: teacherRole?.id ?? null,
         teacher: {
           update: {
+            subject: t.subject,
+            headline: `${t.subject} Instructor`,
+            bio: t.bio,
+            experienceYears: t.experienceYears,
             sessionPrice50Min: t.sessionPrice50Min,
             currency: "EGP",
+            linkedinUrl: t.linkedinUrl,
           },
         },
       },
