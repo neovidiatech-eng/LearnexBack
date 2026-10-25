@@ -3,7 +3,7 @@ import joi from "joi";
 export const addReviewSchema = {
   body: joi
     .object({
-      type: joi.string().valid("COURSE", "TEACHER").optional(),
+      type: joi.string().valid("COURSE", "TEACHER", "TEACHER_COURSE").optional(),
       courseId: joi.string().uuid().optional(),
       teacherId: joi.string().uuid().optional(),
       targetId: joi.string().uuid().optional(),
@@ -12,12 +12,15 @@ export const addReviewSchema = {
       bookingId: joi.string().uuid().allow(null).optional(),
     })
     .custom((value, helpers) => {
-      const isCourse = value.type === "COURSE" || Boolean(value.courseId);
+      const isCourse =
+        value.type === "COURSE" ||
+        value.type === "TEACHER_COURSE" ||
+        Boolean(value.courseId);
       const isTeacher = value.type === "TEACHER" || Boolean(value.teacherId);
 
-      if (value.type === "COURSE") {
+      if (value.type === "COURSE" || value.type === "TEACHER_COURSE") {
         if (!value.courseId && !value.targetId) {
-          return helpers.message("courseId is required when type is COURSE");
+          return helpers.message("courseId is required when type is COURSE or TEACHER_COURSE");
         }
       } else if (value.type === "TEACHER") {
         if (!value.teacherId && !value.targetId) {

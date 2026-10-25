@@ -7631,6 +7631,199 @@ Include the Bearer JWT token in the Authorization header:
       },
     },
 
+    "/api/v1/student/courses/filters": {
+      get: {
+        summary: "Get Faceted Search & Filter Options (Udemy-style)",
+        description:
+          "Returns counts and available metadata for filters: providers, categories, difficulty levels, languages, rating brackets, video durations, and price types.",
+        tags: ["Student - Courses"],
+        security: bearerSecurity,
+        parameters: [localeQueryParam],
+        responses: {
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/GenericSuccessDataResponse",
+          }),
+          401: standardResponses[401],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/student/courses": {
+      get: {
+        summary: "Browse Course Catalog with Advanced Udemy-Style Filters",
+        description:
+          "Comprehensive course catalog supporting search across title, description, instructor, and tags. Supports multi-faceted filters: provider (ALL, PLATFORM, TEACHER), categoryId, level, language, minRating, durationRange, enrollmentType, minPrice, maxPrice, hasCertificate, and sorting.",
+        tags: ["Student - Courses"],
+        security: bearerSecurity,
+        parameters: [
+          ...paginationQueryParams,
+          localeQueryParam,
+          {
+            in: "query",
+            name: "search",
+            schema: { type: "string" },
+            description: "Search keyword matching title, description, instructor, or tags",
+          },
+          {
+            in: "query",
+            name: "provider",
+            schema: { type: "string", enum: ["ALL", "PLATFORM", "TEACHER"], default: "ALL" },
+            description: "Filter courses by provider source",
+          },
+          {
+            in: "query",
+            name: "categoryId",
+            schema: { type: "string", format: "uuid" },
+            description: "Filter by category ID",
+          },
+          {
+            in: "query",
+            name: "level",
+            schema: { type: "string", enum: ["BEGINNER", "INTERMEDIATE", "ADVANCED", "ALL_LEVELS"] },
+            description: "Difficulty level",
+          },
+          {
+            in: "query",
+            name: "language",
+            schema: { type: "string" },
+            description: "Language of instruction (e.g. arabic, english)",
+          },
+          {
+            in: "query",
+            name: "minRating",
+            schema: { type: "number", minimum: 0, maximum: 5 },
+            description: "Minimum rating bracket (e.g. 4.5, 4.0, 3.5, 3.0)",
+          },
+          {
+            in: "query",
+            name: "durationRange",
+            schema: { type: "string", enum: ["0-1", "1-3", "3-6", "6+"] },
+            description: "Video duration range bracket in hours",
+          },
+          {
+            in: "query",
+            name: "enrollmentType",
+            schema: { type: "string", enum: ["FREE", "PAID"] },
+            description: "Price filter: FREE or PAID",
+          },
+          {
+            in: "query",
+            name: "minPrice",
+            schema: { type: "number", minimum: 0 },
+            description: "Minimum price",
+          },
+          {
+            in: "query",
+            name: "maxPrice",
+            schema: { type: "number", minimum: 0 },
+            description: "Maximum price",
+          },
+          {
+            in: "query",
+            name: "hasCertificate",
+            schema: { type: "boolean" },
+            description: "Filter for courses with completion certificate",
+          },
+          {
+            in: "query",
+            name: "sortBy",
+            schema: {
+              type: "string",
+              enum: ["newest", "rating", "popular", "price_asc", "price_desc"],
+              default: "newest",
+            },
+            description: "Sorting criteria",
+          },
+        ],
+        responses: {
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/GenericSuccessDataResponse",
+          }),
+          401: standardResponses[401],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/student/courses/{courseId}": {
+      get: {
+        summary: "Get unified course details (Platform or Teacher course)",
+        description:
+          "Returns complete course details, instructor profile, sections, locked/unlocked lesson items, section quizzes, review stats, and enrollment status.",
+        tags: ["Student - Courses"],
+        security: bearerSecurity,
+        parameters: [
+          uuidParam("courseId", "Course ID"),
+          localeQueryParam,
+          {
+            in: "query",
+            name: "itemType",
+            schema: { type: "string", enum: ["COURSE", "TEACHER_COURSE"] },
+            description: "Optional course type discriminator",
+          },
+        ],
+        responses: {
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/GenericSuccessDataResponse",
+          }),
+          401: standardResponses[401],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/student/courses/{courseId}/lessons/{lessonId}/complete": {
+      post: {
+        summary: "Mark a lesson as completed & update progress",
+        description:
+          "Marks a lesson item as completed for both platform and teacher courses, calculates overall course progress percent in Redis and DB, and sets status to COMPLETED once 100% reached.",
+        tags: ["Student - Courses"],
+        security: bearerSecurity,
+        parameters: [
+          uuidParam("courseId", "Course ID"),
+          uuidParam("lessonId", "Lesson or Item ID"),
+        ],
+        responses: {
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/GenericSuccessDataResponse",
+          }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/student/courses/{courseId}/reviews": {
+      get: {
+        summary: "Get course reviews with rating distribution",
+        description:
+          "Returns paginated reviews, 5-star distribution percentages, and average rating for platform or teacher courses.",
+        tags: ["Student - Courses"],
+        security: bearerSecurity,
+        parameters: [
+          uuidParam("courseId", "Course ID"),
+          ...paginationQueryParams,
+          {
+            in: "query",
+            name: "itemType",
+            schema: { type: "string", enum: ["COURSE", "TEACHER_COURSE"] },
+            description: "Optional type discriminator",
+          },
+        ],
+        responses: {
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/GenericSuccessDataResponse",
+          }),
+          401: standardResponses[401],
+          500: standardResponses[500],
+        },
+      },
+    },
+
     // ═══════════════════════════════════════════════════════════
     // STUDENT TEACHERS
     // ═══════════════════════════════════════════════════════════

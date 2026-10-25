@@ -16,10 +16,26 @@ export const addReviewService = async (userId, body) => {
 
   await checkReviewEligibility(userId, { courseId, teacherId });
 
-  const isCourse = type ? type === "COURSE" : Boolean(courseId);
-  const model = isCourse ? "courseReview" : "teacherReview";
-  const parentModel = isCourse ? "course" : "teacher";
-  const parentId = isCourse ? courseId : teacherId;
+  const isCourse = type ? (type === "COURSE" || type === "TEACHER_COURSE") : Boolean(courseId);
+  let model = "courseReview";
+  let parentModel = "course";
+  let parentId = courseId;
+
+  if (isCourse) {
+    const isPlatformCourse = await db.findFirst({
+      model: "course",
+      where: { id: courseId },
+      select: { id: true },
+    });
+    if (!isPlatformCourse) {
+      model = "teacherCourseReview";
+      parentModel = "teacherCourse";
+    }
+  } else {
+    model = "teacherReview";
+    parentModel = "teacher";
+    parentId = teacherId;
+  }
 
   const review = await db.upsertOne({
     model,

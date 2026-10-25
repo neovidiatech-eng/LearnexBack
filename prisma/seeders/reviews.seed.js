@@ -3,7 +3,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
 import "dotenv/config";
 
-export async function seedReviews(prisma, students = [], teachers = [], courses = []) {
+export async function seedReviews(prisma, students = [], teachers = [], courses = [], teacherCourses = []) {
   console.log("🌱 Seeding reviews for courses and teachers...");
 
   // If students not supplied, fetch from DB
@@ -195,6 +195,62 @@ export async function seedReviews(prisma, students = [], teachers = [], courses 
   // ═══════════════════════════════════════════════════════════════
   // 2. Seed Teacher Reviews with bookingId (تقييمات المدرسين والجلسات)
   // ═══════════════════════════════════════════════════════════
+  // 1.1. Seed Teacher Course Reviews
+  let tCourseList = teacherCourses;
+  if (!tCourseList || tCourseList.length === 0) {
+    tCourseList = await prisma.teacherCourse.findMany({ take: 5 }).catch(() => []);
+  }
+
+  if (tCourseList.length > 0 && studentUsers.length > 0) {
+    const teacherCourseReviewsData = [
+      {
+        studentId: studentUsers[0].id,
+        courseId: tCourseList[0].id,
+        rating: 5,
+        comment: "كورس Next.js فوق الممتاز! الشرح تفصيلي والتطبيقات حقيقية جداً.",
+        isHidden: false,
+      },
+      ...(tCourseList[1] && studentUsers[1]
+        ? [
+            {
+              studentId: studentUsers[1].id,
+              courseId: tCourseList[1].id,
+              rating: 5,
+              comment: "من أفضل كورسات الـ PyTorch والتعلم الآلي باللغة الإنجليزية والعربية.",
+              isHidden: false,
+            },
+          ]
+        : []),
+      ...(tCourseList[2] && studentUsers[2]
+        ? [
+            {
+              studentId: studentUsers[2].id,
+              courseId: tCourseList[2].id,
+              rating: 4,
+              comment: "Great Flutter course with clean architecture and reactive state management.",
+              isHidden: false,
+            },
+          ]
+        : []),
+    ];
+
+    for (const tr of teacherCourseReviewsData) {
+      await prisma.teacherCourseReview.upsert({
+        where: {
+          studentId_courseId: {
+            studentId: tr.studentId,
+            courseId: tr.courseId,
+          },
+        },
+        update: {
+          rating: tr.rating,
+          comment: tr.comment,
+        },
+        create: tr,
+      }).catch(() => {});
+    }
+  }
+
   const teacherReviewsData = [];
 
   if (teacherList.length > 0) {
@@ -300,29 +356,53 @@ export async function seedReviews(prisma, students = [], teachers = [], courses 
 
   const seededTeacherReviews = [];
   for (const review of teacherReviewsData) {
-    const created = await prisma.teacherReview.upsert({
-      where: {
-        studentId_teacherId: {
-          studentId: review.studentId,
-          teacherId: review.teacherId,
-        },
-      },
-      update: {
-        rating: review.rating,
-        comment: review.comment,
-        bookingId: review.bookingId ?? null,
-        isHidden: review.isHidden ?? false,
-      },
-      create: {
-        studentId: review.studentId,
-        teacherId: review.teacherId,
-        rating: review.rating,
-        comment: review.comment,
-        bookingId: review.bookingId ?? null,
-        isHidden: review.isHidden ?? false,
-      },
-    });
-    seededTeacherReviews.push(created);
+    try {
+      let created;
+      if (review.bookingId) {
+        created = await prisma.teacherReview.upsert({
+          where: { bookingId: review.bookingId },
+          update: {
+            studentId: review.studentId,
+            teacherId: review.teacherId,
+            rating: review.rating,
+            comment: review.comment,
+            isHidden: review.isHidden ?? false,
+          },
+          create: {
+            studentId: review.studentId,
+            teacherId: review.teacherId,
+            rating: review.rating,
+            comment: review.comment,
+            bookingId: review.bookingId,
+            isHidden: review.isHidden ?? false,
+          },
+        });
+      } else {
+        created = await prisma.teacherReview.upsert({
+          where: {
+            studentId_teacherId: {
+              studentId: review.studentId,
+              teacherId: review.teacherId,
+            },
+          },
+          update: {
+            rating: review.rating,
+            comment: review.comment,
+            isHidden: review.isHidden ?? false,
+          },
+          create: {
+            studentId: review.studentId,
+            teacherId: review.teacherId,
+            rating: review.rating,
+            comment: review.comment,
+            isHidden: review.isHidden ?? false,
+          },
+        });
+      }
+      if (created) seededTeacherReviews.push(created);
+    } catch {
+      // If studentId_teacherId already has another review, skip or update gracefully
+    }
   }
 
   // Recalculate Teacher avgRating and reviewsCount

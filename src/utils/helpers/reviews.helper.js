@@ -5,8 +5,18 @@ export const checkReviewEligibility = async (
   { courseId, teacherId },
 ) => {
   if (courseId) {
+    const isPlatformCourse = await db.findFirst({
+      model: "course",
+      where: { id: courseId },
+      select: { id: true },
+    });
+
+    const enrollmentModel = isPlatformCourse
+      ? "courseEnrollment"
+      : "teacherCourseEnrollment";
+
     const enrollment = await db.findFirst({
-      model: "courseEnrollment",
+      model: enrollmentModel,
       where: { studentId: userId, courseId },
     });
     if (!enrollment) {

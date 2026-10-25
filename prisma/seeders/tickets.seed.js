@@ -469,7 +469,7 @@ export async function seedTickets(prisma, teachers = [], staffUser = null) {
             attachments: {
               create: (message.attachments || []).map((attachment) => ({
                 fileName: attachment.fileName,
-                storageKey: attachment.storageKey,
+                storageKey: `${attachment.storageKey}-${Math.random().toString(36).substring(2, 7)}`,
                 mimeType: attachment.mimeType,
                 size: attachment.size,
                 createdAt: message.createdAt,

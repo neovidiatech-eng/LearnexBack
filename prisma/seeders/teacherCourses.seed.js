@@ -1,4 +1,4 @@
-export async function seedTeacherCourses(prisma, teachers) {
+export async function seedTeacherCourses(prisma, teachers, categories = []) {
   console.log("🌱 Seeding teacher courses (teacher/courses)...");
 
   // Get teacher profiles from users
@@ -12,14 +12,31 @@ export async function seedTeacherCourses(prisma, teachers) {
     return [];
   }
 
+  let catList = categories;
+  if (!catList || catList.length === 0) {
+    catList = await prisma.category.findMany().catch(() => []);
+  }
+
+  const webCat = catList.find((c) => c.slug === "web-development") || catList[0];
+  const mobileCat = catList.find((c) => c.slug === "mobile-development") || catList[1] || catList[0];
+  const dataCat = catList.find((c) => c.slug === "data-science") || catList[2] || catList[0];
+
   const teacherCoursesData = [
     // ── Ahmed Hassan (Web Development) ──────────────────────────
     {
       teacherId: ahmedTeacher.id,
+      categoryId: webCat?.id || null,
       name: "Advanced Full-Stack Next.js 14 & Node.js",
       description: "Master full-stack modern web development with Next.js 14 App Router, Server Actions, Prisma, and PostgreSQL.",
       price: 349.99,
       totalHours: 45,
+      level: "ADVANCED",
+      language: "english",
+      provider: "TEACHER",
+      previewVideoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+      avgRating: 4.8,
+      reviewsCount: 18,
+      totalStudentsCount: 42,
       status: "APPROVED",
       wallPaper: "uploads/teacherCourse/nextjs14-masterclass.jpg",
       sections: [
@@ -93,10 +110,18 @@ export async function seedTeacherCourses(prisma, teachers) {
     },
     {
       teacherId: ahmedTeacher.id,
+      categoryId: webCat?.id || null,
       name: "Modern TypeScript & Microservices with NestJS",
       description: "Build robust, scalable enterprise microservices using TypeScript, NestJS, RabbitMQ, and Redis.",
       price: 299.99,
       totalHours: 35,
+      level: "INTERMEDIATE",
+      language: "english",
+      provider: "TEACHER",
+      previewVideoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+      avgRating: 4.7,
+      reviewsCount: 12,
+      totalStudentsCount: 29,
       status: "APPROVED",
       wallPaper: "uploads/teacherCourse/nestjs-microservices.jpg",
       sections: [
@@ -119,10 +144,18 @@ export async function seedTeacherCourses(prisma, teachers) {
     // ── Sara Ibrahim (Data Science) ─────────────────────────────
     {
       teacherId: saraTeacher.id,
+      categoryId: dataCat?.id || null,
       name: "Applied Machine Learning with Python & PyTorch",
       description: "From data preprocessing to training deep neural networks and deploying machine learning models in production.",
       price: 499.99,
       totalHours: 50,
+      level: "ADVANCED",
+      language: "english",
+      provider: "TEACHER",
+      previewVideoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      avgRating: 4.9,
+      reviewsCount: 25,
+      totalStudentsCount: 68,
       status: "APPROVED",
       wallPaper: "uploads/teacherCourse/pytorch-ml.jpg",
       sections: [
@@ -177,10 +210,18 @@ export async function seedTeacherCourses(prisma, teachers) {
     },
     {
       teacherId: saraTeacher.id,
+      categoryId: dataCat?.id || null,
       name: "Generative AI & LLM Fine-Tuning Bootcamp",
       description: "Learn how to build RAG systems, fine-tune open source LLMs with LoRA, and deploy AI agents using LangChain.",
       price: 599.99,
       totalHours: 40,
+      level: "INTERMEDIATE",
+      language: "english",
+      provider: "TEACHER",
+      previewVideoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+      avgRating: 0.0,
+      reviewsCount: 0,
+      totalStudentsCount: 0,
       status: "PENDING",
       wallPaper: "uploads/teacherCourse/genai-llm.jpg",
       sections: [
@@ -203,10 +244,18 @@ export async function seedTeacherCourses(prisma, teachers) {
     // ── Omar Ali (Mobile Development) ───────────────────────────
     {
       teacherId: omarTeacher.id,
+      categoryId: mobileCat?.id || null,
       name: "Flutter & Dart: Zero to App Store Production",
       description: "Build clean, reactive cross-platform mobile apps with Flutter, Bloc state management, Firebase, and REST APIs.",
       price: 279.99,
       totalHours: 38,
+      level: "BEGINNER",
+      language: "arabic",
+      provider: "TEACHER",
+      previewVideoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+      avgRating: 4.6,
+      reviewsCount: 14,
+      totalStudentsCount: 31,
       status: "APPROVED",
       wallPaper: "uploads/teacherCourse/flutter-masterclass.jpg",
       sections: [
@@ -276,10 +325,18 @@ export async function seedTeacherCourses(prisma, teachers) {
       ? [
           {
             teacherId: sayedTeacher.id,
+            categoryId: mobileCat?.id || null,
             name: "Mastering Clean Architecture in Flutter & Node.js",
             description: "A production-grade guide to building scalable, enterprise mobile applications with Flutter, Bloc, and scalable Node.js microservices.",
             price: 499.99,
             totalHours: 50,
+            level: "ADVANCED",
+            language: "arabic",
+            provider: "TEACHER",
+            previewVideoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4",
+            avgRating: 4.9,
+            reviewsCount: 30,
+            totalStudentsCount: 85,
             status: "APPROVED",
             wallPaper: "uploads/teacherCourse/clean-architecture-flutter.jpg",
             sections: [
@@ -417,6 +474,28 @@ export async function seedTeacherCourses(prisma, teachers) {
           }
         }
       }
+    } else {
+      // Update existing course with categories and filters metadata
+      course = await prisma.teacherCourse.update({
+        where: { id: course.id },
+        data: {
+          categoryId: courseFields.categoryId,
+          level: courseFields.level,
+          language: courseFields.language,
+          previewVideoUrl: courseFields.previewVideoUrl,
+          provider: courseFields.provider,
+          avgRating: courseFields.avgRating,
+          reviewsCount: courseFields.reviewsCount,
+          totalStudentsCount: courseFields.totalStudentsCount,
+        },
+        include: {
+          sections: {
+            include: {
+              items: true,
+            },
+          },
+        },
+      });
     }
 
     createdCourses.push(course);
