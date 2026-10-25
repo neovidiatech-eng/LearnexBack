@@ -61,6 +61,16 @@ export async function seedTeachers(prisma, roles) {
     const passwordToHash = t.password || "Teacher@123456";
     const hashedPassword = await bcrypt.hash(passwordToHash, 10);
 
+    const teacherProfileData = {
+      subject: t.subject,
+      headline: `${t.subject} Instructor`,
+      bio: t.bio,
+      experienceYears: t.experienceYears,
+      sessionPrice50Min: t.sessionPrice50Min,
+      currency: "EGP",
+      linkedinUrl: t.linkedinUrl,
+    };
+
     const user = await prisma.user.upsert({
       where: { email: t.email },
       update: {
@@ -71,14 +81,9 @@ export async function seedTeachers(prisma, roles) {
         confirmEmail: true,
         roleId: teacherRole?.id ?? null,
         teacher: {
-          update: {
-            subject: t.subject,
-            headline: `${t.subject} Instructor`,
-            bio: t.bio,
-            experienceYears: t.experienceYears,
-            sessionPrice50Min: t.sessionPrice50Min,
-            currency: "EGP",
-            linkedinUrl: t.linkedinUrl,
+          upsert: {
+            create: teacherProfileData,
+            update: teacherProfileData,
           },
         },
       },
@@ -92,15 +97,7 @@ export async function seedTeachers(prisma, roles) {
         confirmEmail: true,
         roleId: teacherRole?.id ?? null,
         teacher: {
-          create: {
-            subject: t.subject,
-            headline: `${t.subject} Instructor`,
-            bio: t.bio,
-            experienceYears: t.experienceYears,
-            sessionPrice50Min: t.sessionPrice50Min,
-            currency: "EGP",
-            linkedinUrl: t.linkedinUrl,
-          },
+          create: teacherProfileData,
         },
       },
       include: { teacher: true },
