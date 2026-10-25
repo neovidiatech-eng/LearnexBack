@@ -1,25 +1,25 @@
 model SystemRequest {
-    id              String  @id @default(uuid())
-    code            String  @unique
-    tab             String  @default("STUDENT")
-    type            String
-    priority        String  @default("MEDIUM")
-    status          String  @default("PENDING")
-    requesterId     String
-    requester       User    @relation(fields: [requesterId], references: [id], onDelete: Cascade)
-    requesterRole   String
-    referenceId     String?
-    referenceModel  String?
-    details         Json?
-    rejectionReason String? @db.Text
+  id              String  @id @default(uuid())
+  code            String  @unique
+  tab             String  @default("STUDENT")
+  type            String
+  priority        String  @default("MEDIUM")
+  status          String  @default("PENDING")
+  requesterId     String
+  requester       User    @relation(fields: [requesterId], references: [id], onDelete: Cascade)
+  requesterRole   String
+  referenceId     String?
+  referenceModel  String?
+  details         Json?
+  rejectionReason String? @db.Text
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    @@index([tab, status])
-    @@index([type])
-    @@index([priority])
-    @@index([requesterId])
-    @@index([createdAt])
-    @@map("system_requests")
+  @@index([tab, status])
+  @@index([type])
+  @@index([priority])
+  @@index([requesterId])
+  @@index([createdAt])
+  @@map("system_requests")
 }

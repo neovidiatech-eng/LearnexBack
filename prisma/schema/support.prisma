@@ -35,7 +35,7 @@ model SupportMessage {
     attachments SupportAttachment[]
     admin       Admin?              @relation("SupportMessageAdmin", fields: [adminSenderId], references: [id], onDelete: Cascade)
 
-    createdAt DateTime @default(now())
+  createdAt DateTime @default(now())
 
     @@index([ticketId, createdAt, id])
     @@index([senderId, createdAt])
@@ -44,17 +44,17 @@ model SupportMessage {
 }
 
 model SupportAttachment {
-    id         String @id @default(uuid())
-    messageId  String
-    fileName   String @db.VarChar(255)
-    storageKey String @unique
-    mimeType   String @db.VarChar(100)
-    size       Int
+  id         String @id @default(uuid())
+  messageId  String
+  fileName   String @db.VarChar(255)
+  storageKey String @unique
+  mimeType   String @db.VarChar(100)
+  size       Int
 
-    message SupportMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  message SupportMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
-    createdAt DateTime @default(now())
+  createdAt DateTime @default(now())
 
-    @@index([messageId])
-    @@map("support_attachments")
+  @@index([messageId])
+  @@map("support_attachments")
 }

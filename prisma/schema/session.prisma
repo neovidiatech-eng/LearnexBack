@@ -59,25 +59,24 @@ model SessionRequest {
 }
 
 model Session {
-  id              String         @id @default(uuid())
-  requestId       String         @unique
-  request         SessionRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
-  teacherId       String
-  teacher         Teacher        @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  studentId       String
-  student         Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  title           String
-  roomName        String?        @unique
-  status          String         @default("SCHEDULED") // SCHEDULED | LIVE | COMPLETED | CANCELLED
-  startAt         DateTime
-  endAt           DateTime
-  studentJoinedAt DateTime?
-  studentLeftAt   DateTime?
-  actualEndAt     DateTime?
-  actualStartAt   DateTime?
+  id                    String               @id @default(uuid())
+  requestId             String               @unique
+  request               SessionRequest       @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  teacherId             String
+  teacher               Teacher              @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  studentId             String
+  student               Student              @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  title                 String
+  roomName              String?              @unique
+  status                String               @default("SCHEDULED") // SCHEDULED | LIVE | COMPLETED | CANCELLED
+  startAt               DateTime
+  endAt                 DateTime
+  studentJoinedAt       DateTime?
+  studentLeftAt         DateTime?
+  actualEndAt           DateTime?
+  actualStartAt         DateTime?
   teacherSubscriptionId String?
   teacherSubscription   teacherSubscription? @relation(fields: [teacherSubscriptionId], references: [id], onDelete: SetNull)
-  
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

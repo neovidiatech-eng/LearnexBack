@@ -556,6 +556,31 @@ Include the Bearer JWT token in the Authorization header:
           },
           price: { type: "number", example: 49.99 },
           totalHours: { type: "integer", minimum: 0, example: 35 },
+          categoryId: {
+            type: "string",
+            format: "uuid",
+            example: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            description: "Category ID",
+          },
+          previewVideoUrl: {
+            type: "string",
+            format: "uri",
+            example: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            description: "Course intro / preview video URL",
+          },
+          level: {
+            type: "string",
+            enum: ["BEGINNER", "INTERMEDIATE", "ADVANCED", "ALL_LEVELS"],
+            default: "BEGINNER",
+            example: "BEGINNER",
+            description: "Target difficulty level",
+          },
+          language: {
+            type: "string",
+            default: "english",
+            example: "english",
+            description: "Course primary language (e.g., english, arabic)",
+          },
           wallPaper: {
             type: "string",
             format: "binary",
