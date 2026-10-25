@@ -56,7 +56,7 @@ async function main() {
   const courses = await seedCourses(prisma, teachers, categories);
 
   // 7.1. Teacher-Created Courses (depends on teachers)
-  const teacherCourses = await seedTeacherCourses(prisma, teachers);
+  const teacherCourses = await seedTeacherCourses(prisma, teachers, categories, students);
 
   // 7.2. Session Plans (depends on teachers)
   await seedPlans(prisma, teachers);

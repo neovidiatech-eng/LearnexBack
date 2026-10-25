@@ -44,6 +44,8 @@ const teachersData = [
     phone: "+201023888997",
     country: "EG",
     subject: "Computer Science & Software Engineering",
+    headline: "Lead Software Architect & Mobile Engineering Consultant",
+    introVideoUrl: "https://www.youtube.com/watch?v=VPvVD8t02U8",
     experienceYears: 8,
     sessionPrice50Min: 150.0,
     bio: "خبير تعليمي واستشاري هندسة البرمجيات وتطوير النظم وتطبيقات الموبايل. شغوف بتمكين الطلاب ونقل الخبرة العملية وبناء الكفاءات البرمجية المتقدمة.",
@@ -63,12 +65,14 @@ export async function seedTeachers(prisma, roles) {
 
     const teacherProfileData = {
       subject: t.subject,
-      headline: `${t.subject} Instructor`,
+      headline: t.headline || `${t.subject} Instructor`,
+      introVideoUrl: t.introVideoUrl || null,
       bio: t.bio,
       experienceYears: t.experienceYears,
       sessionPrice50Min: t.sessionPrice50Min,
       currency: "EGP",
       linkedinUrl: t.linkedinUrl,
+      isAvailable: true,
     };
 
     const user = await prisma.user.upsert({
