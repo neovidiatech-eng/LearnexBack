@@ -33,6 +33,7 @@ export async function seedPlans(prisma, teachers) {
   const ahmed = resolvedTeachers.find((t) => t.email === "ahmed.hassan@learnex.com");
   const sara = resolvedTeachers.find((t) => t.email === "sara.ibrahim@learnex.com");
   const omar = resolvedTeachers.find((t) => t.email === "omar.ali@learnex.com");
+  const sayed = resolvedTeachers.find((t) => t.email === "elsayedatef469@gmail.com");
 
   const plansData = [];
 
@@ -275,6 +276,103 @@ export async function seedPlans(prisma, teachers) {
             title: "Mobile Technical Interview Prep (2 Sessions)",
             description: "Mock technical interviews for mobile engineering roles covering CS fundamentals, system design, and algorithms.",
             slug: "omar-mobile-interview-en",
+          },
+        ],
+      }
+    );
+  }
+
+    if (sayed) {
+    plansData.push(
+      {
+        teacherId: sayed.id,
+        sessionsCount: 1,
+        price: 150.0,
+        discountType: null,
+        discountValue: null,
+        color: "#10B981",
+        isActive: true,
+        translations: [
+          {
+            lang: "ar",
+            title: "جلسة استشارية وتوجيه تقني مباشر (جلسة واحدة)",
+            description: "جلسة خاصة فردية لحل مشكلة برمجية محددة، مراجعة معمارية الكود، أو مناقشة خيارات التصميم التقني لمشروعك.",
+            slug: "sayed-quick-consultation-ar",
+          },
+          {
+            lang: "en",
+            title: "1-on-1 Quick Technical Consultation (1 Session)",
+            description: "One-on-one focused session to debug a critical issue, review architecture decisions, or get tech stack guidance.",
+            slug: "sayed-quick-consultation-en",
+          },
+        ],
+      },
+      {
+        teacherId: sayed.id,
+        sessionsCount: 4,
+        price: 540.0,
+        discountType: "PERCENTAGE",
+        discountValue: 10.0,
+        color: "#3B82F6",
+        isActive: true,
+        translations: [
+          {
+            lang: "ar",
+            title: "باقة مراجعة الكود وهندسة المعمارية (4 جلسات)",
+            description: "فحص معماري شامل لتطبيقك، تدقيق الأداء، إعادة هيكلة الطبقات Domain/Data/Presentation، وتطبيق Clean Architecture.",
+            slug: "sayed-code-audit-ar",
+          },
+          {
+            lang: "en",
+            title: "Code Audit & Clean Architecture Package (4 Sessions)",
+            description: "Comprehensive architectural review, performance profiling, layer refactoring, and Clean Architecture best practices.",
+            slug: "sayed-code-audit-en",
+          },
+        ],
+      },
+      {
+        teacherId: sayed.id,
+        sessionsCount: 8,
+        price: 960.0,
+        discountType: "PERCENTAGE",
+        discountValue: 20.0,
+        color: "#8B5CF6",
+        isActive: true,
+        translations: [
+          {
+            lang: "ar",
+            title: "المسار الاحترافي الشامل لتطوير البرمجيات (8 جلسات)",
+            description: "برنامج تدريبي متقدم لبناء وتوسيع أنظمة Flutter و Node.js المتكاملة، اختبارات الكود، ومحاكاة بيئات العمل الواقعية.",
+            slug: "sayed-mobile-mastery-ar",
+          },
+          {
+            lang: "en",
+            title: "Full Mobile & Backend Mastery Track (8 Sessions)",
+            description: "Advanced hands-on program covering Flutter & Node.js microservices, automated testing, and production deployments.",
+            slug: "sayed-mobile-mastery-en",
+          },
+        ],
+      },
+      {
+        teacherId: sayed.id,
+        sessionsCount: 12,
+        price: 1350.0,
+        discountType: "PERCENTAGE",
+        discountValue: 25.0,
+        color: "#F59E0B",
+        isActive: true,
+        translations: [
+          {
+            lang: "ar",
+            title: "برنامج الإرشاد الهندسي للوظائف المتقدمة (12 جلسة)",
+            description: "توجيه مهني وفني طويل المدى، إعداد لمقابلات الشركات العالمية، تصميم الأنظمة الموزعة، وبناء بورتفوليو قوي.",
+            slug: "sayed-senior-mentorship-ar",
+          },
+          {
+            lang: "en",
+            title: "Senior Engineering & Career Mentorship (12 Sessions)",
+            description: "Long-term technical mentorship, system design fundamentals, technical interview simulation, and career advancement.",
+            slug: "sayed-senior-mentorship-en",
           },
         ],
       }

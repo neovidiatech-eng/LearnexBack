@@ -1,11 +1,14 @@
 model Category {
-  id            String                @id @default(uuid())
-  slug          String                @unique
-  image         String?
-  createdAt     DateTime              @default(now())
-  updatedAt     DateTime              @updatedAt
-  courses       Course[]
-  translations  CategoryTranslation[]
+  id             String                @id @default(uuid())
+  slug           String                @unique
+  image          String?
+  coursesCount   Int                   @default(0)
+  studentsCount  Int                   @default(0)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  courses        Course[]
+  translations   CategoryTranslation[]
+  teacherCourses TeacherCourse[]
 
   @@map("categories")
 }
@@ -27,6 +30,7 @@ model Course {
   id                 String              @id @default(uuid())
   thumbnail          String?
   previewVideoUrl    String?
+  provider           String              @default("PLATFORM") // PLATFORM | TEACHER
   level              String              @default("BEGINNER")
   status             String              @default("DRAFT")
   enrollmentType     String              @default("PAID")

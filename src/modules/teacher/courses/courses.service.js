@@ -13,7 +13,23 @@ export const createTeacherCourse = async ({
   price,
   totalHours,
   wallPaper,
+  categoryId,
+  previewVideoUrl,
+  level,
+  language,
 }) => {
+  if (categoryId) {
+    const category = await dbService.findFirst({
+      model: "category",
+      where: { id: categoryId },
+    });
+    if (!category) {
+      const error = new Error("CATEGORY_NOT_FOUND");
+      error.cause = 404;
+      throw error;
+    }
+  }
+
   const course = await dbService.create({
     model: "teacherCourse",
     data: {
@@ -23,6 +39,10 @@ export const createTeacherCourse = async ({
       price,
       totalHours,
       wallPaper,
+      ...(categoryId ? { categoryId } : {}),
+      ...(previewVideoUrl ? { previewVideoUrl } : {}),
+      ...(level ? { level } : {}),
+      ...(language ? { language } : {}),
     },
   });
 
@@ -59,27 +79,30 @@ export const createTeacherCourse = async ({
   };
 };
 
-export const getCourses = async ({ teacherId, role, search, page, limit }) => {
-  const where =
-    role === "teacher"
-      ? {
-          teacherId,
-          ...(search && {
-            name: {
-              contains: search,
-              mode: "insensitive",
-            },
-          }),
-        }
-      : {
-          status: teacherCourseStatusEnum.APPROVED,
-          ...(search && {
-            name: {
-              contains: search,
-              mode: "insensitive",
-            },
-          }),
-        };
+export const getCourses = async ({
+  teacherId,
+  role,
+  search,
+  categoryId,
+  level,
+  language,
+  page,
+  limit,
+}) => {
+  const where = {
+    ...(role === "teacher"
+      ? { teacherId }
+      : { status: teacherCourseStatusEnum.APPROVED }),
+    ...(search && {
+      name: {
+        contains: search,
+        mode: "insensitive",
+      },
+    }),
+    ...(categoryId && { categoryId }),
+    ...(level && { level }),
+    ...(language && { language }),
+  };
 
   const allCourses = await dbService.findMany({
     model: "teacherCourse",
@@ -90,6 +113,18 @@ export const getCourses = async ({ teacherId, role, search, page, limit }) => {
     select: {
       id: true,
       wallPaper: true,
+      previewVideoUrl: true,
+      provider: true,
+      level: true,
+      language: true,
+      categoryId: true,
+      category: {
+        select: {
+          id: true,
+          slug: true,
+          translations: true,
+        },
+      },
       name: true,
       description: true,
       price: true,
@@ -109,7 +144,7 @@ export const getCourses = async ({ teacherId, role, search, page, limit }) => {
   });
 
   return allCoursesWithType;
-};;
+};
 
 export const getCourseById = async ({ courseId, teacherId }) => {
   const course = await dbService.findFirst({
@@ -121,6 +156,13 @@ export const getCourseById = async ({ courseId, teacherId }) => {
       ...(teacherId ? { teacherId } : { status: "APPROVED" }),
     },
     include: {
+      category: {
+        select: {
+          id: true,
+          slug: true,
+          translations: true,
+        },
+      },
       sections: {
         orderBy: {
           order: "asc",
@@ -157,6 +199,10 @@ export const updateTeacherCourse = async ({
   price,
   totalHours,
   wallPaper,
+  categoryId,
+  previewVideoUrl,
+  level,
+  language,
 }) => {
   const course = await dbService.findFirst({
     model: "teacherCourse",
@@ -176,6 +222,18 @@ export const updateTeacherCourse = async ({
     throw error;
   }
 
+  if (categoryId) {
+    const category = await dbService.findFirst({
+      model: "category",
+      where: { id: categoryId },
+    });
+    if (!category) {
+      const error = new Error("CATEGORY_NOT_FOUND");
+      error.cause = 404;
+      throw error;
+    }
+  }
+
   const updateCourse = await dbService.updateOne({
     model: "teacherCourse",
     where: {
@@ -187,6 +245,10 @@ export const updateTeacherCourse = async ({
       ...(price !== undefined && { price }),
       ...(totalHours !== undefined && { totalHours }),
       ...(wallPaper !== undefined && { wallPaper }),
+      ...(categoryId !== undefined && { categoryId }),
+      ...(previewVideoUrl !== undefined && { previewVideoUrl }),
+      ...(level !== undefined && { level }),
+      ...(language !== undefined && { language }),
     },
   });
 

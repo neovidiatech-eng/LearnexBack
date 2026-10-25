@@ -3,7 +3,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
 import "dotenv/config";
 
-export async function seedReviews(prisma, students = [], teachers = [], courses = []) {
+export async function seedReviews(prisma, students = [], teachers = [], courses = [], teacherCourses = []) {
   console.log("🌱 Seeding reviews for courses and teachers...");
 
   // If students not supplied, fetch from DB
@@ -195,11 +195,73 @@ export async function seedReviews(prisma, students = [], teachers = [], courses 
   // ═══════════════════════════════════════════════════════════════
   // 2. Seed Teacher Reviews with bookingId (تقييمات المدرسين والجلسات)
   // ═══════════════════════════════════════════════════════════
+  // 1.1. Seed Teacher Course Reviews
+  let tCourseList = teacherCourses;
+  if (!tCourseList || tCourseList.length === 0) {
+    tCourseList = await prisma.teacherCourse.findMany({ take: 5 }).catch(() => []);
+  }
+
+  if (tCourseList.length > 0 && studentUsers.length > 0) {
+    const teacherCourseReviewsData = [
+      {
+        studentId: studentUsers[0].id,
+        courseId: tCourseList[0].id,
+        rating: 5,
+        comment: "كورس Next.js فوق الممتاز! الشرح تفصيلي والتطبيقات حقيقية جداً.",
+        isHidden: false,
+      },
+      ...(tCourseList[1] && studentUsers[1]
+        ? [
+            {
+              studentId: studentUsers[1].id,
+              courseId: tCourseList[1].id,
+              rating: 5,
+              comment: "من أفضل كورسات الـ PyTorch والتعلم الآلي باللغة الإنجليزية والعربية.",
+              isHidden: false,
+            },
+          ]
+        : []),
+      ...(tCourseList[2] && studentUsers[2]
+        ? [
+            {
+              studentId: studentUsers[2].id,
+              courseId: tCourseList[2].id,
+              rating: 4,
+              comment: "Great Flutter course with clean architecture and reactive state management.",
+              isHidden: false,
+            },
+          ]
+        : []),
+    ];
+
+    for (const tr of teacherCourseReviewsData) {
+      await prisma.teacherCourseReview.upsert({
+        where: {
+          studentId_courseId: {
+            studentId: tr.studentId,
+            courseId: tr.courseId,
+          },
+        },
+        update: {
+          rating: tr.rating,
+          comment: tr.comment,
+        },
+        create: tr,
+      }).catch(() => {});
+    }
+  }
+
   const teacherReviewsData = [];
+
+  const findTeacher = (email) => teacherList.find((t) => (t.email || t.user?.email) === email);
+  const ahmedT = findTeacher("ahmed.hassan@learnex.com") || teacherList[0];
+  const saraT = findTeacher("sara.ibrahim@learnex.com") || teacherList[1];
+  const omarT = findTeacher("omar.ali@learnex.com") || teacherList[2];
+  const sayedT = findTeacher("elsayedatef469@gmail.com") || teacherList[3];
 
   if (teacherList.length > 0) {
     // Teacher 0 (Ahmed Hassan)
-    const teacher0Id = resolveTeacherId(teacherList[0]);
+    const teacher0Id = ahmedT ? resolveTeacherId(ahmedT) : null;
     if (teacher0Id) {
       if (studentUsers[0]) {
         teacherReviewsData.push({
@@ -234,8 +296,8 @@ export async function seedReviews(prisma, students = [], teachers = [], courses 
     }
 
     // Teacher 1 (Sara Ibrahim)
-    if (teacherList[1]) {
-      const teacher1Id = resolveTeacherId(teacherList[1]);
+    if (saraT) {
+      const teacher1Id = resolveTeacherId(saraT);
       if (teacher1Id) {
         if (studentUsers[1]) {
           teacherReviewsData.push({
@@ -271,8 +333,8 @@ export async function seedReviews(prisma, students = [], teachers = [], courses 
     }
 
     // Teacher 2 (Omar Ali)
-    if (teacherList[2]) {
-      const teacher2Id = resolveTeacherId(teacherList[2]);
+    if (omarT) {
+      const teacher2Id = resolveTeacherId(omarT);
       if (teacher2Id) {
         if (studentUsers[2]) {
           teacherReviewsData.push({
@@ -296,33 +358,104 @@ export async function seedReviews(prisma, students = [], teachers = [], courses 
         }
       }
     }
+
+    // Teacher 3 (MR Sayed)
+    if (sayedT) {
+      const teacher3Id = resolveTeacherId(sayedT);
+      if (teacher3Id) {
+        if (studentUsers[0]) {
+          teacherReviewsData.push({
+            studentId: studentUsers[0].id,
+            teacherId: teacher3Id,
+            rating: 5,
+            comment: "مستر سيد من أفضل المعلمين والموجهين التقنيين. الجلسات الفردية معاه أضافتلي خبرة عملية كبيرة جداً في معمارية الأنظمة ومشاكل الأداء.",
+            bookingId: "b004a444-7777-4444-9999-000000000010",
+            isHidden: false,
+          });
+        }
+        if (studentUsers[2]) {
+          teacherReviewsData.push({
+            studentId: studentUsers[2].id,
+            teacherId: teacher3Id,
+            rating: 5,
+            comment: "استشارة ممتازة ومثمرة جداً، حل معايا مشكلة معقدة في كود Flutter كان متبقي عليها أسابيع، متمكن لأقصى درجة.",
+            bookingId: "b004a444-7777-4444-9999-000000000011",
+            isHidden: false,
+          });
+        }
+        if (studentUsers[3]) {
+          teacherReviewsData.push({
+            studentId: studentUsers[3].id,
+            teacherId: teacher3Id,
+            rating: 5,
+            comment: "أسلوبه في الشرح راقي ومنظم، بيشرح أسباب اختيار كل حل هندسي مش مجرد كود وخلاص. ربنا يبارك فيه.",
+            bookingId: "b004a444-7777-4444-9999-000000000012",
+            isHidden: false,
+          });
+        }
+        if (studentUsers[1]) {
+          teacherReviewsData.push({
+            studentId: studentUsers[1].id,
+            teacherId: teacher3Id,
+            rating: 5,
+            comment: "توجيه مهني رائع ونصائح ذهبية ساعدتني في التحضير لمقابلات العمل التقنية وهندسة الأنظمة.",
+            bookingId: "b004a444-7777-4444-9999-000000000013",
+            isHidden: false,
+          });
+        }
+      }
+    }
   }
 
   const seededTeacherReviews = [];
   for (const review of teacherReviewsData) {
-    const created = await prisma.teacherReview.upsert({
-      where: {
-        studentId_teacherId: {
-          studentId: review.studentId,
-          teacherId: review.teacherId,
-        },
-      },
-      update: {
-        rating: review.rating,
-        comment: review.comment,
-        bookingId: review.bookingId ?? null,
-        isHidden: review.isHidden ?? false,
-      },
-      create: {
-        studentId: review.studentId,
-        teacherId: review.teacherId,
-        rating: review.rating,
-        comment: review.comment,
-        bookingId: review.bookingId ?? null,
-        isHidden: review.isHidden ?? false,
-      },
-    });
-    seededTeacherReviews.push(created);
+    try {
+      let created;
+      if (review.bookingId) {
+        created = await prisma.teacherReview.upsert({
+          where: { bookingId: review.bookingId },
+          update: {
+            studentId: review.studentId,
+            teacherId: review.teacherId,
+            rating: review.rating,
+            comment: review.comment,
+            isHidden: review.isHidden ?? false,
+          },
+          create: {
+            studentId: review.studentId,
+            teacherId: review.teacherId,
+            rating: review.rating,
+            comment: review.comment,
+            bookingId: review.bookingId,
+            isHidden: review.isHidden ?? false,
+          },
+        });
+      } else {
+        created = await prisma.teacherReview.upsert({
+          where: {
+            studentId_teacherId: {
+              studentId: review.studentId,
+              teacherId: review.teacherId,
+            },
+          },
+          update: {
+            rating: review.rating,
+            comment: review.comment,
+            isHidden: review.isHidden ?? false,
+          },
+          create: {
+            studentId: review.studentId,
+            teacherId: review.teacherId,
+            rating: review.rating,
+            comment: review.comment,
+            isHidden: review.isHidden ?? false,
+          },
+        });
+      }
+      if (created) seededTeacherReviews.push(created);
+    } catch {
+      // If studentId_teacherId already has another review, skip or update gracefully
+    }
   }
 
   // Recalculate Teacher avgRating and reviewsCount

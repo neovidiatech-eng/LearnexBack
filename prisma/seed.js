@@ -56,13 +56,13 @@ async function main() {
   const courses = await seedCourses(prisma, teachers, categories);
 
   // 7.1. Teacher-Created Courses (depends on teachers)
-  const teacherCourses = await seedTeacherCourses(prisma, teachers);
+  const teacherCourses = await seedTeacherCourses(prisma, teachers, categories, students);
 
   // 7.2. Session Plans (depends on teachers)
   await seedPlans(prisma, teachers);
 
-  // 8. Enrollments (depends on students + courses)
-  await seedEnrollments(prisma, students, courses);
+  // 8. Enrollments (depends on students + courses + teacherCourses)
+  await seedEnrollments(prisma, students, courses, teacherCourses);
 
   // 9. Carts (depends on students + courses)
   await seedCarts(prisma, students, courses);
@@ -79,8 +79,8 @@ async function main() {
   // 12. CMS & App Settings (independent)
   await seedCms(prisma);
 
-  // 13. Reviews (depends on students + teachers + courses)
-  await seedReviews(prisma, students, teachers, courses);
+  // 13. Reviews (depends on students + teachers + courses + teacherCourses)
+  await seedReviews(prisma, students, teachers, courses, teacherCourses);
 
   // 14. Promotional Offers (depends on students + teachers + courses + teacherCourses)
   await seedOffers(prisma, students, teachers, courses, teacherCourses);

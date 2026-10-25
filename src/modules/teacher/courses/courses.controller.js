@@ -3,7 +3,16 @@ import { asyncHandler, successResponse } from "../../../utils/response.js"
 import * as teacherCourseService from "./courses.service.js"
 
 export const createTeacherCourse = asyncHandler(async (req, res, next) => {
-  const { name, description, price, totalHours } = req.body;
+  const {
+    name,
+    description,
+    price,
+    totalHours,
+    categoryId,
+    previewVideoUrl,
+    level,
+    language,
+  } = req.body;
   const teacher = await dbService.findFirst({
     model: "teacher",
     where: {
@@ -25,6 +34,10 @@ export const createTeacherCourse = asyncHandler(async (req, res, next) => {
     description,
     price,
     totalHours,
+    categoryId,
+    previewVideoUrl,
+    level,
+    language,
     wallPaper: req.file?.path || req.file?.relativeDestination
   });
   return successResponse({
@@ -38,7 +51,7 @@ export const createTeacherCourse = asyncHandler(async (req, res, next) => {
 });
 
 export const getCourses = asyncHandler(async (req, res, next) => {
-  const { search, page = 1, limit = 10 } = req.query;
+  const { search, categoryId, level, language, page = 1, limit = 10 } = req.query;
 
   let teacherId;
 
@@ -66,6 +79,9 @@ export const getCourses = asyncHandler(async (req, res, next) => {
     teacherId,
     role: req.user.role.slug.toLowerCase(),
     search,
+    categoryId,
+    level,
+    language,
     page,
     limit,
   });
@@ -115,6 +131,10 @@ export const updateTeacherCourse = asyncHandler(async (req, res, next) => {
     description,
     price,
     totalHours,
+    categoryId,
+    previewVideoUrl,
+    level,
+    language,
   } = req.body;
 
   const teacher = await dbService.findFirst({
@@ -141,6 +161,10 @@ export const updateTeacherCourse = asyncHandler(async (req, res, next) => {
     description,
     price,
     totalHours,
+    categoryId,
+    previewVideoUrl,
+    level,
+    language,
     wallPaper: req.file?.path || req.file?.relativeDestination
   });
 
