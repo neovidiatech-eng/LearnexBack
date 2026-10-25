@@ -161,7 +161,8 @@ export const PERMISSIONS_V2 = {
     READ_ALL: "tickets:read_all",
     CLOSE: "tickets:close",
     REOPEN: "tickets:reopen",
-    ASSIGN:"tickets:assign"
+    ASSIGN:"tickets:assign",
+    SEND_MESSAGE:"tickets:send_message"
    }
  };
 

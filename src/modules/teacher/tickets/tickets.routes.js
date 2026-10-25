@@ -37,7 +37,7 @@ router.post(
 );
 router.post(
   "/:ticketId/send-message",
-  authorize(PERMISSIONS_V2.TICKETS.CREATE),
+  authorize(PERMISSIONS_V2.TICKETS.SEND_MESSAGE),
   localFileUpload({
     customPath: (req) => `support/attachments/${req.user.id}`,
     maxSizeInMB: "5",

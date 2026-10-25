@@ -24,7 +24,7 @@ export const getTicketById = asyncHandler(async (req, res) => {
 });
 
 export const sendMessage = asyncHandler(async (req, res) => {
-  const userId = req.user.id;
+  const userId = req.user
   const data = req.body;
   const file = req.file;
   const { ticketId } = req.params;

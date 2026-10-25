@@ -100,5 +100,8 @@
   "TICKET_NOT_FOUND": "Ticket not found.",
   "TICKET_DETAILS_FETCHED_SUCCESSFULLY": "Ticket details fetched successfully.",
   "TEACHER_OPEN_TICKET":"Teacher already has an 2 open ticket.",
-  "NOT_AUTHORIZED_TO_SEND_MESSAGE":"You are not authorized to send a message to this ticket."
+  "NOT_AUTHORIZED_TO_SEND_MESSAGE":"You are not authorized to send a message to this ticket.",
+  "CANT_CLOSE_TICKET":"Cant close ticket "
+
+  
 }

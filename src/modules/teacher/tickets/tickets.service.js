@@ -80,9 +80,9 @@ export const createTicketService = async ({ user, body, file }) => {
     where: {
       userId: user,
       status: {
-        in:[
-          SupportTicketStatus.OPEN,
-          SupportTicketStatus.IN_PROGRESS,
+        notIn:[
+          SupportTicketStatus.CLOSED,
+          SupportTicketStatus.RESOLVED,
         ]
       }
     },
