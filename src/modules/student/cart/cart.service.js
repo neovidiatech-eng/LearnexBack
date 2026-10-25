@@ -193,6 +193,13 @@ export const addToCartService = async (userId, { type, itemId }) => {
     if (!course) throwError("COURSE_NOT_FOUND", 404);
     if (course.status !== "APPROVED")
       throwError("COURSE_NOT_AVAILABLE", 400);
+
+    const existingEnrollment = await db.findFirst({
+      model: "teacherCourseEnrollment",
+      where: { studentId: userId, courseId: itemId },
+    })
+    if (existingEnrollment) throwError("ALREADY_ENROLLED", 409);
+
   } else {
     throwError("INVALID_ITEM_TYPE", 400);
   }
@@ -280,7 +287,7 @@ export const checkoutCartService = async (userId, locale = "ar") => {
     where: { userId },
     include: { cartItems: true },
   });
-
+  
   if (!cart || !cart.cartItems || cart.cartItems.length === 0) {
     throwError("CART_IS_EMPTY", 400);
   }
@@ -328,8 +335,8 @@ export const checkoutCartService = async (userId, locale = "ar") => {
           model: "course",
           where: { id: course.id },
           data: {
-            totalStudentsCount: (course.totalStudentsCount || 0) + 1,
-            totalRevenue: Number(course.totalRevenue || 0) + paidAmount,
+            totalStudentsCount: { increment: 1 },
+            totalRevenue: { increment: paidAmount },
           },
         });
 
@@ -349,7 +356,71 @@ export const checkoutCartService = async (userId, locale = "ar") => {
             status: enrollment.status,
           },
         });
+      }
+    } else if (item.type === coursesType.TEACHER_COURSE) {
+      const course = await db.findOne({
+        model: "teacherCourse",
+        where: { id: item.itemId },
+        select: {
+          id: true,
+          status: true,
+          price: true,
+          totalStudentsCount: true,
+          totalRevenue: true,
+        },
+      });
 
+      if (!course || course.status !== "APPROVED") {
+        continue;
+      }
+
+      const existingEnrollment = await db.findFirst({
+        model: "teacherCourseEnrollment",
+        where: { studentId: userId, courseId: course.id },
+      });
+
+      if (!existingEnrollment) {
+        const paidAmount = Number(course.price || 0);
+        const enrollment = await db.create({
+          model: "teacherCourseEnrollment",
+          data: {
+            studentId: userId,
+            courseId: course.id,
+            status: "ACTIVE",
+            paidAmount,
+            progressPercent: 0,
+          },
+        });
+
+        await db.updateOne({
+          model: "teacherCourse",
+          where: { id: course.id },
+          data: {
+            totalStudentsCount: { increment: 1 },
+            totalRevenue: { increment: paidAmount },
+          },
+        });
+
+        enrolled.push({
+          ...enrollment,
+          type: coursesType.TEACHER_COURSE,
+        });
+
+        await createSystemRequest({
+          tab: requestTabEnum.STUDENT,
+          type: requestTypeEnum.COURSE_ENROLLMENT,
+          priority: requestPriorityEnum.HIGH,
+          requesterId: userId,
+          requesterRole: requestTabEnum.STUDENT,
+          referenceId: enrollment.id,
+          referenceModel: requestReferenceModelEnum.TEACHER_COURSE,
+          details: {
+            courseId: course.id,
+            amount: enrollment.paidAmount,
+            status: enrollment.status,
+            itemType: coursesType.TEACHER_COURSE,
+          },
+        });
       }
     }
   }

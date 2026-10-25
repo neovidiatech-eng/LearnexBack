@@ -60,6 +60,14 @@ export const getCategories = asyncHandler(async (req, res) => {
   return successResponse({ res, data: result });
 });
 
+export const getCourseFilters = asyncHandler(async (req, res) => {
+  const result = await studentCourseService.getCourseFiltersService(
+    req.user.id,
+    req.query
+  );
+  return successResponse({ res, data: result });
+});
+
 export const getCourseDetails = asyncHandler(async (req, res) => {
   const result = await studentCourseService.getCourseDetailsService(
     req.user.id,

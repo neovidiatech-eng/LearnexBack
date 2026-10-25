@@ -36,6 +36,12 @@ router.get(
 );
 
 router.get(
+  "/filters",
+  validation(courseValidation.getCourseFilters),
+  courseController.getCourseFilters
+);
+
+router.get(
   "/",
   validation(courseValidation.getCourseCatalog),
   courseController.getCourseCatalog
@@ -53,7 +59,11 @@ router.post(
   courseController.completeLesson
 );
 
-router.get("/:courseId/reviews", courseController.getCourseReviews);
+router.get(
+  "/:courseId/reviews",
+  validation(courseValidation.getCourseReviews),
+  courseController.getCourseReviews
+);
 
 router.get(
   "/:courseId",

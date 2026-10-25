@@ -1,4 +1,4 @@
-export async function seedEnrollments(prisma, students, courses) {
+export async function seedEnrollments(prisma, students, courses, teacherCourses = []) {
   console.log("🌱 Seeding enrollments...");
 
   // Each student enrolls in specific courses
@@ -44,6 +44,67 @@ export async function seedEnrollments(prisma, students, courses) {
     enrollments.push(created);
   }
 
-  console.log(`✅ Seeded ${enrollments.length} enrollments`);
+  // Teacher course enrollments
+  let tCourses = teacherCourses;
+  if (!tCourses || tCourses.length === 0) {
+    tCourses = await prisma.teacherCourse.findMany({ take: 5 }).catch(() => []);
+  }
+
+  if (tCourses.length > 0 && students.length > 0) {
+    const teacherEnrollmentsData = [
+      {
+        studentId: students[0].id,
+        courseId: tCourses[0].id,
+        paidAmount: Number(tCourses[0].price || 0),
+        progressPercent: 35.0,
+        status: "ACTIVE",
+      },
+      ...(tCourses[1] && students[1]
+        ? [
+            {
+              studentId: students[1].id,
+              courseId: tCourses[1].id,
+              paidAmount: Number(tCourses[1].price || 0),
+              progressPercent: 70.0,
+              status: "ACTIVE",
+            },
+          ]
+        : []),
+      ...(tCourses[2] && students[2]
+        ? [
+            {
+              studentId: students[2].id,
+              courseId: tCourses[2].id,
+              paidAmount: Number(tCourses[2].price || 0),
+              progressPercent: 100.0,
+              status: "COMPLETED",
+              completedAt: new Date(),
+            },
+          ]
+        : []),
+    ];
+
+    for (const te of teacherEnrollmentsData) {
+      await prisma.teacherCourseEnrollment.upsert({
+        where: {
+          studentId_courseId: {
+            studentId: te.studentId,
+            courseId: te.courseId,
+          },
+        },
+        update: {},
+        create: {
+          studentId: te.studentId,
+          courseId: te.courseId,
+          status: te.status,
+          paidAmount: te.paidAmount,
+          progressPercent: te.progressPercent,
+          completedAt: te.completedAt ?? null,
+        },
+      }).catch(() => {});
+    }
+  }
+
+  console.log(`✅ Seeded ${enrollments.length} platform course enrollments and teacher course enrollments`);
   return enrollments;
 }
