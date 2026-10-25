@@ -1,0 +1,8 @@
+export const actionTypeEnum = {
+  DISCOUNT: "DISCOUNT",
+  COURSE: "COURSE",
+  CATEGORY: "CATEGORY",
+  INSTRUCTORS: "INSTRUCTORS",
+  EXTERNAL_URL: "EXTERNAL_URL",
+  NONE: "NONE",
+};

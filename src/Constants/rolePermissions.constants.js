@@ -54,7 +54,31 @@ export const PERMISSIONS_DATA = [
     resource: "categories",
     action: "delete",
   },
-
+  //Banners
+  {
+    code: PERMISSIONS_V2.BANNERS.READ,
+    name: "Read Banners",
+    resource: "banners",
+    action: "read",
+  },
+  {
+    code: PERMISSIONS_V2.BANNERS.CREATE,
+    name: "Create Banners",
+    resource: "banners",
+    action: "create",
+  },
+  {
+    code: PERMISSIONS_V2.BANNERS.UPDATE,
+    name: "Update Banners",
+    resource: "banners",
+    action: "update",
+  },
+  {
+    code: PERMISSIONS_V2.BANNERS.DELETE,
+    name: "Delete Banners",
+    resource: "banners",
+    action: "delete",
+  },
   // Courses
   {
     code: PERMISSIONS_V2.COURSES.READ,
@@ -566,7 +590,7 @@ export const PERMISSIONS_DATA = [
     name: "Send Message in Support Ticket",
     resource: "supportTickets",
     action: "send_message",
-  }
+  },
 ];
 
 export const ROLE_PERMISSIONS_MAP = {
@@ -637,6 +661,7 @@ export const ROLE_PERMISSIONS_MAP = {
     PERMISSIONS_V2.COURSES.READ,
     PERMISSIONS_V2.ENROLLMENTS.READ,
     PERMISSIONS_V2.CATEGORIES.READ,
+    PERMISSIONS_V2.BANNERS.READ,
     PERMISSIONS_V2.REVIEWS.READ,
     PERMISSIONS_V2.PLANS.BUY_PLAN,
     PERMISSIONS_V2.TICKETS.READ,
