@@ -32,38 +32,42 @@ export const getAllCategoriesService = async ({
       : {}),
   };
 
-  const select = {
-    id: true,
-    slug: true,
-    image: true,
-    createdAt: true,
-    updatedAt: true,
-    _count: { select: { courses: true } },
-    translations: {
-      where: locale ? { locale } : undefined,
-      select: {
-        id: true,
-        locale: true,
-        name: true,
-        description: true,
-      },
-    },
-  
-  };
+ const select = {
+   id: true,
+   slug: true,
+   image: true,
+   createdAt: true,
+   updatedAt: true,
+   _count: {
+     select: {
+       courses: { where: { status: "PUBLISHED" } },
+       teacherCourses: { where: { status: "APPROVED" } },
+     },
+   },
+   translations: {
+     where: locale ? { locale } : undefined,
+     select: {
+       id: true,
+       locale: true,
+       name: true,
+       description: true,
+     },
+   },
+ };
 
-  const result = await DBService.findManyWithPaginationAndCount({
-    model: "category",
-    where,
-    page,
-    limit,
-    orderBy: { createdAt: "desc" },
-    select,
-  });
+ const result = await DBService.findManyWithPaginationAndCount({
+   model: "category",
+   where,
+   page,
+   limit,
+   orderBy: { createdAt: "desc" },
+   select,
+ });
 
-  const categories = result.items.map(({ _count, ...category }) => ({
-    ...category,
-    coursesCount: _count.courses,
-  }));
+ const categories = result.items.map(({ _count, ...category }) => ({
+   ...category,
+   coursesCount: _count.courses + _count.teacherCourses,
+ }));
 
   return {
     categories,
@@ -90,7 +94,15 @@ export const getCategoryByIdService = async (categoryId, locale) => {
           },
         },
       },
-     
+      teacherCourses: {
+        select: {
+          id: true,
+          level: true,
+          status: true,
+          price: true,
+          name: true,
+        },
+      },
     },
   });
 
@@ -100,7 +112,12 @@ export const getCategoryByIdService = async (categoryId, locale) => {
     throw error;
   }
 
-  return { category };
+ return {
+   category: {
+     ...category,
+     coursesCount: category.courses.length + category.teacherCourses.length,
+   },
+ };
 };
 
 export const createCategoryService = async (body, file, query = {}) => {
