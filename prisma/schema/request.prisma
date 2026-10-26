@@ -5,8 +5,8 @@ model SystemRequest {
   type            String
   priority        String  @default("MEDIUM")
   status          String  @default("PENDING")
-  requesterId     String
-  requester       User    @relation(fields: [requesterId], references: [id], onDelete: Cascade)
+  requesterId     String?
+  requester       User?   @relation(fields: [requesterId], references: [id], onDelete: SetNull)
   requesterRole   String
   referenceId     String?
   referenceModel  String?

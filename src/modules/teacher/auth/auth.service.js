@@ -10,8 +10,14 @@ import { userStatusEnum } from "../../../utils/Enums/userStatus.enum.js";
 import { customAlphabet } from "nanoid";
 import { emailEvent } from "../../../utils/events/email.event.js";
 import { deleteCache, getCache, setCache } from "../../../db/redis.service.js";
-import { requestPriorityEnum, requestReferenceModelEnum, requestTabEnum, requestTypeEnum } from "../../../utils/Enums/request.enum.js";
+import {
+  requestPriorityEnum,
+  requestReferenceModelEnum,
+  requestTabEnum,
+  requestTypeEnum,
+} from "../../../utils/Enums/request.enum.js";
 import { createSystemRequest } from "../../../utils/helpers/requests.helper.js";
+import { walletEnum } from "../../../utils/Enums/wallet.enum.js";
 
 export const teacherSignupService = async (body, reqFiles) => {
   const {
@@ -79,6 +85,12 @@ export const teacherSignupService = async (body, reqFiles) => {
           roleId: role?.id || null,
           status: userStatusEnum.PENDING_REVIEW,
           confirmEmail: false,
+          wallet: {
+            create: {
+              type: walletEnum.TEACHER,
+              balance: 0,
+            },
+          },
         },
       },
     },
@@ -90,6 +102,7 @@ export const teacherSignupService = async (body, reqFiles) => {
           fullName: true,
           phone: true,
           status: true,
+          wallet: true,
           role: {
             select: {
               id: true,
@@ -122,7 +135,7 @@ export const teacherSignupService = async (body, reqFiles) => {
   });
 
   return createdTeacher;
-};;
+};
 
 export const teacherLoginService = async ({ email, password }) => {
   const normalizedEmail = email.toLowerCase().trim();
