@@ -1204,6 +1204,158 @@ Include the Bearer JWT token in the Authorization header:
           maxUsesPerUser: { type: "integer", default: 1, example: 1 },
         },
       },
+      BannerTranslationInputDTO: {
+        type: "object",
+        required: ["locale", "title", "subtitle", "buttonText"],
+        properties: {
+          locale: { type: "string", enum: ["ar", "en", "fr"], example: "en" },
+          title: { type: "string", example: "Autumn Sale" },
+          subtitle: { type: "string", example: "Up to 50% off all courses" },
+          buttonText: { type: "string", example: "Join now" },
+        },
+      },
+
+      BannerCreateDTO: {
+        type: "object",
+        required: ["image", "translations"],
+        properties: {
+          image: { type: "string", format: "binary" },
+          actionType: {
+            type: "string",
+            enum: [
+              "DISCOUNT",
+              "COURSE",
+              "CATEGORY",
+              "INSTRUCTORS",
+              "EXTERNAL_URL",
+              "NONE",
+            ],
+            default: "DISCOUNT",
+            example: "COURSE",
+          },
+          targetId: {
+            type: "string",
+            nullable: true,
+            example: "550e8400-e29b-41d4-a716-446655440000",
+          },
+          isActive: { type: "boolean", default: true, example: true },
+          translations: {
+            type: "string",
+            example:
+              '[{"locale":"en","title":"Autumn Sale","subtitle":"Up to 50% off","buttonText":"Join now"},{"locale":"ar","title":"Autumn Sale AR","subtitle":"Up to 50% off AR","buttonText":"Join now AR"}]',
+          },
+        },
+      },
+
+      BannerUpdateDTO: {
+        type: "object",
+        properties: {
+          image: { type: "string", format: "binary" },
+          actionType: {
+            type: "string",
+            enum: [
+              "DISCOUNT",
+              "COURSE",
+              "CATEGORY",
+              "INSTRUCTORS",
+              "EXTERNAL_URL",
+              "NONE",
+            ],
+            example: "CATEGORY",
+          },
+          targetId: { type: "string", nullable: true },
+          isActive: { type: "boolean", example: true },
+          translations: {
+            type: "string",
+            example:
+              '[{"locale":"en","title":"New title","subtitle":"New subtitle","buttonText":"New button"}]',
+          },
+        },
+      },
+
+      BannerTranslationDTO: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          bannerId: { type: "string", format: "uuid" },
+          locale: { type: "string", example: "en" },
+          title: { type: "string", example: "Autumn Sale" },
+          subtitle: { type: "string", example: "Up to 50% off" },
+          buttonText: { type: "string", example: "Join now" },
+        },
+      },
+      BannerDTO: {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+          imageUrl: {
+            type: "string",
+            example: "/uploads/banners/banner-1.png",
+          },
+          isActive: { type: "boolean", example: true },
+          actionType: {
+            type: "string",
+            enum: [
+              "DISCOUNT",
+              "COURSE",
+              "CATEGORY",
+              "INSTRUCTORS",
+              "EXTERNAL_URL",
+              "NONE",
+            ],
+            example: "COURSE",
+          },
+          targetId: {
+            type: "string",
+            nullable: true,
+            example: "550e8400-e29b-41d4-a716-446655440000",
+          },
+          createdAt: { type: "string", format: "date-time" },
+          updatedAt: { type: "string", format: "date-time" },
+          translations: {
+            type: "array",
+            items: { $ref: "#/components/schemas/BannerTranslationDTO" },
+          },
+        },
+      },
+
+      BannerDetailResponseDTO: {
+        type: "object",
+        properties: {
+          message: { type: "string", example: "SUCCESS" },
+          data: { $ref: "#/components/schemas/BannerDTO" },
+        },
+      },
+
+      BannerWrappedResponseDTO: {
+        type: "object",
+        properties: {
+          message: { type: "string", example: "SUCCESS" },
+          data: {
+            type: "object",
+            properties: {
+              banner: { $ref: "#/components/schemas/BannerDTO" },
+            },
+          },
+        },
+      },
+
+      BannerListResponseDTO: {
+        type: "object",
+        properties: {
+          message: { type: "string", example: "SUCCESS" },
+          data: {
+            type: "object",
+            properties: {
+              banners: {
+                type: "array",
+                items: { $ref: "#/components/schemas/BannerDTO" },
+              },
+              pagination: { $ref: "#/components/schemas/PaginationMeta" },
+            },
+          },
+        },
+      },
       NotificationCreateDTO: {
         type: "object",
         required: ["translations"],
@@ -1545,7 +1697,11 @@ Include the Bearer JWT token in the Authorization header:
         type: "object",
         properties: {
           id: { type: "string", format: "uuid" },
-          title: { type: "string", example: "🔴 Live Mentoring: Next.js 15 App Router & Server Actions" },
+          title: {
+            type: "string",
+            example:
+              "🔴 Live Mentoring: Next.js 15 App Router & Server Actions",
+          },
           status: {
             type: "string",
             enum: ["SCHEDULED", "LIVE", "COMPLETED", "CANCELLED"],
@@ -1597,8 +1753,16 @@ Include the Bearer JWT token in the Authorization header:
             nullable: true,
             properties: {
               id: { type: "string", format: "uuid" },
-              title: { type: "string", nullable: true, example: "Live mentoring on Next.js 15" },
-              note: { type: "string", nullable: true, example: "Review server actions and streaming" },
+              title: {
+                type: "string",
+                nullable: true,
+                example: "Live mentoring on Next.js 15",
+              },
+              note: {
+                type: "string",
+                nullable: true,
+                example: "Review server actions and streaming",
+              },
             },
           },
           teacher: {
@@ -1611,7 +1775,10 @@ Include the Bearer JWT token in the Authorization header:
                   id: { type: "string", format: "uuid" },
                   fullName: { type: "string", example: "Ahmed Hassan" },
                   profilePhoto: { type: "string", nullable: true },
-                  email: { type: "string", example: "ahmed.hassan@learnex.com" },
+                  email: {
+                    type: "string",
+                    example: "ahmed.hassan@learnex.com",
+                  },
                 },
               },
             },
@@ -1621,7 +1788,10 @@ Include the Bearer JWT token in the Authorization header:
       StudentSessionsListResponseDTO: {
         type: "object",
         properties: {
-          message: { type: "string", example: "STUDENT_SESSIONS_FETCHED_SUCCESSFULLY" },
+          message: {
+            type: "string",
+            example: "STUDENT_SESSIONS_FETCHED_SUCCESSFULLY",
+          },
           data: {
             type: "object",
             properties: {
@@ -1647,7 +1817,11 @@ Include the Bearer JWT token in the Authorization header:
           },
           startAt: { type: "string", format: "date-time" },
           endAt: { type: "string", format: "date-time" },
-          note: { type: "string", nullable: true, example: "Want to discuss event-driven patterns with Kafka" },
+          note: {
+            type: "string",
+            nullable: true,
+            example: "Want to discuss event-driven patterns with Kafka",
+          },
           status: {
             type: "string",
             enum: ["PENDING", "ACCEPTED", "REJECTED", "CANCELLED"],
@@ -1666,7 +1840,10 @@ Include the Bearer JWT token in the Authorization header:
                   id: { type: "string", format: "uuid" },
                   fullName: { type: "string", example: "Ahmed Hassan" },
                   profilePhoto: { type: "string", nullable: true },
-                  email: { type: "string", example: "ahmed.hassan@learnex.com" },
+                  email: {
+                    type: "string",
+                    example: "ahmed.hassan@learnex.com",
+                  },
                 },
               },
             },
@@ -1687,13 +1864,18 @@ Include the Bearer JWT token in the Authorization header:
       StudentSessionRequestsListResponseDTO: {
         type: "object",
         properties: {
-          message: { type: "string", example: "SESSION_REQUESTS_FETCHED_SUCCESSFULLY" },
+          message: {
+            type: "string",
+            example: "SESSION_REQUESTS_FETCHED_SUCCESSFULLY",
+          },
           data: {
             type: "object",
             properties: {
               items: {
                 type: "array",
-                items: { $ref: "#/components/schemas/StudentSessionRequestItemDTO" },
+                items: {
+                  $ref: "#/components/schemas/StudentSessionRequestItemDTO",
+                },
               },
               meta: { $ref: "#/components/schemas/PaginationMeta" },
             },
@@ -2103,7 +2285,8 @@ Include the Bearer JWT token in the Authorization header:
               roomName: { type: "string", example: "session_live_abc123" },
               token: {
                 type: "string",
-                description: "Signed Jitsi Meet JWT token for WebRTC video conference room",
+                description:
+                  "Signed Jitsi Meet JWT token for WebRTC video conference room",
               },
             },
           },
@@ -2417,20 +2600,44 @@ Include the Bearer JWT token in the Authorization header:
       SupportTicketUserDTO: {
         type: "object",
         properties: {
-          id: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440001" },
+          id: {
+            type: "string",
+            format: "uuid",
+            example: "550e8400-e29b-41d4-a716-446655440001",
+          },
           fullName: { type: "string", example: "Dr. Ahmed Hassan" },
-          email: { type: "string", format: "email", example: "ahmed.hassan@learnex.com" },
-          profilePhoto: { type: "string", nullable: true, example: "/uploads/avatars/user.jpg" },
+          email: {
+            type: "string",
+            format: "email",
+            example: "ahmed.hassan@learnex.com",
+          },
+          profilePhoto: {
+            type: "string",
+            nullable: true,
+            example: "/uploads/avatars/user.jpg",
+          },
         },
       },
       SupportTicketUserDetailDTO: {
         type: "object",
         properties: {
-          id: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440001" },
+          id: {
+            type: "string",
+            format: "uuid",
+            example: "550e8400-e29b-41d4-a716-446655440001",
+          },
           fullName: { type: "string", example: "Dr. Ahmed Hassan" },
-          email: { type: "string", format: "email", example: "ahmed.hassan@learnex.com" },
+          email: {
+            type: "string",
+            format: "email",
+            example: "ahmed.hassan@learnex.com",
+          },
           phone: { type: "string", nullable: true, example: "+201001234567" },
-          profilePhoto: { type: "string", nullable: true, example: "/uploads/avatars/user.jpg" },
+          profilePhoto: {
+            type: "string",
+            nullable: true,
+            example: "/uploads/avatars/user.jpg",
+          },
           role: {
             type: "object",
             properties: {
@@ -2452,10 +2659,21 @@ Include the Bearer JWT token in the Authorization header:
       SupportAttachmentDTO: {
         type: "object",
         properties: {
-          id: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440002" },
-          messageId: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440003" },
+          id: {
+            type: "string",
+            format: "uuid",
+            example: "550e8400-e29b-41d4-a716-446655440002",
+          },
+          messageId: {
+            type: "string",
+            format: "uuid",
+            example: "550e8400-e29b-41d4-a716-446655440003",
+          },
           fileName: { type: "string", example: "screenshot.png" },
-          storageKey: { type: "string", example: "uploads/support/attachments/uuid/screenshot.png" },
+          storageKey: {
+            type: "string",
+            example: "uploads/support/attachments/uuid/screenshot.png",
+          },
           mimeType: { type: "string", example: "image/png" },
           size: { type: "integer", example: 1048576 },
           createdAt: { type: "string", format: "date-time" },
@@ -2464,19 +2682,47 @@ Include the Bearer JWT token in the Authorization header:
       SupportMessageSenderDTO: {
         type: "object",
         properties: {
-          id: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440001" },
+          id: {
+            type: "string",
+            format: "uuid",
+            example: "550e8400-e29b-41d4-a716-446655440001",
+          },
           fullName: { type: "string", example: "Support Agent" },
-          email: { type: "string", nullable: true, example: "support@learnex.com" },
-          profilePhoto: { type: "string", nullable: true, example: "/uploads/avatars/agent.jpg" },
+          email: {
+            type: "string",
+            nullable: true,
+            example: "support@learnex.com",
+          },
+          profilePhoto: {
+            type: "string",
+            nullable: true,
+            example: "/uploads/avatars/agent.jpg",
+          },
         },
       },
       SupportMessageDTO: {
         type: "object",
         properties: {
-          id: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440003" },
-          ticketId: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440000" },
-          senderId: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440001" },
-          body: { type: "string", example: "Hello, we have reviewed your request and resolved the issue." },
+          id: {
+            type: "string",
+            format: "uuid",
+            example: "550e8400-e29b-41d4-a716-446655440003",
+          },
+          ticketId: {
+            type: "string",
+            format: "uuid",
+            example: "550e8400-e29b-41d4-a716-446655440000",
+          },
+          senderId: {
+            type: "string",
+            format: "uuid",
+            example: "550e8400-e29b-41d4-a716-446655440001",
+          },
+          body: {
+            type: "string",
+            example:
+              "Hello, we have reviewed your request and resolved the issue.",
+          },
           createdAt: { type: "string", format: "date-time" },
           sender: { $ref: "#/components/schemas/SupportMessageSenderDTO" },
           attachments: {
@@ -2488,12 +2734,25 @@ Include the Bearer JWT token in the Authorization header:
       AdminTicketListItemDTO: {
         type: "object",
         properties: {
-          id: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440000" },
+          id: {
+            type: "string",
+            format: "uuid",
+            example: "550e8400-e29b-41d4-a716-446655440000",
+          },
           ticketNumber: { type: "integer", example: 1001 },
-          subject: { type: "string", example: "Issue with course video upload" },
+          subject: {
+            type: "string",
+            example: "Issue with course video upload",
+          },
           status: {
             type: "string",
-            enum: ["OPEN", "IN_PROGRESS", "WAITING_FOR_TEACHER", "RESOLVED", "CLOSED"],
+            enum: [
+              "OPEN",
+              "IN_PROGRESS",
+              "WAITING_FOR_TEACHER",
+              "RESOLVED",
+              "CLOSED",
+            ],
             example: "OPEN",
           },
           priority: {
@@ -2501,26 +2760,55 @@ Include the Bearer JWT token in the Authorization header:
             enum: ["LOW", "NORMAL", "HIGH", "URGENT"],
             example: "NORMAL",
           },
-          userId: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440001" },
-          assignedStaffId: { type: "string", format: "uuid", nullable: true, example: "550e8400-e29b-41d4-a716-446655440005" },
-          lastMessageAt: { type: "string", format: "date-time", nullable: true },
+          userId: {
+            type: "string",
+            format: "uuid",
+            example: "550e8400-e29b-41d4-a716-446655440001",
+          },
+          assignedStaffId: {
+            type: "string",
+            format: "uuid",
+            nullable: true,
+            example: "550e8400-e29b-41d4-a716-446655440005",
+          },
+          lastMessageAt: {
+            type: "string",
+            format: "date-time",
+            nullable: true,
+          },
           resolvedAt: { type: "string", format: "date-time", nullable: true },
           closedAt: { type: "string", format: "date-time", nullable: true },
           createdAt: { type: "string", format: "date-time" },
           updatedAt: { type: "string", format: "date-time" },
           user: { $ref: "#/components/schemas/SupportTicketUserDTO" },
-          staff: { $ref: "#/components/schemas/SupportTicketUserDTO", nullable: true },
+          staff: {
+            $ref: "#/components/schemas/SupportTicketUserDTO",
+            nullable: true,
+          },
         },
       },
       AdminTicketDetailDTO: {
         type: "object",
         properties: {
-          id: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440000" },
+          id: {
+            type: "string",
+            format: "uuid",
+            example: "550e8400-e29b-41d4-a716-446655440000",
+          },
           ticketNumber: { type: "integer", example: 1001 },
-          subject: { type: "string", example: "Issue with course video upload" },
+          subject: {
+            type: "string",
+            example: "Issue with course video upload",
+          },
           status: {
             type: "string",
-            enum: ["OPEN", "IN_PROGRESS", "WAITING_FOR_TEACHER", "RESOLVED", "CLOSED"],
+            enum: [
+              "OPEN",
+              "IN_PROGRESS",
+              "WAITING_FOR_TEACHER",
+              "RESOLVED",
+              "CLOSED",
+            ],
             example: "OPEN",
           },
           priority: {
@@ -2530,13 +2818,20 @@ Include the Bearer JWT token in the Authorization header:
           },
           userId: { type: "string", format: "uuid" },
           assignedStaffId: { type: "string", format: "uuid", nullable: true },
-          lastMessageAt: { type: "string", format: "date-time", nullable: true },
+          lastMessageAt: {
+            type: "string",
+            format: "date-time",
+            nullable: true,
+          },
           resolvedAt: { type: "string", format: "date-time", nullable: true },
           closedAt: { type: "string", format: "date-time", nullable: true },
           createdAt: { type: "string", format: "date-time" },
           updatedAt: { type: "string", format: "date-time" },
           user: { $ref: "#/components/schemas/SupportTicketUserDetailDTO" },
-          staff: { $ref: "#/components/schemas/SupportTicketUserDTO", nullable: true },
+          staff: {
+            $ref: "#/components/schemas/SupportTicketUserDTO",
+            nullable: true,
+          },
           supportMessages: {
             type: "array",
             items: { $ref: "#/components/schemas/SupportMessageDTO" },
@@ -2599,7 +2894,8 @@ Include the Bearer JWT token in the Authorization header:
             format: "uuid",
             nullable: true,
             example: "550e8400-e29b-41d4-a716-446655440005",
-            description: "Staff User UUID to assign the ticket to, or null to unassign",
+            description:
+              "Staff User UUID to assign the ticket to, or null to unassign",
           },
         },
       },
@@ -2609,7 +2905,13 @@ Include the Bearer JWT token in the Authorization header:
         properties: {
           status: {
             type: "string",
-            enum: ["OPEN", "IN_PROGRESS", "WAITING_FOR_TEACHER", "RESOLVED", "CLOSED"],
+            enum: [
+              "OPEN",
+              "IN_PROGRESS",
+              "WAITING_FOR_TEACHER",
+              "RESOLVED",
+              "CLOSED",
+            ],
             example: "IN_PROGRESS",
             description: "New status of the support ticket",
           },
@@ -2619,17 +2921,25 @@ Include the Bearer JWT token in the Authorization header:
         type: "object",
         required: ["subject", "priority", "message"],
         properties: {
-          subject: { type: "string", example: "Question regarding monthly payout" },
+          subject: {
+            type: "string",
+            example: "Question regarding monthly payout",
+          },
           priority: {
             type: "string",
             enum: ["LOW", "NORMAL", "HIGH", "URGENT"],
             example: "NORMAL",
           },
-          message: { type: "string", example: "Hello, when will the monthly session payouts be processed?" },
+          message: {
+            type: "string",
+            example:
+              "Hello, when will the monthly session payouts be processed?",
+          },
           attachment: {
             type: "string",
             format: "binary",
-            description: "Optional file attachment (image or document up to 5MB)",
+            description:
+              "Optional file attachment (image or document up to 5MB)",
           },
         },
       },
@@ -2637,11 +2947,15 @@ Include the Bearer JWT token in the Authorization header:
         type: "object",
         required: ["message"],
         properties: {
-          message: { type: "string", example: "Here is the screenshot of the error." },
+          message: {
+            type: "string",
+            example: "Here is the screenshot of the error.",
+          },
           attachment: {
             type: "string",
             format: "binary",
-            description: "Optional file attachment (image or document up to 5MB)",
+            description:
+              "Optional file attachment (image or document up to 5MB)",
           },
         },
       },
@@ -2649,23 +2963,40 @@ Include the Bearer JWT token in the Authorization header:
         type: "object",
         required: ["message"],
         properties: {
-          message: { type: "string", example: "The issue occurred again today, reopening this ticket." },
+          message: {
+            type: "string",
+            example: "The issue occurred again today, reopening this ticket.",
+          },
           attachment: {
             type: "string",
             format: "binary",
-            description: "Optional file attachment (image or document up to 5MB)",
+            description:
+              "Optional file attachment (image or document up to 5MB)",
           },
         },
       },
       TeacherTicketListItemDTO: {
         type: "object",
         properties: {
-          id: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440000" },
+          id: {
+            type: "string",
+            format: "uuid",
+            example: "550e8400-e29b-41d4-a716-446655440000",
+          },
           ticketNumber: { type: "integer", example: 1001 },
-          subject: { type: "string", example: "Question regarding monthly payout" },
+          subject: {
+            type: "string",
+            example: "Question regarding monthly payout",
+          },
           status: {
             type: "string",
-            enum: ["OPEN", "IN_PROGRESS", "WAITING_FOR_TEACHER", "RESOLVED", "CLOSED"],
+            enum: [
+              "OPEN",
+              "IN_PROGRESS",
+              "WAITING_FOR_TEACHER",
+              "RESOLVED",
+              "CLOSED",
+            ],
             example: "OPEN",
           },
           priority: {
@@ -2675,7 +3006,11 @@ Include the Bearer JWT token in the Authorization header:
           },
           userId: { type: "string", format: "uuid" },
           assignedStaffId: { type: "string", format: "uuid", nullable: true },
-          lastMessageAt: { type: "string", format: "date-time", nullable: true },
+          lastMessageAt: {
+            type: "string",
+            format: "date-time",
+            nullable: true,
+          },
           resolvedAt: { type: "string", format: "date-time", nullable: true },
           closedAt: { type: "string", format: "date-time", nullable: true },
           createdAt: { type: "string", format: "date-time" },
@@ -2691,7 +3026,9 @@ Include the Bearer JWT token in the Authorization header:
             properties: {
               data: {
                 type: "array",
-                items: { $ref: "#/components/schemas/TeacherTicketListItemDTO" },
+                items: {
+                  $ref: "#/components/schemas/TeacherTicketListItemDTO",
+                },
               },
               pagination: { $ref: "#/components/schemas/PaginationMeta" },
             },
@@ -2705,12 +3042,25 @@ Include the Bearer JWT token in the Authorization header:
           data: {
             type: "object",
             properties: {
-              id: { type: "string", format: "uuid", example: "550e8400-e29b-41d4-a716-446655440000" },
+              id: {
+                type: "string",
+                format: "uuid",
+                example: "550e8400-e29b-41d4-a716-446655440000",
+              },
               ticketNumber: { type: "integer", example: 1001 },
-              subject: { type: "string", example: "Question regarding monthly payout" },
+              subject: {
+                type: "string",
+                example: "Question regarding monthly payout",
+              },
               status: {
                 type: "string",
-                enum: ["OPEN", "IN_PROGRESS", "WAITING_FOR_TEACHER", "RESOLVED", "CLOSED"],
+                enum: [
+                  "OPEN",
+                  "IN_PROGRESS",
+                  "WAITING_FOR_TEACHER",
+                  "RESOLVED",
+                  "CLOSED",
+                ],
                 example: "OPEN",
               },
               priority: {
@@ -2719,13 +3069,28 @@ Include the Bearer JWT token in the Authorization header:
                 example: "NORMAL",
               },
               userId: { type: "string", format: "uuid" },
-              assignedStaffId: { type: "string", format: "uuid", nullable: true },
-              lastMessageAt: { type: "string", format: "date-time", nullable: true },
-              resolvedAt: { type: "string", format: "date-time", nullable: true },
+              assignedStaffId: {
+                type: "string",
+                format: "uuid",
+                nullable: true,
+              },
+              lastMessageAt: {
+                type: "string",
+                format: "date-time",
+                nullable: true,
+              },
+              resolvedAt: {
+                type: "string",
+                format: "date-time",
+                nullable: true,
+              },
               closedAt: { type: "string", format: "date-time", nullable: true },
               createdAt: { type: "string", format: "date-time" },
               updatedAt: { type: "string", format: "date-time" },
-              staff: { $ref: "#/components/schemas/SupportTicketUserDTO", nullable: true },
+              staff: {
+                $ref: "#/components/schemas/SupportTicketUserDTO",
+                nullable: true,
+              },
               supportMessages: {
                 type: "array",
                 items: { $ref: "#/components/schemas/SupportMessageDTO" },
@@ -2738,7 +3103,8 @@ Include the Bearer JWT token in the Authorization header:
       // Chat Schemas
       ChatStartConversationDTO: {
         type: "object",
-        description: "Pass either teacherId (if student) or studentId (if teacher)",
+        description:
+          "Pass either teacherId (if student) or studentId (if teacher)",
         properties: {
           teacherId: {
             type: "string",
@@ -2782,7 +3148,10 @@ Include the Bearer JWT token in the Authorization header:
         type: "object",
         properties: {
           id: { type: "string", format: "uuid" },
-          content: { type: "string", example: "Hello, can you help me with this quiz?" },
+          content: {
+            type: "string",
+            example: "Hello, can you help me with this quiz?",
+          },
           senderId: { type: "string", format: "uuid" },
           createdAt: { type: "string", format: "date-time" },
           isMine: { type: "boolean", example: true },
@@ -2799,7 +3168,10 @@ Include the Bearer JWT token in the Authorization header:
       ChatUnreadCountResponse: {
         type: "object",
         properties: {
-          message: { type: "string", example: "UNREAD_COUNT_RETRIEVED_SUCCESSFULLY" },
+          message: {
+            type: "string",
+            example: "UNREAD_COUNT_RETRIEVED_SUCCESSFULLY",
+          },
           status: { type: "integer", example: 200 },
           data: {
             type: "object",
@@ -2812,7 +3184,10 @@ Include the Bearer JWT token in the Authorization header:
       ChatConversationsListResponse: {
         type: "object",
         properties: {
-          message: { type: "string", example: "CONVERSATIONS_RETRIEVED_SUCCESSFULLY" },
+          message: {
+            type: "string",
+            example: "CONVERSATIONS_RETRIEVED_SUCCESSFULLY",
+          },
           status: { type: "integer", example: 200 },
           data: {
             type: "object",
@@ -2829,7 +3204,10 @@ Include the Bearer JWT token in the Authorization header:
       ChatMessageHistoryResponse: {
         type: "object",
         properties: {
-          message: { type: "string", example: "MESSAGES_RETRIEVED_SUCCESSFULLY" },
+          message: {
+            type: "string",
+            example: "MESSAGES_RETRIEVED_SUCCESSFULLY",
+          },
           status: { type: "integer", example: 200 },
           data: {
             type: "object",
@@ -2852,7 +3230,10 @@ Include the Bearer JWT token in the Authorization header:
       ChatConversationDetailResponse: {
         type: "object",
         properties: {
-          message: { type: "string", example: "CONVERSATION_INITIALIZED_SUCCESSFULLY" },
+          message: {
+            type: "string",
+            example: "CONVERSATION_INITIALIZED_SUCCESSFULLY",
+          },
           status: { type: "integer", example: 200 },
           data: { $ref: "#/components/schemas/ChatConversationItemDTO" },
         },
@@ -2860,36 +3241,137 @@ Include the Bearer JWT token in the Authorization header:
     },
   },
   tags: [
-    { name: "Chat", description: "Direct real-time messaging between students and teachers" },
-    { name: "Admin - Auth", description: "Admin login, logout, and token refresh" },
+    {
+      name: "Chat",
+      description: "Direct real-time messaging between students and teachers",
+    },
+    {
+      name: "Admin - Auth",
+      description: "Admin login, logout, and token refresh",
+    },
 
-    { name: "Admin - Dashboard", description: "Admin dashboard metrics, overview KPI cards, charts, and live activities" },
-    { name: "Admin - Students", description: "Students management, status toggling, and Excel export" },
-    { name: "Admin - Teachers", description: "Teacher verification, application reviews, certificates, and course approvals" },
-    { name: "Admin - Categories", description: "Course categories with multilingual translations and icons" },
-    { name: "Admin - Courses", description: "Central courses, curriculum sections, and video/text lessons" },
-    { name: "Admin - Staff", description: "Staff members, administrative roles, and privileges" },
-    { name: "Admin - Roles & Permissions", description: "RBAC roles, permission sets, and localized titles" },
-    { name: "Admin - Coupons", description: "Discount vouchers, redemption limits, and status toggles" },
-    { name: "Admin - Offers", description: "Promotional offers, percentage discounts, and validity schedules" },
-    { name: "Admin - Plans", description: "Admin monitoring and management of teacher session plans" },
-    { name: "Admin - Reviews", description: "Admin reviews management, visibility toggle (isHidden), and statistics" },
-    { name: "Admin - Activity Logs", description: "Audit trail, security metrics, and real-time activity tracking" },
-    { name: "Admin - Settings & CMS", description: "App metadata, logo branding, and static CMS pages" },
-    { name: "Admin - Requests", description: "Admin requests management, overview statistics, approvals, and rejections" },
-    { name: "Admin - Sessions", description: "Admin monitoring of sessions (today, upcoming, history)" },
+    {
+      name: "Admin - Dashboard",
+      description:
+        "Admin dashboard metrics, overview KPI cards, charts, and live activities",
+    },
+    {
+      name: "Admin - Students",
+      description: "Students management, status toggling, and Excel export",
+    },
+    {
+      name: "Admin - Teachers",
+      description:
+        "Teacher verification, application reviews, certificates, and course approvals",
+    },
+    {
+      name: "Admin - Categories",
+      description: "Course categories with multilingual translations and icons",
+    },
+    {
+      name: "Admin - Courses",
+      description:
+        "Central courses, curriculum sections, and video/text lessons",
+    },
+    {
+      name: "Admin - Staff",
+      description: "Staff members, administrative roles, and privileges",
+    },
+    {
+      name: "Admin - Roles & Permissions",
+      description: "RBAC roles, permission sets, and localized titles",
+    },
+    {
+      name: "Admin - Coupons",
+      description: "Discount vouchers, redemption limits, and status toggles",
+    },
+    {
+      name: "Admin - Banners",
+      description:
+        "Banners management (image, translations, action type, and target)",
+    },
+    {
+      name: "Admin - Offers",
+      description:
+        "Promotional offers, percentage discounts, and validity schedules",
+    },
+    {
+      name: "Admin - Plans",
+      description: "Admin monitoring and management of teacher session plans",
+    },
+    {
+      name: "Admin - Reviews",
+      description:
+        "Admin reviews management, visibility toggle (isHidden), and statistics",
+    },
+    {
+      name: "Admin - Activity Logs",
+      description:
+        "Audit trail, security metrics, and real-time activity tracking",
+    },
+    {
+      name: "Admin - Settings & CMS",
+      description: "App metadata, logo branding, and static CMS pages",
+    },
+    {
+      name: "Admin - Requests",
+      description:
+        "Admin requests management, overview statistics, approvals, and rejections",
+    },
+    {
+      name: "Admin - Sessions",
+      description: "Admin monitoring of sessions (today, upcoming, history)",
+    },
 
-    { name: "Teacher - Auth", description: "Teacher registration with CV upload, login, and password recovery" },
-    { name: "Teacher - Profile", description: "Teacher bio, hourly session pricing, avatar uploads, and visibility" },
-    { name: "Teacher - Plans", description: "Teacher session plans, multi-session bundles, and multilingual packages" },
-    { name: "Teacher - Certificates", description: "Teacher academic/professional credentials submission and tracking" },
-    { name: "Teacher - Courses", description: "Teacher self-published courses CRUD" },
-    { name: "Teacher - Sections", description: "Curriculum modules and section reordering" },
-    { name: "Teacher - Items", description: "Lesson materials (Video / PDF / Document uploads)" },
-    { name: "Teacher - Quizzes", description: "Section quizzes, MCQ questions, submissions, and grading" },
-    { name: "Teacher - Sessions", description: "Teacher session requests management (view, accept, reject) and live sessions (start, end)" },
-    { name: "Teacher - Offers", description: "Teacher personal course promotional offers" },
-    { name: "Teacher - Reviews", description: "Teacher session and course reviews overview" },
+    {
+      name: "Teacher - Auth",
+      description:
+        "Teacher registration with CV upload, login, and password recovery",
+    },
+    {
+      name: "Teacher - Profile",
+      description:
+        "Teacher bio, hourly session pricing, avatar uploads, and visibility",
+    },
+    {
+      name: "Teacher - Plans",
+      description:
+        "Teacher session plans, multi-session bundles, and multilingual packages",
+    },
+    {
+      name: "Teacher - Certificates",
+      description:
+        "Teacher academic/professional credentials submission and tracking",
+    },
+    {
+      name: "Teacher - Courses",
+      description: "Teacher self-published courses CRUD",
+    },
+    {
+      name: "Teacher - Sections",
+      description: "Curriculum modules and section reordering",
+    },
+    {
+      name: "Teacher - Items",
+      description: "Lesson materials (Video / PDF / Document uploads)",
+    },
+    {
+      name: "Teacher - Quizzes",
+      description: "Section quizzes, MCQ questions, submissions, and grading",
+    },
+    {
+      name: "Teacher - Sessions",
+      description:
+        "Teacher session requests management (view, accept, reject) and live sessions (start, end)",
+    },
+    {
+      name: "Teacher - Offers",
+      description: "Teacher personal course promotional offers",
+    },
+    {
+      name: "Teacher - Reviews",
+      description: "Teacher session and course reviews overview",
+    },
 
     {
       name: "Student - Auth",
@@ -4575,7 +5057,173 @@ Include the Bearer JWT token in the Authorization header:
         },
       },
     },
-
+    // ═══════════════════════════════════════════════════════════
+    // ADMIN BANNERS
+    // ═══════════════════════════════════════════════════════════
+    "/api/v1/admin/banners": {
+      get: {
+        summary: "Get All Banners",
+        tags: ["Admin - Banners"],
+        security: bearerSecurity,
+        parameters: [
+          ...paginationQueryParams,
+          {
+            in: "query",
+            name: "locale",
+            schema: { type: "string", enum: ["ar", "en", "fr"], default: "en" },
+          },
+          {
+            in: "query",
+            name: "isActive",
+            schema: { type: "boolean" },
+          },
+        ],
+        responses: {
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/BannerListResponseDTO",
+          }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+      post: {
+        summary: "Create Banner",
+        tags: ["Admin - Banners"],
+        security: bearerSecurity,
+        requestBody: {
+          required: true,
+          content: {
+            "multipart/form-data": {
+              schema: { $ref: "#/components/schemas/BannerCreateDTO" },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[201]({
+            $ref: "#/components/schemas/BannerDetailResponseDTO",
+          }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/admin/banners/{id}": {
+      get: {
+        summary: "Get Banner by ID",
+        tags: ["Admin - Banners"],
+        security: bearerSecurity,
+        parameters: [
+          uuidParam("id", "Banner ID"),
+          {
+            in: "query",
+            name: "locale",
+            schema: { type: "string", enum: ["ar", "en", "fr"] },
+          },
+        ],
+        responses: {
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/BannerDetailResponseDTO",
+          }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+      patch: {
+        summary: "Update Banner",
+        tags: ["Admin - Banners"],
+        security: bearerSecurity,
+        parameters: [uuidParam("id", "Banner ID")],
+        requestBody: {
+          content: {
+            "multipart/form-data": {
+              schema: { $ref: "#/components/schemas/BannerUpdateDTO" },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/BannerWrappedResponseDTO",
+          }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+      delete: {
+        summary: "Delete Banner",
+        tags: ["Admin - Banners"],
+        security: bearerSecurity,
+        parameters: [uuidParam("id", "Banner ID")],
+        responses: {
+          ...standardResponses[204](),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/admin/banners/{id}/status": {
+      patch: {
+        summary: "Update Banner Status",
+        tags: ["Admin - Banners"],
+        security: bearerSecurity,
+        parameters: [uuidParam("id", "Banner ID")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["isActive"],
+                properties: { isActive: { type: "boolean", example: false } },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Banner status updated",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string", example: "SUCCESS" },
+                    data: {
+                      type: "object",
+                      properties: {
+                        banner: {
+                          type: "object",
+                          properties: {
+                            id: { type: "string", format: "uuid" },
+                            isActive: { type: "boolean", example: false },
+                            updatedAt: { type: "string", format: "date-time" },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
     // ═══════════════════════════════════════════════════════════
     // ADMIN COUPONS
     // ═══════════════════════════════════════════════════════════
@@ -5615,7 +6263,8 @@ Include the Bearer JWT token in the Authorization header:
     "/api/v1/admin/tickets": {
       get: {
         summary: "Get All Support Tickets",
-        description: "Retrieve paginated list of support tickets with status, priority, assigned staff filtering, and search across subject, ticketNumber, user name or email.",
+        description:
+          "Retrieve paginated list of support tickets with status, priority, assigned staff filtering, and search across subject, ticketNumber, user name or email.",
         tags: ["Admin - Tickets"],
         security: bearerSecurity,
         parameters: [
@@ -5625,7 +6274,13 @@ Include the Bearer JWT token in the Authorization header:
             name: "status",
             schema: {
               type: "string",
-              enum: ["OPEN", "IN_PROGRESS", "WAITING_FOR_TEACHER", "RESOLVED", "CLOSED"],
+              enum: [
+                "OPEN",
+                "IN_PROGRESS",
+                "WAITING_FOR_TEACHER",
+                "RESOLVED",
+                "CLOSED",
+              ],
             },
             description: "Filter by ticket status",
           },
@@ -5642,7 +6297,8 @@ Include the Bearer JWT token in the Authorization header:
             in: "query",
             name: "assignedStaffId",
             schema: { type: "string", format: "uuid" },
-            description: "Filter by assigned staff UUID (pass null or omit for unassigned)",
+            description:
+              "Filter by assigned staff UUID (pass null or omit for unassigned)",
           },
           {
             in: "query",
@@ -5652,7 +6308,9 @@ Include the Bearer JWT token in the Authorization header:
           },
         ],
         responses: {
-          ...standardResponses[200]({ $ref: "#/components/schemas/AdminTicketListResponseDTO" }),
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/AdminTicketListResponseDTO",
+          }),
           400: standardResponses[400],
           401: standardResponses[401],
           403: standardResponses[403],
@@ -5664,12 +6322,15 @@ Include the Bearer JWT token in the Authorization header:
     "/api/v1/admin/tickets/{ticketId}": {
       get: {
         summary: "Get Support Ticket by ID",
-        description: "Retrieve comprehensive details of a single support ticket including ticket creator (with role info), assigned staff, and all support messages with attachments.",
+        description:
+          "Retrieve comprehensive details of a single support ticket including ticket creator (with role info), assigned staff, and all support messages with attachments.",
         tags: ["Admin - Tickets"],
         security: bearerSecurity,
         parameters: [uuidParam("ticketId", "Support Ticket UUID")],
         responses: {
-          ...standardResponses[200]({ $ref: "#/components/schemas/AdminTicketDetailResponseDTO" }),
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/AdminTicketDetailResponseDTO",
+          }),
           400: standardResponses[400],
           401: standardResponses[401],
           403: standardResponses[403],
@@ -5682,7 +6343,8 @@ Include the Bearer JWT token in the Authorization header:
     "/api/v1/admin/tickets/{ticketId}/messages": {
       get: {
         summary: "Get Ticket Messages with Cursor Pagination",
-        description: "Retrieve messages of a ticket sorted chronologically using cursor-based pagination (id and createdAt).",
+        description:
+          "Retrieve messages of a ticket sorted chronologically using cursor-based pagination (id and createdAt).",
         tags: ["Admin - Tickets"],
         security: bearerSecurity,
         parameters: [
@@ -5707,7 +6369,9 @@ Include the Bearer JWT token in the Authorization header:
           },
         ],
         responses: {
-          ...standardResponses[200]({ $ref: "#/components/schemas/TicketMessagesCursorResponseDTO" }),
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/TicketMessagesCursorResponseDTO",
+          }),
           400: standardResponses[400],
           401: standardResponses[401],
           403: standardResponses[403],
@@ -5720,7 +6384,8 @@ Include the Bearer JWT token in the Authorization header:
     "/api/v1/admin/tickets/{ticketId}/send-message": {
       post: {
         summary: "Reply to Support Ticket",
-        description: "Admin sends a message response to a ticket with an optional attachment (image/document up to 5MB). Changes ticket status to IN_PROGRESS and auto-assigns current staff if unassigned.",
+        description:
+          "Admin sends a message response to a ticket with an optional attachment (image/document up to 5MB). Changes ticket status to IN_PROGRESS and auto-assigns current staff if unassigned.",
         tags: ["Admin - Tickets"],
         security: bearerSecurity,
         parameters: [uuidParam("ticketId", "Support Ticket UUID")],
@@ -5733,7 +6398,9 @@ Include the Bearer JWT token in the Authorization header:
           },
         },
         responses: {
-          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/GenericSuccessDataResponse",
+          }),
           400: standardResponses[400],
           401: standardResponses[401],
           403: standardResponses[403],
@@ -5746,12 +6413,15 @@ Include the Bearer JWT token in the Authorization header:
     "/api/v1/admin/tickets/{ticketId}/close": {
       post: {
         summary: "Close Support Ticket",
-        description: "Explicitly close a support ticket. Sets status to CLOSED, closedAt and resolvedAt timestamps.",
+        description:
+          "Explicitly close a support ticket. Sets status to CLOSED, closedAt and resolvedAt timestamps.",
         tags: ["Admin - Tickets"],
         security: bearerSecurity,
         parameters: [uuidParam("ticketId", "Support Ticket UUID")],
         responses: {
-          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/GenericSuccessDataResponse",
+          }),
           400: standardResponses[400],
           401: standardResponses[401],
           403: standardResponses[403],
@@ -5764,7 +6434,8 @@ Include the Bearer JWT token in the Authorization header:
     "/api/v1/admin/tickets/{ticketId}/status": {
       patch: {
         summary: "Change Ticket Status",
-        description: "Update the lifecycle status of a support ticket (OPEN, IN_PROGRESS, WAITING_FOR_TEACHER, RESOLVED, CLOSED).",
+        description:
+          "Update the lifecycle status of a support ticket (OPEN, IN_PROGRESS, WAITING_FOR_TEACHER, RESOLVED, CLOSED).",
         tags: ["Admin - Tickets"],
         security: bearerSecurity,
         parameters: [uuidParam("ticketId", "Support Ticket UUID")],
@@ -5772,12 +6443,16 @@ Include the Bearer JWT token in the Authorization header:
           required: true,
           content: {
             "application/json": {
-              schema: { $ref: "#/components/schemas/AdminChangeTicketStatusDTO" },
+              schema: {
+                $ref: "#/components/schemas/AdminChangeTicketStatusDTO",
+              },
             },
           },
         },
         responses: {
-          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/GenericSuccessDataResponse",
+          }),
           400: standardResponses[400],
           401: standardResponses[401],
           403: standardResponses[403],
@@ -5790,7 +6465,8 @@ Include the Bearer JWT token in the Authorization header:
     "/api/v1/admin/tickets/{ticketId}/assign": {
       patch: {
         summary: "Assign Ticket to Staff Member",
-        description: "Assign or reassign ticket to a staff member (or set staffId to null to unassign).",
+        description:
+          "Assign or reassign ticket to a staff member (or set staffId to null to unassign).",
         tags: ["Admin - Tickets"],
         security: bearerSecurity,
         parameters: [uuidParam("ticketId", "Support Ticket UUID")],
@@ -5803,7 +6479,9 @@ Include the Bearer JWT token in the Authorization header:
           },
         },
         responses: {
-          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/GenericSuccessDataResponse",
+          }),
           400: standardResponses[400],
           401: standardResponses[401],
           403: standardResponses[403],
@@ -7058,7 +7736,8 @@ Include the Bearer JWT token in the Authorization header:
     "/api/v1/teacher/tickets": {
       get: {
         summary: "Get Teacher Support Tickets",
-        description: "Retrieve paginated list of support tickets submitted by the authenticated teacher, filterable by status and priority.",
+        description:
+          "Retrieve paginated list of support tickets submitted by the authenticated teacher, filterable by status and priority.",
         tags: ["Teacher - Tickets"],
         security: bearerSecurity,
         parameters: [
@@ -7068,7 +7747,13 @@ Include the Bearer JWT token in the Authorization header:
             name: "status",
             schema: {
               type: "string",
-              enum: ["OPEN", "IN_PROGRESS", "WAITING_FOR_TEACHER", "RESOLVED", "CLOSED"],
+              enum: [
+                "OPEN",
+                "IN_PROGRESS",
+                "WAITING_FOR_TEACHER",
+                "RESOLVED",
+                "CLOSED",
+              ],
             },
             description: "Filter by ticket status",
           },
@@ -7089,7 +7774,9 @@ Include the Bearer JWT token in the Authorization header:
           },
         ],
         responses: {
-          ...standardResponses[200]({ $ref: "#/components/schemas/TeacherTicketListResponseDTO" }),
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/TeacherTicketListResponseDTO",
+          }),
           400: standardResponses[400],
           401: standardResponses[401],
           403: standardResponses[403],
@@ -7101,7 +7788,8 @@ Include the Bearer JWT token in the Authorization header:
     "/api/v1/teacher/tickets/create": {
       post: {
         summary: "Create Support Ticket",
-        description: "Teacher creates a new support ticket. Note: A maximum of 2 OPEN tickets are allowed simultaneously per teacher. Returns message TICKET_CREATED on success.",
+        description:
+          "Teacher creates a new support ticket. Note: A maximum of 2 OPEN tickets are allowed simultaneously per teacher. Returns message TICKET_CREATED on success.",
         tags: ["Teacher - Tickets"],
         security: bearerSecurity,
         requestBody: {
@@ -7130,12 +7818,15 @@ Include the Bearer JWT token in the Authorization header:
     "/api/v1/teacher/tickets/{ticketId}": {
       get: {
         summary: "Get Teacher Ticket Details",
-        description: "Retrieve support ticket details by ID for the authenticated teacher, including assigned staff and message thread.",
+        description:
+          "Retrieve support ticket details by ID for the authenticated teacher, including assigned staff and message thread.",
         tags: ["Teacher - Tickets"],
         security: bearerSecurity,
         parameters: [uuidParam("ticketId", "Support Ticket UUID")],
         responses: {
-          ...standardResponses[200]({ $ref: "#/components/schemas/TeacherTicketDetailResponseDTO" }),
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/TeacherTicketDetailResponseDTO",
+          }),
           400: standardResponses[400],
           401: standardResponses[401],
           403: standardResponses[403],
@@ -7148,7 +7839,8 @@ Include the Bearer JWT token in the Authorization header:
     "/api/v1/teacher/tickets/{ticketId}/send-message": {
       post: {
         summary: "Send Message in Support Ticket",
-        description: "Teacher adds a message reply with an optional file attachment (image/document up to 5MB) to an open support ticket.",
+        description:
+          "Teacher adds a message reply with an optional file attachment (image/document up to 5MB) to an open support ticket.",
         tags: ["Teacher - Tickets"],
         security: bearerSecurity,
         parameters: [uuidParam("ticketId", "Support Ticket UUID")],
@@ -7161,7 +7853,9 @@ Include the Bearer JWT token in the Authorization header:
           },
         },
         responses: {
-          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/GenericSuccessDataResponse",
+          }),
           400: standardResponses[400],
           401: standardResponses[401],
           403: standardResponses[403],
@@ -7174,7 +7868,8 @@ Include the Bearer JWT token in the Authorization header:
     "/api/v1/teacher/tickets/{ticketId}/reopen": {
       post: {
         summary: "Reopen Closed Support Ticket",
-        description: "Reopen a previously CLOSED or RESOLVED ticket with a message and an optional file attachment (image/document up to 5MB).",
+        description:
+          "Reopen a previously CLOSED or RESOLVED ticket with a message and an optional file attachment (image/document up to 5MB).",
         tags: ["Teacher - Tickets"],
         security: bearerSecurity,
         parameters: [uuidParam("ticketId", "Support Ticket UUID")],
@@ -7187,7 +7882,9 @@ Include the Bearer JWT token in the Authorization header:
           },
         },
         responses: {
-          ...standardResponses[200]({ $ref: "#/components/schemas/GenericSuccessDataResponse" }),
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/GenericSuccessDataResponse",
+          }),
           400: standardResponses[400],
           401: standardResponses[401],
           403: standardResponses[403],
@@ -7200,7 +7897,8 @@ Include the Bearer JWT token in the Authorization header:
     "/api/v1/teacher/tickets/{ticketId}/messages": {
       get: {
         summary: "Get Teacher Ticket Messages with Cursor Pagination",
-        description: "Retrieve messages of a ticket sorted chronologically using cursor pagination (requires id and createdAt). Ticket must not be CLOSED or RESOLVED.",
+        description:
+          "Retrieve messages of a ticket sorted chronologically using cursor pagination (requires id and createdAt). Ticket must not be CLOSED or RESOLVED.",
         tags: ["Teacher - Tickets"],
         security: bearerSecurity,
         parameters: [
@@ -7227,7 +7925,9 @@ Include the Bearer JWT token in the Authorization header:
           },
         ],
         responses: {
-          ...standardResponses[200]({ $ref: "#/components/schemas/TicketMessagesCursorResponseDTO" }),
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/TicketMessagesCursorResponseDTO",
+          }),
           400: standardResponses[400],
           401: standardResponses[401],
           403: standardResponses[403],
@@ -7663,12 +8363,17 @@ Include the Bearer JWT token in the Authorization header:
             in: "query",
             name: "search",
             schema: { type: "string" },
-            description: "Search keyword matching title, description, instructor, or tags",
+            description:
+              "Search keyword matching title, description, instructor, or tags",
           },
           {
             in: "query",
             name: "provider",
-            schema: { type: "string", enum: ["ALL", "PLATFORM", "TEACHER"], default: "ALL" },
+            schema: {
+              type: "string",
+              enum: ["ALL", "PLATFORM", "TEACHER"],
+              default: "ALL",
+            },
             description: "Filter courses by provider source",
           },
           {
@@ -7680,7 +8385,10 @@ Include the Bearer JWT token in the Authorization header:
           {
             in: "query",
             name: "level",
-            schema: { type: "string", enum: ["BEGINNER", "INTERMEDIATE", "ADVANCED", "ALL_LEVELS"] },
+            schema: {
+              type: "string",
+              enum: ["BEGINNER", "INTERMEDIATE", "ADVANCED", "ALL_LEVELS"],
+            },
             description: "Difficulty level",
           },
           {
@@ -8697,14 +9405,21 @@ Include the Bearer JWT token in the Authorization header:
                 schema: {
                   type: "object",
                   properties: {
-                    message: { type: "string", example: "SESSION_REQUEST_CREATED_SUCCESSFULLY" },
+                    message: {
+                      type: "string",
+                      example: "SESSION_REQUEST_CREATED_SUCCESSFULLY",
+                    },
                     data: {
                       type: "object",
                       properties: {
                         id: { type: "string", format: "uuid" },
                         studentId: { type: "string", format: "uuid" },
                         teacherId: { type: "string", format: "uuid" },
-                        title: { type: "string", nullable: true, example: "React hooks and state management deep dive" },
+                        title: {
+                          type: "string",
+                          nullable: true,
+                          example: "React hooks and state management deep dive",
+                        },
                         startAt: { type: "string", format: "date-time" },
                         endAt: { type: "string", format: "date-time" },
                         note: { type: "string", nullable: true },
@@ -8722,146 +9437,411 @@ Include the Bearer JWT token in the Authorization header:
           403: standardResponses[403],
           404: {
             description: "Teacher or student not found",
-            content: { "application/json": { schema: { $ref: "#/components/schemas/NotFoundErrorResponse" } } },
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/NotFoundErrorResponse" },
+              },
+            },
           },
           409: {
-            description: "Slot not available, student has a time conflict, or a pending request already exists for this slot",
-            content: { "application/json": { schema: { $ref: "#/components/schemas/ConflictErrorResponse" } } },
+            description:
+              "Slot not available, student has a time conflict, or a pending request already exists for this slot",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ConflictErrorResponse" },
+              },
+            },
           },
           500: standardResponses[500],
         },
       },
     },
 
-        "/api/v1/student/sessions/{requestId}/cancel-request": {
-          patch: {
-            summary: "Cancel a session request",
-            description:
-              "Allows the student who created the request to cancel it, provided it is still in `PENDING` status. A race-condition guard prevents cancellation if the teacher accepted or rejected it at the same moment.",
-            tags: ["Student - Sessions"],
-            security: bearerSecurity,
-            parameters: [uuidParam("requestId", "Session Request UUID")],
-            responses: {
-              200: {
-                description: "Session request cancelled successfully",
-                content: {
-                  "application/json": {
-                    schema: {
+    "/api/v1/student/sessions/{requestId}/cancel-request": {
+      patch: {
+        summary: "Cancel a session request",
+        description:
+          "Allows the student who created the request to cancel it, provided it is still in `PENDING` status. A race-condition guard prevents cancellation if the teacher accepted or rejected it at the same moment.",
+        tags: ["Student - Sessions"],
+        security: bearerSecurity,
+        parameters: [uuidParam("requestId", "Session Request UUID")],
+        responses: {
+          200: {
+            description: "Session request cancelled successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: {
+                      type: "string",
+                      example: "SESSION_REQUEST_CANCELLED_SUCCESSFULLY",
+                    },
+                    data: {
                       type: "object",
                       properties: {
-                        message: {
-                          type: "string",
-                          example: "SESSION_REQUEST_CANCELLED_SUCCESSFULLY",
+                        id: { type: "string", format: "uuid" },
+                        status: { type: "string", example: "CANCELLED" },
+                        updatedAt: { type: "string", format: "date-time" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          400: {
+            description: "Request is not in PENDING status",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/ValidationErrorResponse",
+                },
+              },
+            },
+          },
+          401: standardResponses[401],
+          403: {
+            description: "Student does not own this request",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/ForbiddenErrorResponse",
+                },
+              },
+            },
+          },
+          404: standardResponses[404],
+          409: {
+            description:
+              "Request was already accepted/rejected by the teacher (race condition)",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/ConflictErrorResponse",
+                },
+              },
+            },
+          },
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    // ─── Cycle 2: Student Custom Session Requests ────────────
+    "/api/v1/student/sessions/custom-requests": {
+      get: {
+        summary: "Get student's custom session requests",
+        description:
+          "Returns paginated list of custom bundle requests created by the authenticated student.",
+        tags: ["Student - Sessions"],
+        security: bearerSecurity,
+        parameters: [
+          {
+            in: "query",
+            name: "status",
+            schema: {
+              type: "string",
+              enum: ["PENDING", "ACCEPTED", "REJECTED", "CANCELLED"],
+            },
+            description: "Filter by status",
+          },
+          {
+            in: "query",
+            name: "page",
+            schema: { type: "integer", minimum: 1, default: 1 },
+          },
+          {
+            in: "query",
+            name: "limit",
+            schema: {
+              type: "integer",
+              minimum: 1,
+              maximum: 50,
+              default: 20,
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Custom session requests fetched",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: {
+                      type: "string",
+                      example: "CUSTOM_SESSION_REQUESTS_FETCHED_SUCCESSFULLY",
+                    },
+                    data: {
+                      type: "object",
+                      properties: {
+                        items: {
+                          type: "array",
+                          items: {
+                            $ref: "#/components/schemas/CustomSessionRequestItemDTO",
+                          },
                         },
-                        data: {
+                        meta: {
+                          $ref: "#/components/schemas/PaginationMeta",
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/student/sessions/{teacherId}/custom-request": {
+      post: {
+        summary: "Create a custom session bundle request (Cycle 2)",
+        description:
+          "Student requests custom number of sessions from teacher based on teacher's sessionPrice50Min. Total price is calculated automatically.",
+        tags: ["Student - Sessions"],
+        security: bearerSecurity,
+        parameters: [uuidParam("teacherId", "Teacher UUID")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/CreateCustomSessionRequestDTO",
+              },
+            },
+          },
+        },
+        responses: {
+          201: {
+            description: "Custom session request created",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: {
+                      type: "string",
+                      example: "CUSTOM_SESSION_REQUEST_CREATED_SUCCESSFULLY",
+                    },
+                    data: {
+                      $ref: "#/components/schemas/CustomSessionRequestItemDTO",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          400: {
+            description: "Teacher has no hourly price or invalid count",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/ValidationErrorResponse",
+                },
+              },
+            },
+          },
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/student/sessions/custom-requests/{requestId}/cancel": {
+      patch: {
+        summary: "Cancel a pending custom session request",
+        description:
+          "Student cancels their own PENDING custom session bundle request.",
+        tags: ["Student - Sessions"],
+        security: bearerSecurity,
+        parameters: [uuidParam("requestId", "Custom Request UUID")],
+        responses: {
+          200: {
+            description: "Custom request cancelled",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: {
+                      type: "string",
+                      example: "CUSTOM_SESSION_REQUEST_CANCELLED_SUCCESSFULLY",
+                    },
+                    data: {
+                      $ref: "#/components/schemas/CustomSessionRequestItemDTO",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          400: { description: "Request not PENDING" },
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/student/sessions/{sessionId}/join": {
+      post: {
+        summary: "Join Live Session (Student)",
+        description:
+          "Join an ongoing LIVE session and obtain a signed Jitsi Meet JWT token. Updates studentJoinedAt timestamp upon joining. Session must currently have status LIVE.",
+        tags: ["Student - Sessions"],
+        security: bearerSecurity,
+        parameters: [uuidParam("sessionId", "Session UUID")],
+        responses: {
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/JoinSessionResponseDTO",
+          }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          409: {
+            description: "Session is not LIVE or join window expired",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/ConflictErrorResponse",
+                },
+              },
+            },
+          },
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // TEACHER - SESSIONS
+    // ═══════════════════════════════════════════════════════════
+    "/api/v1/teacher/sessions/requests": {
+      get: {
+        summary: "Get incoming session requests",
+        description:
+          "Returns a paginated list of session requests sent to the authenticated teacher. Defaults to PENDING when no status filter is provided.",
+        tags: ["Teacher - Sessions"],
+        security: bearerSecurity,
+        parameters: [
+          {
+            in: "query",
+            name: "status",
+            schema: {
+              type: "string",
+              enum: ["PENDING", "ACCEPTED", "REJECTED", "CANCELLED"],
+            },
+            description: "Filter by request status (default: PENDING)",
+            example: "PENDING",
+          },
+          {
+            in: "query",
+            name: "page",
+            schema: { type: "integer", minimum: 1, default: 1 },
+            description: "Page number",
+            example: 1,
+          },
+          {
+            in: "query",
+            name: "limit",
+            schema: {
+              type: "integer",
+              minimum: 1,
+              maximum: 50,
+              default: 20,
+            },
+            description: "Records per page (max 50)",
+            example: 20,
+          },
+        ],
+        responses: {
+          200: {
+            description: "Session requests fetched",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: {
+                      type: "string",
+                      example: "SESSION_REQUESTS_FETCHED_SUCCESSFULLY",
+                    },
+                    data: {
+                      type: "object",
+                      properties: {
+                        items: {
+                          type: "array",
+                          items: {
+                            $ref: "#/components/schemas/SessionRequestItemDTO",
+                          },
+                        },
+                        meta: {
+                          $ref: "#/components/schemas/PaginationMeta",
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/teacher/sessions/requests/{requestId}/accept": {
+      patch: {
+        summary: "Accept a session request",
+        description:
+          "Accepts a PENDING session request and creates a SCHEDULED session. Checks for teacher and student time conflicts.",
+        tags: ["Teacher - Sessions"],
+        security: bearerSecurity,
+        parameters: [uuidParam("requestId", "Session Request UUID")],
+        responses: {
+          200: {
+            description: "Request accepted and session created",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: {
+                      type: "string",
+                      example: "SESSION_REQUEST_ACCEPTED_SUCCESSFULLY",
+                    },
+                    data: {
+                      type: "object",
+                      properties: {
+                        requestId: { type: "string", format: "uuid" },
+                        session: {
                           type: "object",
                           properties: {
                             id: { type: "string", format: "uuid" },
-                            status: { type: "string", example: "CANCELLED" },
-                            updatedAt: { type: "string", format: "date-time" },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-              400: {
-                description: "Request is not in PENDING status",
-                content: {
-                  "application/json": {
-                    schema: {
-                      $ref: "#/components/schemas/ValidationErrorResponse",
-                    },
-                  },
-                },
-              },
-              401: standardResponses[401],
-              403: {
-                description: "Student does not own this request",
-                content: {
-                  "application/json": {
-                    schema: {
-                      $ref: "#/components/schemas/ForbiddenErrorResponse",
-                    },
-                  },
-                },
-              },
-              404: standardResponses[404],
-              409: {
-                description:
-                  "Request was already accepted/rejected by the teacher (race condition)",
-                content: {
-                  "application/json": {
-                    schema: {
-                      $ref: "#/components/schemas/ConflictErrorResponse",
-                    },
-                  },
-                },
-              },
-              500: standardResponses[500],
-            },
-          },
-        },
-
-        // ─── Cycle 2: Student Custom Session Requests ────────────
-        "/api/v1/student/sessions/custom-requests": {
-          get: {
-            summary: "Get student's custom session requests",
-            description:
-              "Returns paginated list of custom bundle requests created by the authenticated student.",
-            tags: ["Student - Sessions"],
-            security: bearerSecurity,
-            parameters: [
-              {
-                in: "query",
-                name: "status",
-                schema: {
-                  type: "string",
-                  enum: ["PENDING", "ACCEPTED", "REJECTED", "CANCELLED"],
-                },
-                description: "Filter by status",
-              },
-              {
-                in: "query",
-                name: "page",
-                schema: { type: "integer", minimum: 1, default: 1 },
-              },
-              {
-                in: "query",
-                name: "limit",
-                schema: {
-                  type: "integer",
-                  minimum: 1,
-                  maximum: 50,
-                  default: 20,
-                },
-              },
-            ],
-            responses: {
-              200: {
-                description: "Custom session requests fetched",
-                content: {
-                  "application/json": {
-                    schema: {
-                      type: "object",
-                      properties: {
-                        message: {
-                          type: "string",
-                          example:
-                            "CUSTOM_SESSION_REQUESTS_FETCHED_SUCCESSFULLY",
-                        },
-                        data: {
-                          type: "object",
-                          properties: {
-                            items: {
-                              type: "array",
-                              items: {
-                                $ref: "#/components/schemas/CustomSessionRequestItemDTO",
-                              },
+                            title: {
+                              type: "string",
+                              example: "Private Session",
                             },
-                            meta: {
-                              $ref: "#/components/schemas/PaginationMeta",
+                            startAt: {
+                              type: "string",
+                              format: "date-time",
+                            },
+                            endAt: { type: "string", format: "date-time" },
+                            status: {
+                              type: "string",
+                              example: "SCHEDULED",
                             },
                           },
                         },
@@ -8870,340 +9850,438 @@ Include the Bearer JWT token in the Authorization header:
                   },
                 },
               },
-              401: standardResponses[401],
-              403: standardResponses[403],
-              500: standardResponses[500],
             },
           },
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: {
+            description: "Request not found",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/NotFoundErrorResponse",
+                },
+              },
+            },
+          },
+          409: {
+            description: "Not pending / slot unavailable / time conflict",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/ConflictErrorResponse",
+                },
+              },
+            },
+          },
+          500: standardResponses[500],
         },
+      },
+    },
 
-        "/api/v1/student/sessions/{teacherId}/custom-request": {
-          post: {
-            summary: "Create a custom session bundle request (Cycle 2)",
-            description:
-              "Student requests custom number of sessions from teacher based on teacher's sessionPrice50Min. Total price is calculated automatically.",
-            tags: ["Student - Sessions"],
-            security: bearerSecurity,
-            parameters: [uuidParam("teacherId", "Teacher UUID")],
-            requestBody: {
-              required: true,
-              content: {
-                "application/json": {
-                  schema: {
-                    $ref: "#/components/schemas/CreateCustomSessionRequestDTO",
+    "/api/v1/teacher/sessions/requests/{requestId}/reject": {
+      patch: {
+        summary: "Reject a session request",
+        description: "Rejects a PENDING request with an optional reason.",
+        tags: ["Teacher - Sessions"],
+        security: bearerSecurity,
+        parameters: [uuidParam("requestId", "Session Request UUID")],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  rejectedReason: {
+                    type: "string",
+                    maxLength: 500,
+                    nullable: true,
+                    example: "I am unavailable at that time.",
+                    description: "Optional rejection reason (max 500 chars).",
                   },
                 },
               },
             },
-            responses: {
-              201: {
-                description: "Custom session request created",
-                content: {
-                  "application/json": {
-                    schema: {
+          },
+        },
+        responses: {
+          200: {
+            description: "Request rejected",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: {
+                      type: "string",
+                      example: "SESSION_REQUEST_REJECTED_SUCCESSFULLY",
+                    },
+                    data: {
                       type: "object",
                       properties: {
-                        message: {
+                        id: { type: "string", format: "uuid" },
+                        status: { type: "string", example: "REJECTED" },
+                        rejectedReason: { type: "string", nullable: true },
+                        respondedAt: {
                           type: "string",
-                          example:
-                            "CUSTOM_SESSION_REQUEST_CREATED_SUCCESSFULLY",
+                          format: "date-time",
                         },
-                        data: {
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          409: {
+            description: "Request is no longer PENDING",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/ConflictErrorResponse",
+                },
+              },
+            },
+          },
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/teacher/sessions/my-sessions": {
+      get: {
+        summary: "Get teacher's own sessions",
+        description:
+          "Returns a paginated list of the teacher's sessions. Without a status filter, returns upcoming SCHEDULED and LIVE sessions ordered soonest first.",
+        tags: ["Teacher - Sessions"],
+        security: bearerSecurity,
+        parameters: [
+          {
+            in: "query",
+            name: "status",
+            schema: {
+              type: "string",
+              enum: ["SCHEDULED", "LIVE", "COMPLETED", "CANCELLED"],
+            },
+            description:
+              "Filter by session status. Omit for all upcoming active sessions.",
+            example: "SCHEDULED",
+          },
+          {
+            in: "query",
+            name: "page",
+            schema: { type: "integer", minimum: 1, default: 1 },
+            description: "Page number",
+            example: 1,
+          },
+          {
+            in: "query",
+            name: "limit",
+            schema: {
+              type: "integer",
+              minimum: 1,
+              maximum: 50,
+              default: 20,
+            },
+            description: "Records per page (max 50)",
+            example: 20,
+          },
+        ],
+        responses: {
+          200: {
+            description: "Sessions fetched",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: {
+                      type: "string",
+                      example: "TEACHER_SESSIONS_FETCHED_SUCCESSFULLY",
+                    },
+                    data: {
+                      type: "object",
+                      properties: {
+                        items: {
+                          type: "array",
+                          items: {
+                            $ref: "#/components/schemas/TeacherSessionItemDTO",
+                          },
+                        },
+                        meta: {
+                          $ref: "#/components/schemas/PaginationMeta",
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/teacher/sessions/{sessionId}/start": {
+      patch: {
+        summary: "Start a session",
+        description:
+          "Marks a SCHEDULED session as LIVE. Can be started up to 10 min early and no later than 15 min after the scheduled time.",
+        tags: ["Teacher - Sessions"],
+        security: bearerSecurity,
+        parameters: [uuidParam("sessionId", "Session UUID")],
+        responses: {
+          200: {
+            description: "Session started",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: {
+                      type: "string",
+                      example: "SESSION_STARTED_SUCCESSFULLY",
+                    },
+                    data: {
+                      type: "object",
+                      properties: {
+                        id: { type: "string", format: "uuid" },
+                        status: { type: "string", example: "LIVE" },
+                        startAt: { type: "string", format: "date-time" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          400: {
+            description: "Too early to start (>10 min before scheduled time)",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/ValidationErrorResponse",
+                },
+              },
+            },
+          },
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          409: {
+            description:
+              "Session not SCHEDULED or start window expired (>15 min late)",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/ConflictErrorResponse",
+                },
+              },
+            },
+          },
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/teacher/sessions/{sessionId}/end": {
+      patch: {
+        summary: "End a live session",
+        description:
+          "Marks a LIVE session as COMPLETED and records the actual end time. Only the owning teacher can end their session.",
+        tags: ["Teacher - Sessions"],
+        security: bearerSecurity,
+        parameters: [uuidParam("sessionId", "Session UUID")],
+        responses: {
+          200: {
+            description: "Session ended",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: {
+                      type: "string",
+                      example: "SESSION_ENDED_SUCCESSFULLY",
+                    },
+                    data: {
+                      type: "object",
+                      properties: {
+                        id: { type: "string", format: "uuid" },
+                        status: { type: "string", example: "COMPLETED" },
+                        actualEndAt: {
+                          type: "string",
+                          format: "date-time",
+                          example: "2026-10-15T09:52:00.000Z",
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          409: {
+            description: "Session is not currently LIVE",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/ConflictErrorResponse",
+                },
+              },
+            },
+          },
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/teacher/sessions/{sessionId}/join": {
+      post: {
+        summary: "Join Live Session (Teacher / Host)",
+        description:
+          "Join an ongoing LIVE session as moderator and obtain a signed Jitsi Meet JWT token with moderator privileges. Session must currently have status LIVE.",
+        tags: ["Teacher - Sessions"],
+        security: bearerSecurity,
+        parameters: [uuidParam("sessionId", "Session UUID")],
+        responses: {
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/JoinSessionResponseDTO",
+          }),
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          409: {
+            description: "Session is not LIVE or join window expired",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/ConflictErrorResponse",
+                },
+              },
+            },
+          },
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    // ─── Cycle 2: Teacher Custom Session Requests ────────────
+    "/api/v1/teacher/sessions/custom-requests": {
+      get: {
+        summary: "Get incoming custom session requests (Cycle 2)",
+        description:
+          "Returns paginated list of custom bundle requests sent to the authenticated teacher. Defaults to PENDING.",
+        tags: ["Teacher - Sessions"],
+        security: bearerSecurity,
+        parameters: [
+          {
+            in: "query",
+            name: "status",
+            schema: {
+              type: "string",
+              enum: ["PENDING", "ACCEPTED", "REJECTED"],
+            },
+            default: "PENDING",
+          },
+          {
+            in: "query",
+            name: "page",
+            schema: { type: "integer", minimum: 1, default: 1 },
+          },
+          {
+            in: "query",
+            name: "limit",
+            schema: {
+              type: "integer",
+              minimum: 1,
+              maximum: 50,
+              default: 20,
+            },
+          },
+        ],
+        responses: {
+          200: {
+            description: "Custom requests fetched",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: {
+                      type: "string",
+                      example: "CUSTOM_SESSION_REQUESTS_FETCHED_SUCCESSFULLY",
+                    },
+                    data: {
+                      type: "object",
+                      properties: {
+                        items: {
+                          type: "array",
+                          items: {
+                            $ref: "#/components/schemas/CustomSessionRequestItemDTO",
+                          },
+                        },
+                        meta: {
+                          $ref: "#/components/schemas/PaginationMeta",
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/teacher/sessions/custom-requests/{requestId}/accept": {
+      patch: {
+        summary: "Accept custom session request (Cycle 2)",
+        description:
+          "Teacher accepts student's custom session bundle request. Activates teacherSubscription for the student with sessionsCount, sessionLeft, and validity period.",
+        tags: ["Teacher - Sessions"],
+        security: bearerSecurity,
+        parameters: [uuidParam("requestId", "Custom Request UUID")],
+        responses: {
+          200: {
+            description: "Custom request accepted and subscription activated",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: {
+                      type: "string",
+                      example: "CUSTOM_SESSION_REQUEST_ACCEPTED_SUCCESSFULLY",
+                    },
+                    data: {
+                      type: "object",
+                      properties: {
+                        request: {
                           $ref: "#/components/schemas/CustomSessionRequestItemDTO",
                         },
-                      },
-                    },
-                  },
-                },
-              },
-              400: {
-                description: "Teacher has no hourly price or invalid count",
-                content: {
-                  "application/json": {
-                    schema: {
-                      $ref: "#/components/schemas/ValidationErrorResponse",
-                    },
-                  },
-                },
-              },
-              401: standardResponses[401],
-              403: standardResponses[403],
-              404: standardResponses[404],
-              500: standardResponses[500],
-            },
-          },
-        },
-
-        "/api/v1/student/sessions/custom-requests/{requestId}/cancel": {
-          patch: {
-            summary: "Cancel a pending custom session request",
-            description:
-              "Student cancels their own PENDING custom session bundle request.",
-            tags: ["Student - Sessions"],
-            security: bearerSecurity,
-            parameters: [uuidParam("requestId", "Custom Request UUID")],
-            responses: {
-              200: {
-                description: "Custom request cancelled",
-                content: {
-                  "application/json": {
-                    schema: {
-                      type: "object",
-                      properties: {
-                        message: {
-                          type: "string",
-                          example:
-                            "CUSTOM_SESSION_REQUEST_CANCELLED_SUCCESSFULLY",
-                        },
-                        data: {
-                          $ref: "#/components/schemas/CustomSessionRequestItemDTO",
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-              400: { description: "Request not PENDING" },
-              401: standardResponses[401],
-              403: standardResponses[403],
-              404: standardResponses[404],
-              500: standardResponses[500],
-            },
-          },
-        },
-
-        "/api/v1/student/sessions/{sessionId}/join": {
-          post: {
-            summary: "Join Live Session (Student)",
-            description:
-              "Join an ongoing LIVE session and obtain a signed Jitsi Meet JWT token. Updates studentJoinedAt timestamp upon joining. Session must currently have status LIVE.",
-            tags: ["Student - Sessions"],
-            security: bearerSecurity,
-            parameters: [uuidParam("sessionId", "Session UUID")],
-            responses: {
-              ...standardResponses[200]({
-                $ref: "#/components/schemas/JoinSessionResponseDTO",
-              }),
-              401: standardResponses[401],
-              403: standardResponses[403],
-              404: standardResponses[404],
-              409: {
-                description: "Session is not LIVE or join window expired",
-                content: {
-                  "application/json": {
-                    schema: {
-                      $ref: "#/components/schemas/ConflictErrorResponse",
-                    },
-                  },
-                },
-              },
-              500: standardResponses[500],
-            },
-          },
-        },
-
-        // ═══════════════════════════════════════════════════════════
-        // TEACHER - SESSIONS
-        // ═══════════════════════════════════════════════════════════
-        "/api/v1/teacher/sessions/requests": {
-          get: {
-            summary: "Get incoming session requests",
-            description:
-              "Returns a paginated list of session requests sent to the authenticated teacher. Defaults to PENDING when no status filter is provided.",
-            tags: ["Teacher - Sessions"],
-            security: bearerSecurity,
-            parameters: [
-              {
-                in: "query",
-                name: "status",
-                schema: {
-                  type: "string",
-                  enum: ["PENDING", "ACCEPTED", "REJECTED", "CANCELLED"],
-                },
-                description: "Filter by request status (default: PENDING)",
-                example: "PENDING",
-              },
-              {
-                in: "query",
-                name: "page",
-                schema: { type: "integer", minimum: 1, default: 1 },
-                description: "Page number",
-                example: 1,
-              },
-              {
-                in: "query",
-                name: "limit",
-                schema: {
-                  type: "integer",
-                  minimum: 1,
-                  maximum: 50,
-                  default: 20,
-                },
-                description: "Records per page (max 50)",
-                example: 20,
-              },
-            ],
-            responses: {
-              200: {
-                description: "Session requests fetched",
-                content: {
-                  "application/json": {
-                    schema: {
-                      type: "object",
-                      properties: {
-                        message: {
-                          type: "string",
-                          example: "SESSION_REQUESTS_FETCHED_SUCCESSFULLY",
-                        },
-                        data: {
-                          type: "object",
-                          properties: {
-                            items: {
-                              type: "array",
-                              items: {
-                                $ref: "#/components/schemas/SessionRequestItemDTO",
-                              },
-                            },
-                            meta: {
-                              $ref: "#/components/schemas/PaginationMeta",
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-              401: standardResponses[401],
-              403: standardResponses[403],
-              500: standardResponses[500],
-            },
-          },
-        },
-
-        "/api/v1/teacher/sessions/requests/{requestId}/accept": {
-          patch: {
-            summary: "Accept a session request",
-            description:
-              "Accepts a PENDING session request and creates a SCHEDULED session. Checks for teacher and student time conflicts.",
-            tags: ["Teacher - Sessions"],
-            security: bearerSecurity,
-            parameters: [uuidParam("requestId", "Session Request UUID")],
-            responses: {
-              200: {
-                description: "Request accepted and session created",
-                content: {
-                  "application/json": {
-                    schema: {
-                      type: "object",
-                      properties: {
-                        message: {
-                          type: "string",
-                          example: "SESSION_REQUEST_ACCEPTED_SUCCESSFULLY",
-                        },
-                        data: {
-                          type: "object",
-                          properties: {
-                            requestId: { type: "string", format: "uuid" },
-                            session: {
-                              type: "object",
-                              properties: {
-                                id: { type: "string", format: "uuid" },
-                                title: {
-                                  type: "string",
-                                  example: "Private Session",
-                                },
-                                startAt: {
-                                  type: "string",
-                                  format: "date-time",
-                                },
-                                endAt: { type: "string", format: "date-time" },
-                                status: {
-                                  type: "string",
-                                  example: "SCHEDULED",
-                                },
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-              401: standardResponses[401],
-              403: standardResponses[403],
-              404: {
-                description: "Request not found",
-                content: {
-                  "application/json": {
-                    schema: {
-                      $ref: "#/components/schemas/NotFoundErrorResponse",
-                    },
-                  },
-                },
-              },
-              409: {
-                description: "Not pending / slot unavailable / time conflict",
-                content: {
-                  "application/json": {
-                    schema: {
-                      $ref: "#/components/schemas/ConflictErrorResponse",
-                    },
-                  },
-                },
-              },
-              500: standardResponses[500],
-            },
-          },
-        },
-
-        "/api/v1/teacher/sessions/requests/{requestId}/reject": {
-          patch: {
-            summary: "Reject a session request",
-            description: "Rejects a PENDING request with an optional reason.",
-            tags: ["Teacher - Sessions"],
-            security: bearerSecurity,
-            parameters: [uuidParam("requestId", "Session Request UUID")],
-            requestBody: {
-              required: false,
-              content: {
-                "application/json": {
-                  schema: {
-                    type: "object",
-                    properties: {
-                      rejectedReason: {
-                        type: "string",
-                        maxLength: 500,
-                        nullable: true,
-                        example: "I am unavailable at that time.",
-                        description:
-                          "Optional rejection reason (max 500 chars).",
-                      },
-                    },
-                  },
-                },
-              },
-            },
-            responses: {
-              200: {
-                description: "Request rejected",
-                content: {
-                  "application/json": {
-                    schema: {
-                      type: "object",
-                      properties: {
-                        message: {
-                          type: "string",
-                          example: "SESSION_REQUEST_REJECTED_SUCCESSFULLY",
-                        },
-                        data: {
+                        subscription: {
                           type: "object",
                           properties: {
                             id: { type: "string", format: "uuid" },
-                            status: { type: "string", example: "REJECTED" },
-                            rejectedReason: { type: "string", nullable: true },
-                            respondedAt: {
+                            sessionsCount: { type: "integer", example: 5 },
+                            sessionLeft: { type: "integer", example: 5 },
+                            status: { type: "string", example: "ACTIVE" },
+                            expiresAt: {
                               type: "string",
                               format: "date-time",
                             },
@@ -9214,383 +10292,22 @@ Include the Bearer JWT token in the Authorization header:
                   },
                 },
               },
-              401: standardResponses[401],
-              403: standardResponses[403],
-              404: standardResponses[404],
-              409: {
-                description: "Request is no longer PENDING",
-                content: {
-                  "application/json": {
-                    schema: {
-                      $ref: "#/components/schemas/ConflictErrorResponse",
-                    },
-                  },
-                },
-              },
-              500: standardResponses[500],
             },
           },
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          409: { description: "Request is not PENDING" },
+          500: standardResponses[500],
         },
-
-        "/api/v1/teacher/sessions/my-sessions": {
-          get: {
-            summary: "Get teacher's own sessions",
-            description:
-              "Returns a paginated list of the teacher's sessions. Without a status filter, returns upcoming SCHEDULED and LIVE sessions ordered soonest first.",
-            tags: ["Teacher - Sessions"],
-            security: bearerSecurity,
-            parameters: [
-              {
-                in: "query",
-                name: "status",
-                schema: {
-                  type: "string",
-                  enum: ["SCHEDULED", "LIVE", "COMPLETED", "CANCELLED"],
-                },
-                description:
-                  "Filter by session status. Omit for all upcoming active sessions.",
-                example: "SCHEDULED",
-              },
-              {
-                in: "query",
-                name: "page",
-                schema: { type: "integer", minimum: 1, default: 1 },
-                description: "Page number",
-                example: 1,
-              },
-              {
-                in: "query",
-                name: "limit",
-                schema: {
-                  type: "integer",
-                  minimum: 1,
-                  maximum: 50,
-                  default: 20,
-                },
-                description: "Records per page (max 50)",
-                example: 20,
-              },
-            ],
-            responses: {
-              200: {
-                description: "Sessions fetched",
-                content: {
-                  "application/json": {
-                    schema: {
-                      type: "object",
-                      properties: {
-                        message: {
-                          type: "string",
-                          example: "TEACHER_SESSIONS_FETCHED_SUCCESSFULLY",
-                        },
-                        data: {
-                          type: "object",
-                          properties: {
-                            items: {
-                              type: "array",
-                              items: {
-                                $ref: "#/components/schemas/TeacherSessionItemDTO",
-                              },
-                            },
-                            meta: {
-                              $ref: "#/components/schemas/PaginationMeta",
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-              401: standardResponses[401],
-              403: standardResponses[403],
-              500: standardResponses[500],
-            },
-          },
-        },
-
-        "/api/v1/teacher/sessions/{sessionId}/start": {
-          patch: {
-            summary: "Start a session",
-            description:
-              "Marks a SCHEDULED session as LIVE. Can be started up to 10 min early and no later than 15 min after the scheduled time.",
-            tags: ["Teacher - Sessions"],
-            security: bearerSecurity,
-            parameters: [uuidParam("sessionId", "Session UUID")],
-            responses: {
-              200: {
-                description: "Session started",
-                content: {
-                  "application/json": {
-                    schema: {
-                      type: "object",
-                      properties: {
-                        message: {
-                          type: "string",
-                          example: "SESSION_STARTED_SUCCESSFULLY",
-                        },
-                        data: {
-                          type: "object",
-                          properties: {
-                            id: { type: "string", format: "uuid" },
-                            status: { type: "string", example: "LIVE" },
-                            startAt: { type: "string", format: "date-time" },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-              400: {
-                description:
-                  "Too early to start (>10 min before scheduled time)",
-                content: {
-                  "application/json": {
-                    schema: {
-                      $ref: "#/components/schemas/ValidationErrorResponse",
-                    },
-                  },
-                },
-              },
-              401: standardResponses[401],
-              403: standardResponses[403],
-              404: standardResponses[404],
-              409: {
-                description:
-                  "Session not SCHEDULED or start window expired (>15 min late)",
-                content: {
-                  "application/json": {
-                    schema: {
-                      $ref: "#/components/schemas/ConflictErrorResponse",
-                    },
-                  },
-                },
-              },
-              500: standardResponses[500],
-            },
-          },
-        },
-
-        "/api/v1/teacher/sessions/{sessionId}/end": {
-          patch: {
-            summary: "End a live session",
-            description:
-              "Marks a LIVE session as COMPLETED and records the actual end time. Only the owning teacher can end their session.",
-            tags: ["Teacher - Sessions"],
-            security: bearerSecurity,
-            parameters: [uuidParam("sessionId", "Session UUID")],
-            responses: {
-              200: {
-                description: "Session ended",
-                content: {
-                  "application/json": {
-                    schema: {
-                      type: "object",
-                      properties: {
-                        message: {
-                          type: "string",
-                          example: "SESSION_ENDED_SUCCESSFULLY",
-                        },
-                        data: {
-                          type: "object",
-                          properties: {
-                            id: { type: "string", format: "uuid" },
-                            status: { type: "string", example: "COMPLETED" },
-                            actualEndAt: {
-                              type: "string",
-                              format: "date-time",
-                              example: "2026-10-15T09:52:00.000Z",
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-              401: standardResponses[401],
-              403: standardResponses[403],
-              404: standardResponses[404],
-              409: {
-                description: "Session is not currently LIVE",
-                content: {
-                  "application/json": {
-                    schema: {
-                      $ref: "#/components/schemas/ConflictErrorResponse",
-                    },
-                  },
-                },
-              },
-              500: standardResponses[500],
-            },
-          },
-        },
-
-        "/api/v1/teacher/sessions/{sessionId}/join": {
-          post: {
-            summary: "Join Live Session (Teacher / Host)",
-            description:
-              "Join an ongoing LIVE session as moderator and obtain a signed Jitsi Meet JWT token with moderator privileges. Session must currently have status LIVE.",
-            tags: ["Teacher - Sessions"],
-            security: bearerSecurity,
-            parameters: [uuidParam("sessionId", "Session UUID")],
-            responses: {
-              ...standardResponses[200]({
-                $ref: "#/components/schemas/JoinSessionResponseDTO",
-              }),
-              401: standardResponses[401],
-              403: standardResponses[403],
-              404: standardResponses[404],
-              409: {
-                description: "Session is not LIVE or join window expired",
-                content: {
-                  "application/json": {
-                    schema: {
-                      $ref: "#/components/schemas/ConflictErrorResponse",
-                    },
-                  },
-                },
-              },
-              500: standardResponses[500],
-            },
-          },
-        },
-
-        // ─── Cycle 2: Teacher Custom Session Requests ────────────
-        "/api/v1/teacher/sessions/custom-requests": {
-          get: {
-            summary: "Get incoming custom session requests (Cycle 2)",
-            description:
-              "Returns paginated list of custom bundle requests sent to the authenticated teacher. Defaults to PENDING.",
-            tags: ["Teacher - Sessions"],
-            security: bearerSecurity,
-            parameters: [
-              {
-                in: "query",
-                name: "status",
-                schema: {
-                  type: "string",
-                  enum: ["PENDING", "ACCEPTED", "REJECTED"],
-                },
-                default: "PENDING",
-              },
-              {
-                in: "query",
-                name: "page",
-                schema: { type: "integer", minimum: 1, default: 1 },
-              },
-              {
-                in: "query",
-                name: "limit",
-                schema: {
-                  type: "integer",
-                  minimum: 1,
-                  maximum: 50,
-                  default: 20,
-                },
-              },
-            ],
-            responses: {
-              200: {
-                description: "Custom requests fetched",
-                content: {
-                  "application/json": {
-                    schema: {
-                      type: "object",
-                      properties: {
-                        message: {
-                          type: "string",
-                          example:
-                            "CUSTOM_SESSION_REQUESTS_FETCHED_SUCCESSFULLY",
-                        },
-                        data: {
-                          type: "object",
-                          properties: {
-                            items: {
-                              type: "array",
-                              items: {
-                                $ref: "#/components/schemas/CustomSessionRequestItemDTO",
-                              },
-                            },
-                            meta: {
-                              $ref: "#/components/schemas/PaginationMeta",
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-              401: standardResponses[401],
-              403: standardResponses[403],
-              500: standardResponses[500],
-            },
-          },
-        },
-
-        "/api/v1/teacher/sessions/custom-requests/{requestId}/accept": {
-          patch: {
-            summary: "Accept custom session request (Cycle 2)",
-            description:
-              "Teacher accepts student's custom session bundle request. Activates teacherSubscription for the student with sessionsCount, sessionLeft, and validity period.",
-            tags: ["Teacher - Sessions"],
-            security: bearerSecurity,
-            parameters: [uuidParam("requestId", "Custom Request UUID")],
-            responses: {
-              200: {
-                description:
-                  "Custom request accepted and subscription activated",
-                content: {
-                  "application/json": {
-                    schema: {
-                      type: "object",
-                      properties: {
-                        message: {
-                          type: "string",
-                          example:
-                            "CUSTOM_SESSION_REQUEST_ACCEPTED_SUCCESSFULLY",
-                        },
-                        data: {
-                          type: "object",
-                          properties: {
-                            request: {
-                              $ref: "#/components/schemas/CustomSessionRequestItemDTO",
-                            },
-                            subscription: {
-                              type: "object",
-                              properties: {
-                                id: { type: "string", format: "uuid" },
-                                sessionsCount: { type: "integer", example: 5 },
-                                sessionLeft: { type: "integer", example: 5 },
-                                status: { type: "string", example: "ACTIVE" },
-                                expiresAt: {
-                                  type: "string",
-                                  format: "date-time",
-                                },
-                              },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-              401: standardResponses[401],
-              403: standardResponses[403],
-              404: standardResponses[404],
-              409: { description: "Request is not PENDING" },
-              500: standardResponses[500],
-            },
-          },
-        },
+      },
+    },
 
     "/api/v1/teacher/sessions/custom-requests/{requestId}/reject": {
       patch: {
         summary: "Reject custom session request (Cycle 2)",
-        description: "Teacher rejects student's custom session request with optional reason.",
+        description:
+          "Teacher rejects student's custom session request with optional reason.",
         tags: ["Teacher - Sessions"],
         security: bearerSecurity,
         parameters: [uuidParam("requestId", "Custom Request UUID")],
@@ -9601,7 +10318,11 @@ Include the Bearer JWT token in the Authorization header:
               schema: {
                 type: "object",
                 properties: {
-                  rejectedReason: { type: "string", maxLength: 500, example: "Schedule fully booked" },
+                  rejectedReason: {
+                    type: "string",
+                    maxLength: 500,
+                    example: "Schedule fully booked",
+                  },
                 },
               },
             },
@@ -9615,8 +10336,13 @@ Include the Bearer JWT token in the Authorization header:
                 schema: {
                   type: "object",
                   properties: {
-                    message: { type: "string", example: "CUSTOM_SESSION_REQUEST_REJECTED_SUCCESSFULLY" },
-                    data: { $ref: "#/components/schemas/CustomSessionRequestItemDTO" },
+                    message: {
+                      type: "string",
+                      example: "CUSTOM_SESSION_REQUEST_REJECTED_SUCCESSFULLY",
+                    },
+                    data: {
+                      $ref: "#/components/schemas/CustomSessionRequestItemDTO",
+                    },
                   },
                 },
               },
@@ -9756,7 +10482,8 @@ Include the Bearer JWT token in the Authorization header:
     "/chat/unread-count": {
       get: {
         summary: "Get total unread messages count",
-        description: "Returns the sum of all unread messages for the authenticated student or teacher across all conversations.",
+        description:
+          "Returns the sum of all unread messages for the authenticated student or teacher across all conversations.",
         tags: ["Chat"],
         security: bearerSecurity,
         responses: {
@@ -9773,12 +10500,11 @@ Include the Bearer JWT token in the Authorization header:
     "/chat/conversations": {
       get: {
         summary: "Get all conversations",
-        description: "Returns paginated list of conversations for the authenticated student or teacher with participant details, last message, and unread counts.",
+        description:
+          "Returns paginated list of conversations for the authenticated student or teacher with participant details, last message, and unread counts.",
         tags: ["Chat"],
         security: bearerSecurity,
-        parameters: [
-          ...paginationQueryParams,
-        ],
+        parameters: [...paginationQueryParams],
         responses: {
           ...standardResponses[200]({
             $ref: "#/components/schemas/ChatConversationsListResponse",
@@ -9790,7 +10516,8 @@ Include the Bearer JWT token in the Authorization header:
       },
       post: {
         summary: "Start or get existing conversation",
-        description: "Starts a new conversation between student and teacher (requires an active teacher subscription if new) or returns the existing conversation.",
+        description:
+          "Starts a new conversation between student and teacher (requires an active teacher subscription if new) or returns the existing conversation.",
         tags: ["Chat"],
         security: bearerSecurity,
         requestBody: {
@@ -9816,7 +10543,8 @@ Include the Bearer JWT token in the Authorization header:
     "/chat/conversations/{conversationId}/messages": {
       get: {
         summary: "Get message history for a conversation",
-        description: "Returns paginated messages in reverse chronological order using cursor-based pagination for smooth scrolling.",
+        description:
+          "Returns paginated messages in reverse chronological order using cursor-based pagination for smooth scrolling.",
         tags: ["Chat"],
         security: bearerSecurity,
         parameters: [
@@ -9825,7 +10553,8 @@ Include the Bearer JWT token in the Authorization header:
             in: "query",
             name: "cursor",
             schema: { type: "string", format: "uuid" },
-            description: "Message ID cursor for pagination (nextCursor from previous response)",
+            description:
+              "Message ID cursor for pagination (nextCursor from previous response)",
           },
           {
             in: "query",
@@ -9849,12 +10578,11 @@ Include the Bearer JWT token in the Authorization header:
     "/chat/conversations/{conversationId}/read": {
       patch: {
         summary: "Mark conversation as read",
-        description: "Updates read timestamp and resets unread count for the authenticated user in this conversation.",
+        description:
+          "Updates read timestamp and resets unread count for the authenticated user in this conversation.",
         tags: ["Chat"],
         security: bearerSecurity,
-        parameters: [
-          uuidParam("conversationId", "Conversation UUID"),
-        ],
+        parameters: [uuidParam("conversationId", "Conversation UUID")],
         responses: {
           ...standardResponses[200]({
             $ref: "#/components/schemas/GenericSuccessDataResponse",
@@ -9868,7 +10596,7 @@ Include the Bearer JWT token in the Authorization header:
       },
     },
   },
-}
+};
 
 // ═══════════════════════════════════════════════════════════════
 //  Clean Dark Mode Theme with Blue Highlights
