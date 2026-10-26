@@ -23,6 +23,7 @@ import { seedOffers } from "./seeders/offers.seed.js";
 import { seedSessions } from "./seeders/sessions.seed.js";
 import { seedChat } from "./seeders/chat.seed.js";
 import { seedTickets } from "./seeders/tickets.seed.js";
+import { seedBanners } from "./seeders/banners.seed.js";
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -93,6 +94,9 @@ async function main() {
 
   // 17. Support Tickets & Messages (depends on teachers)
   await seedTickets(prisma, teachers);
+
+  // 18. Banners (depends on courses + categories)
+  await seedBanners(prisma, courses, categories);
 
   console.log("\n✅ Database seeding completed successfully!");
 

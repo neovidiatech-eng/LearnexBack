@@ -16,6 +16,7 @@
     "seed:sessions": "node prisma/seeders/sessions.seed.js",
     "seed:chat": "node prisma/seeders/chat.seed.js",
     "seed:tickets": "node prisma/seeders/tickets.seed.js",
+    "seed:banners": "node prisma/seeders/banners.seed.js",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:build": "docker compose build",
