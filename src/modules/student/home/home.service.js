@@ -25,6 +25,7 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
     cart,
     todaySessionsRaw,
     activeOffersRaw,
+    bannersRaw,
   ] = await Promise.all([
     db.findMany({
       model: "category",
@@ -159,6 +160,16 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
       },
       orderBy: { createdAt: "desc" },
     }),
+    db.findMany({
+      model: "banner",
+      where: {
+        isActive: true,
+      },
+      include: {
+        translations: { where: { locale } },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
   ]);
 
   const allCourseIds = Array.from(
@@ -250,40 +261,9 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
     };
   });
 
-  const defaultBanners = [
-    {
-      id: "b1",
-      title: locale === "ar" ? "خصم يصل إلى 50%" : "Up to 50% Off",
-      subtitle: locale === "ar" ? "على جميع دورات تطوير البرمجيات والذكاء الاصطناعي" : "On all software engineering & AI courses",
-      imageUrl:
-        "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1000&auto=format&fit=crop",
-      actionType: "DISCOUNT",
-      targetId: null,
-      buttonText: locale === "ar" ? "تصفح العروض" : "Explore Offers",
-    },
-    {
-      id: "b2",
-      title: locale === "ar" ? "تعلم مع نخبة المدربين" : "Learn from Top Instructors",
-      subtitle: locale === "ar" ? "دورات عملية تؤهلك لسوق العمل فوراً" : "Practical courses tailored for the job market",
-      imageUrl:
-        "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=1000&auto=format&fit=crop",
-      actionType: "INSTRUCTORS",
-      targetId: null,
-      buttonText: locale === "ar" ? "اكتشف المدربين" : "View Instructors",
-    },
-    {
-      id: "b3",
-      title: locale === "ar" ? "مسارات احترافية جديدة" : "New Professional Tracks",
-      subtitle: locale === "ar" ? "أحدث المناهج التعليمية في التصميم والبرمجة" : "Latest curriculum in design and development",
-      imageUrl:
-        "https://images.unsplash.com/photo-1501504905252-473c47e087f8?q=80&w=1000&auto=format&fit=crop",
-      actionType: "CATEGORIES",
-      targetId: null,
-      buttonText: locale === "ar" ? "تصفح الأقسام" : "Browse Categories",
-    },
-  ];
 
-  const banners = offerBanners.length > 0 ? [...offerBanners, ...defaultBanners] : defaultBanners;
+
+  const banners = offerBanners.length > 0 ? [...offerBanners, ...bannersRaw] : bannersRaw;
 
   return {
     banners,

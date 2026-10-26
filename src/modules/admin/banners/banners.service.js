@@ -1,4 +1,5 @@
 import db, { paginationWithCursor } from "../../../db/db.service.js";
+import { actionTypeEnum } from "../../../utils/Enums/banner.enum.js";
 import { deleteFile } from "../../../utils/multer/file.utils.js";
 import { throwError } from "../../../utils/response.js";
 export const getAllBannersService = async (query) => {
@@ -61,6 +62,16 @@ export const getBannerByIdService = async (id, locale) => {
 };
 export const createBannerService = async (body, file) => {
   const { isActive, actionType, targetId, translations = [] } = body;
+
+  if (actionType === actionTypeEnum.DISCOUNT_ON_COURSE) {
+    const course = await db.findFirst({
+      model: "course",
+      where: { id: targetId },
+    });
+    if (!course) {
+      throwError({ message: "COURSE_NOT_FOUND", status: 404 });
+    }
+  }
   const imageUrl = file ? file.relativeDestination : null;
   const banner = await db.create({
     model: "banner",
