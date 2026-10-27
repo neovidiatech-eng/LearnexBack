@@ -3,70 +3,70 @@ import { actionTypeEnum } from "../../src/utils/Enums/banner.enum.js";
 export const bannersSeedData = [
   {
     id: "a0000000-0000-4000-8000-000000000001",
-    actionType: actionTypeEnum.DISCOUNT,
+    actionType: actionTypeEnum.DISCOUNT_ON_COURSE,
     imageUrl:
       "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1200&auto=format&fit=crop",
     isActive: true,
     translations: [
       {
         locale: "en",
-        title: "Spring Learning Sale: Up to 50% Off",
+        title: "Spring Sale: 50% Off Top Course",
         subtitle:
-          "Unlock your full potential with premier courses across tech, AI, and creative design at unbeatable discounts.",
-        buttonText: "Explore Offers",
+          "Unlock your full potential with an exclusive 50% discount on this featured masterclass.",
+        buttonText: "View Course",
       },
       {
         locale: "ar",
-        title: "عروض الربيع: خصم يصل إلى 50%",
+        title: "عروض الربيع: خصم 50% على هذا الكورس",
         subtitle:
-          "أطلق العنان لإمكانياتك مع دورات مميزة في تطوير الويب والذكاء الاصطناعي والتصميم بنصف السعر لفترة محدودة.",
-        buttonText: "تصفح العروض",
+          "أطلق العنان لإمكانياتك مع خصم حصري 50% على أفضل الكورسات الأكثر طلباً في سوق العمل.",
+        buttonText: "عرض الكورس",
       },
     ],
   },
   {
     id: "a0000000-0000-4000-8000-000000000002",
-    actionType: actionTypeEnum.COURSE,
+    actionType: actionTypeEnum.COURSES,
     imageUrl:
       "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=1200&auto=format&fit=crop",
     isActive: true,
     translations: [
       {
         locale: "en",
-        title: "Full-Stack Web Development Bootcamp",
+        title: "Explore All Popular Courses",
         subtitle:
-          "Master modern web applications from scratch with React, Node.js, and PostgreSQL through hands-on projects.",
-        buttonText: "Enroll Now",
+          "Discover hundreds of certified courses in programming, AI, design, and business management.",
+        buttonText: "All Courses",
       },
       {
         locale: "ar",
-        title: "بوتكامب تطوير تطبيقات الويب المتكاملة",
+        title: "تصفح جميع الكورسات المميزة",
         subtitle:
-          "احترف تطوير الويب الحديث باستخدام React و Node.js و PostgreSQL من خلال مشاريع حقيقية عملية تؤهلك للعمل.",
-        buttonText: "اشترك الآن",
+          "اكتشف مئات الدورات المعتمدة في البرمجة والذكاء الاصطناعي والتصميم وإدارة الأعمال.",
+        buttonText: "كل الكورسات",
       },
     ],
   },
   {
     id: "a0000000-0000-4000-8000-000000000003",
-    actionType: actionTypeEnum.CATEGORY,
+    actionType: actionTypeEnum.CATEGORIES,
     imageUrl:
       "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1200&auto=format&fit=crop",
     isActive: true,
     translations: [
       {
         locale: "en",
-        title: "Master Data Science & AI",
+        title: "Master Data Science & Programming Track",
         subtitle:
-          "Explore industry-curated pathways in machine learning, artificial intelligence, and big data analytics.",
+          "Explore industry-curated pathways in software engineering and data analytics.",
         buttonText: "Browse Category",
       },
       {
         locale: "ar",
-        title: "احترف علم البيانات والذكاء الاصطناعي",
+        title: "احترف مسار البرمجة وعلم البيانات",
         subtitle:
-          "استكشف أفضل المسارات التعليمية في تعلم الآلة والذكاء الاصطناعي وتحليل البيانات المطلوبة عالمياً.",
-        buttonText: "تصفح المسار",
+          "استكشف أفضل المسارات التعليمية المعتمدة في هندسة البرمجيات وتحليل البيانات المطلوبة عالمياً.",
+        buttonText: "تصفح القسم",
       },
     ],
   },
@@ -79,40 +79,41 @@ export const bannersSeedData = [
     translations: [
       {
         locale: "en",
-        title: "Learn Directly from Industry Leaders",
+        title: "Learn Directly from Expert Instructors",
         subtitle:
-          "Book 1-on-1 private mentoring sessions with seasoned instructors to accelerate your career growth.",
-        buttonText: "Meet Instructors",
+          "Book 1-on-1 private mentoring sessions with seasoned teachers to accelerate your learning.",
+        buttonText: "All Instructors",
       },
       {
         locale: "ar",
-        title: "تعلم على يد نخبة من الخبراء والمتخصصين",
+        title: "تعلم مع أفضل المعلمين المعتمدين",
         subtitle:
-          "احجز جلسات توجيه فردية ومباشرة مع أفضل المحاضرين لتسريع نموك المهني والحصول على إرشاد شخصي.",
-        buttonText: "اكتشف المدربين",
+          "احجز جلسات فردية ومباشرة مع نخبة من الأساتذة والخبراء لتسريع تعلمك وتطوير مهاراتك.",
+        buttonText: "كل المعلمين",
       },
     ],
   },
   {
     id: "a0000000-0000-4000-8000-000000000005",
     actionType: actionTypeEnum.EXTERNAL_URL,
+    targetId: "https://flutter.dev",
     imageUrl:
       "https://images.unsplash.com/photo-1531482615713-2afd69097998?q=80&w=1200&auto=format&fit=crop",
     isActive: true,
     translations: [
       {
         locale: "en",
-        title: "Join Our Live Coding Community",
+        title: "Visit Our Official Developer Portal",
         subtitle:
-          "Participate in weekly interactive sessions, collaborate on coding challenges, and expand your network.",
-        buttonText: "Join Community",
+          "Check out the official documentation, developer community guidelines, and learning resources.",
+        buttonText: "Visit Link",
       },
       {
         locale: "ar",
-        title: "انضم إلى مجتمع التعلم التفاعلي",
+        title: "انضم إلى مجتمعنا التقني الرسمي",
         subtitle:
-          "شارك في ورش عمل أسبوعية مباشرة وتحديات برمجية تفاعلية وتواصل مع نخبة من الطلاب والمطورين.",
-        buttonText: "انضم الآن",
+          "تصفح التوثيق الرسمي ومصادر التعلم الإضافية وتواصل مع فريق التطوير في منصتنا.",
+        buttonText: "زيارة الرابط",
       },
     ],
   },
@@ -121,35 +122,30 @@ export const bannersSeedData = [
     actionType: actionTypeEnum.NONE,
     imageUrl:
       "https://images.unsplash.com/photo-1501504905252-473c47e087f8?q=80&w=1200&auto=format&fit=crop",
-    isActive: false,
+    isActive: true,
     translations: [
       {
         locale: "en",
-        title: "Upcoming: Interactive Code Playground",
+        title: "Announcement: Platform Update Coming Soon",
         subtitle:
-          "Practice coding directly in your browser without any local setup needed. Stay tuned!",
-        buttonText: "Coming Soon",
+          "We are continuously working to enhance the learning experience for all students and instructors.",
+        buttonText: "Announcement",
       },
       {
         locale: "ar",
-        title: "قريباً: بيئة برمجية تفاعلية مباشرة",
+        title: "تنويه عام: تحديثات وتطويرات قادمة للمنصة",
         subtitle:
-          "مارس البرمجة وتطبيق التمارين مباشرة داخل المتصفح دون الحاجة لأي تثبيت أو إعدادات مسبقة.",
-        buttonText: "قريباً",
+          "نعمل باستمرار على تطوير المنصة وتقديم أفضل الأدوات التفاعلية وتجربة تعليمية استثنائية.",
+        buttonText: "إعلان",
       },
     ],
   },
 ];
 
-const newBannersSeedData=bannersSeedData.map((b,i)=>{
- return {...b,
-  order:i}
-})
-
 export async function seedBanners(prisma, courses = [], categories = []) {
-  console.log("🌱 Seeding banners...");
+  console.log("🌱 Seeding banners according to all actionTypeEnums...");
 
-  // 1. Resolve course for COURSE action banner
+  // 1. Resolve course for DISCOUNT_ON_COURSE action banner
   let targetCourse = courses?.[0];
   if (!targetCourse) {
     targetCourse = await prisma.course.findFirst({
@@ -158,7 +154,7 @@ export async function seedBanners(prisma, courses = [], categories = []) {
     });
   }
 
-  // 2. Resolve category for CATEGORY action banner
+  // 2. Resolve category for CATEGORIES action banner
   let targetCategory = categories?.[0];
   if (!targetCategory) {
     targetCategory = await prisma.category.findFirst({
@@ -168,12 +164,13 @@ export async function seedBanners(prisma, courses = [], categories = []) {
 
   const seededBanners = [];
 
-  for (const item of newBannersSeedData) {
-    let resolvedTargetId = null;
+  for (let i = 0; i < bannersSeedData.length; i++) {
+    const item = bannersSeedData[i];
+    let resolvedTargetId = item.targetId || null;
 
-    if (item.actionType === actionTypeEnum.COURSE && targetCourse?.id) {
+    if (item.actionType === actionTypeEnum.DISCOUNT_ON_COURSE && targetCourse?.id) {
       resolvedTargetId = targetCourse.id;
-    } else if (item.actionType === actionTypeEnum.CATEGORY && targetCategory?.id) {
+    } else if (item.actionType === actionTypeEnum.CATEGORIES && targetCategory?.id) {
       resolvedTargetId = targetCategory.id;
     }
 
@@ -184,7 +181,7 @@ export async function seedBanners(prisma, courses = [], categories = []) {
         actionType: item.actionType,
         targetId: resolvedTargetId,
         isActive: item.isActive,
-        order:item.order
+        order: i,
       },
       create: {
         id: item.id,
@@ -192,7 +189,7 @@ export async function seedBanners(prisma, courses = [], categories = []) {
         actionType: item.actionType,
         targetId: resolvedTargetId,
         isActive: item.isActive,
-        order:item.order
+        order: i,
       },
     });
 
@@ -222,7 +219,7 @@ export async function seedBanners(prisma, courses = [], categories = []) {
     seededBanners.push(banner);
   }
 
-  console.log(`✅ Seeded ${seededBanners.length} banners with translations`);
+  console.log(`✅ Successfully seeded ${seededBanners.length} banners covering all actionTypeEnums!`);
   return seededBanners;
 }
 

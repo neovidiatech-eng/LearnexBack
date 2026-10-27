@@ -128,16 +128,27 @@ export const startConversationService = async ({
   teacherId,
   studentId,
 }) => {
-  const isStudent = Boolean(user.student?.id);
-  const isTeacher = Boolean(user.teacher?.id);
+  let pair;
 
-  if (!isStudent && !isTeacher) {
-    throwError({ message: "UNAUTHORIZED", status: 403 });
+  if (studentId) {
+    if (!user.teacher?.id) {
+      throwError({ message: "TEACHER_NOT_FOUND", status: 403 });
+    }
+    pair = {
+      studentId: studentId,
+      teacherId: user.teacher.id,
+    };
+  } else if (teacherId) {
+    if (!user.student?.id) {
+      throwError({ message: "STUDENT_NOT_FOUND", status: 403 });
+    }
+    pair = {
+      studentId: user.student.id,
+      teacherId: teacherId,
+    };
+  } else {
+    throwError({ message: "INVALID_PARTICIPANT", status: 400 });
   }
-
-  const pair = isStudent
-    ? { studentId: user.student.id, teacherId }
-    : { studentId, teacherId: user.teacher.id };
 
   if (!pair.studentId || !pair.teacherId) {
     throwError({ message: "INVALID_PARTICIPANT", status: 400 });
