@@ -61,7 +61,17 @@ export const getBannerByIdService = async (id, locale) => {
   return banner;
 };
 export const createBannerService = async (body, file) => {
-  const { isActive, actionType, targetId, translations = [] } = body;
+  const { isActive, actionType, targetId, order, translations = [] } = body;
+
+
+  const existingOrderBanner=await db.findFirst({
+    model:"banner",
+    where:{order}
+  })
+  if(existingOrderBanner){
+    
+    
+  }
 
   if (actionType === actionTypeEnum.DISCOUNT_ON_COURSE) {
     const course = await db.findFirst({

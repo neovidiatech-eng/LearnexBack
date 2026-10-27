@@ -1,25 +1,28 @@
-model Banner {
-  id           String              @id @default(uuid())
-  isActive     Boolean             @default(true)
-  imageUrl     String
-  targetId     String?
-  actionType   String              @default("DISCOUNT")
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
-  translations BannerTranslation[]
+  model Banner {
+    id           String              @id @default(uuid())
+    isActive     Boolean             @default(true)
+    imageUrl     String
+    targetId     String?
+    actionType   String              @default("DISCOUNT")
+    order        Int                 
+    createdAt    DateTime            @default(now())
+    updatedAt    DateTime            @updatedAt
+    translations BannerTranslation[]
 
-  @@map("banners")
-}
+    @@index([order,isActive])
+    @@unique([order])
+    @@map("banners")
+  }
 
-model BannerTranslation {
-  id         String @id @default(uuid())
-  bannerId   String
-  banner     Banner @relation(fields: [bannerId], references: [id], onDelete: Cascade)
-  title      String
-  subtitle   String @db.Text
-  buttonText String
-  locale     String
+  model BannerTranslation {
+    id         String @id @default(uuid())
+    bannerId   String
+    banner     Banner @relation(fields: [bannerId], references: [id], onDelete: Cascade)
+    title      String
+    subtitle   String @db.Text
+    buttonText String
+    locale     String
 
-  @@unique([bannerId, locale])
-  @@map("banner_translations")
-}
+    @@unique([bannerId, locale])
+    @@map("banner_translations")
+  }
