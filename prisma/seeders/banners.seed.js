@@ -181,7 +181,7 @@ export async function seedBanners(prisma, courses = [], categories = []) {
         actionType: item.actionType,
         targetId: resolvedTargetId,
         isActive: item.isActive,
-        order: i,
+        order: i+1,
       },
       create: {
         id: item.id,
@@ -189,7 +189,7 @@ export async function seedBanners(prisma, courses = [], categories = []) {
         actionType: item.actionType,
         targetId: resolvedTargetId,
         isActive: item.isActive,
-        order: i,
+        order: i+1,
       },
     });
 
