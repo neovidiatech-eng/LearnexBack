@@ -110,6 +110,11 @@
   "BANNER_UPDATED_SUCCESSFULLY": "Banner updated successfully",
   "BANNER_STATUS_UPDATED_SUCCESSFULLY": "Banner status updated successfully",
   "BANNER_DELETED_SUCCESSFULLY": "Banner deleted successfully",
-  "BANNER_REORDERED_SUCCESSFULLY": "Banner order updated successfully"
+  "BANNER_REORDERED_SUCCESSFULLY": "Banner order updated successfully",
+  
+  "CERTIFICATES_FETCHED_SUCCESSFULLY": "Certificates fetched successfully",
+  "CERTIFICATE_FETCHED_SUCCESSFULLY": "Certificate fetched successfully",
+  "CERTIFICATE_NOT_FOUND": "Certificate not found",
+  "CERTIFICATE_DELETED_SUCCESSFULLY": "Certificate deleted successfully"
 
 }

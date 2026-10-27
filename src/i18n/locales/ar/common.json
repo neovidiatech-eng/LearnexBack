@@ -110,6 +110,11 @@
   "BANNER_UPDATED_SUCCESSFULLY": "تم تحديث البانر بنجاح",
   "BANNER_STATUS_UPDATED_SUCCESSFULLY": "تم تحديث حالة البانر بنجاح",
   "BANNER_DELETED_SUCCESSFULLY": "تم حذف البانر بنجاح",
-  "BANNER_REORDERED_SUCCESSFULLY": "تم تحديث ترتيب البانر بنجاح"
+  "BANNER_REORDERED_SUCCESSFULLY": "تم تحديث ترتيب البانر بنجاح",
+  "CERTIFICATES_FETCHED_SUCCESSFULLY": "تم جلب الشهادات بنجاح",
+  "CERTIFICATE_FETCHED_SUCCESSFULLY": "تم جلب الشهادة بنجاح",
+  "CERTIFICATE_NOT_FOUND": "الشهادة غير موجودة",
+  "CERTIFICATE_DELETED_SUCCESSFULLY": "تم حذف الشهادة بنجاح"
+
 
 }
