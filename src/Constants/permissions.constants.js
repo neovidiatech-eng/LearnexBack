@@ -29,6 +29,12 @@ export const PERMISSIONS_V2 = {
     UPDATE: "banners:update",
     DELETE: "banners:delete",
   },
+  //certificates
+  CERTIFICATES: {
+    READ: "certificates:read",
+    CREATE: "certificates:create",
+    DELETE: "certificates:delete",
+  },
   // Course Management
   COURSES: {
     READ: "courses:read",
@@ -171,4 +177,3 @@ export const PERMISSIONS_V2 = {
     SEND_MESSAGE: "tickets:send_message",
   },
 };
-

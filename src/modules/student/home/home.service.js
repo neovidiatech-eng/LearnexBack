@@ -18,7 +18,7 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
   endOfToday.setHours(23, 59, 59, 999);
 
   const [
-    categories,
+    categoriesRaw,
     featuredCoursesRaw,
     topRatedCoursesRaw,
     instructorsRaw,
@@ -29,13 +29,24 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
   ] = await Promise.all([
     db.findMany({
       model: "category",
-      include: {
+      select: {
+        id: true,
+        slug: true,
+        image: true,
+        createdAt: true,
+        updatedAt: true,
+        _count: {
+          select: {
+            courses: { where: { status: "PUBLISHED" } },
+            teacherCourses: { where: { status: "APPROVED" } },
+          },
+        },
         translations: {
           where: { locale },
           select: { id: true, locale: true, name: true, description: true },
         },
       },
-      orderBy: { coursesCount: "desc" },
+      orderBy: { createdAt: "desc" },
       take: 12,
     }),
 
@@ -171,6 +182,13 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
       orderBy: { createdAt: "desc" },
     }),
   ]);
+
+  const categories = (categoriesRaw || [])
+    .map(({ _count, ...category }) => ({
+      ...category,
+      coursesCount: _count ? (_count.courses || 0) + (_count.teacherCourses || 0) : 0,
+    }))
+    .sort((a, b) => (b.coursesCount || 0) - (a.coursesCount || 0));
 
   const allCourseIds = Array.from(
     new Set([

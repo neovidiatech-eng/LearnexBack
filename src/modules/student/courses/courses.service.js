@@ -1254,16 +1254,34 @@ export const getCourseFiltersService = async (userId, query = {}) => {
 export const getCategoriesService = async (userId, query = {}) => {
   const { locale = "ar" } = query;
 
-  const categories = await db.findMany({
+  const categoriesRaw = await db.findMany({
     model: "category",
-    include: {
+    select: {
+      id: true,
+      slug: true,
+      image: true,
+      createdAt: true,
+      updatedAt: true,
+      _count: {
+        select: {
+          courses: { where: { status: "PUBLISHED" } },
+          teacherCourses: { where: { status: "APPROVED" } },
+        },
+      },
       translations: {
         where: { locale },
         select: { id: true, locale: true, name: true, description: true },
       },
     },
-    orderBy: { coursesCount: "desc" },
+    orderBy: { createdAt: "desc" },
   });
+
+  const categories = (categoriesRaw || [])
+    .map(({ _count, ...category }) => ({
+      ...category,
+      coursesCount: _count ? (_count.courses || 0) + (_count.teacherCourses || 0) : 0,
+    }))
+    .sort((a, b) => (b.coursesCount || 0) - (a.coursesCount || 0));
 
   return { categories };
 };

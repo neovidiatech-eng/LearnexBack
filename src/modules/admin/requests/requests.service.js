@@ -160,7 +160,7 @@ export const approveRequestService = async (requestId) => {
   }
 
   if (
-    request.type === requestTypeEnum.COURSE_APPROVAL  &&
+    request.type === requestTypeEnum.COURSE_APPROVAL &&
     request.referenceModel === requestReferenceModelEnum.TEACHER_COURSE
   ) {
     const course = await db.findFirst({
@@ -211,7 +211,6 @@ export const approveRequestService = async (requestId) => {
     });
   }
   //Student
-  
 
   return await db.updateOne({
     model: "systemRequest",
@@ -249,7 +248,17 @@ export const rejectRequestService = async (requestId, body = {}) => {
     const teacher = await db.findFirst({
       model: "teacher",
       where: { id: request.referenceId },
-      select: { id: true },
+      select: {
+        id: true,
+        userId: true,
+        user: {
+          select: {
+            fullName: true,
+            email: true,
+            profilePhoto: true,
+          },
+        },
+      },
     });
 
     if (!teacher) {
@@ -257,7 +266,31 @@ export const rejectRequestService = async (requestId, body = {}) => {
       error.cause = 404;
       throw error;
     }
+    const previousDetails =
+      request.details &&
+      typeof request.details === "object" &&
+      !Array.isArray(request.details)
+        ? request.details
+        : {};
 
+    const rejectedRequest = await db.updateOne({
+      model: "systemRequest",
+      where: { id: requestId },
+      data: {
+        status: requestStatusEnum.REJECTED,
+        rejectionReason: rejectionReason || null,
+        details: {
+          ...previousDetails,
+          requesterSnapshot: {
+            userId: teacher.userId,
+            teacherId: teacher.id,
+            fullName: teacher.user?.fullName ?? null,
+            email: teacher.user?.email ?? null,
+            profilePhoto: teacher.user?.profilePhoto ?? null,
+          },
+        },
+      },
+    });
     await db.updateOne({
       model: "teacher",
       where: { id: teacher.id },
@@ -271,6 +304,11 @@ export const rejectRequestService = async (requestId, body = {}) => {
         },
       },
     });
+    await db.deleteOne({
+      model: "user",
+      where: { id: teacher.userId },
+    });
+    return rejectedRequest;
   }
 
   if (
