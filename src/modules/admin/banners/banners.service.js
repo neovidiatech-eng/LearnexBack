@@ -190,6 +190,18 @@ export const updateBannerStatusService = async (id, isActive) => {
   });
   return { banner: updateStatus };
 };
+export const deleteBannerService = async (id) => {
+  const banner = await db.findFirst({ model: "banner", where: { id } });
+  if (!banner) {
+    throwError({ message: "BANNER_NOT_FOUND", status: 404 });
+  }
+  if (banner.imageUrl) {
+    deleteFile(banner.imageUrl);
+  }
+  await db.deleteOne({ model: "banner", where: { id } });
+  return { success: true };
+};
+
 export const reOrderBannerService = async (bannerId, order) => {
   const existingBanner = await dbService.findFirst({
     model: "banner",
