@@ -12,6 +12,7 @@ export const generateJitsiToken = ({
     JITSI_APP_ID,
     JITSI_JWT_SECRET,
     JITSI_AUDIENCE,
+    JITSI_SUB = "*",
   } = process.env;
 
   if (!JITSI_APP_ID || !JITSI_JWT_SECRET || !JITSI_AUDIENCE) {
@@ -27,7 +28,7 @@ export const generateJitsiToken = ({
   const payload = {
     aud: JITSI_AUDIENCE,
     iss: JITSI_APP_ID,
-    sub: "meet.jitsi",
+    sub: JITSI_SUB,
     room: roomName,
     nbf: now - 10,
     exp: now + ttlSeconds,
