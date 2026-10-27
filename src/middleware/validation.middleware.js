@@ -30,9 +30,13 @@ export const validation = (schema) => {
     }
     if (validationError.length) {
       deleteUploadedFiles(req);
-      return res
-        .status(400)
-        .json({ error_message: "VALIDATION_ERROR", validationError });
+      return res.status(400).json({
+        message: "VALIDATION_ERROR",
+        error_message: "VALIDATION_ERROR",
+        validationError,
+        success: false,
+        status: 400,
+      });
     }
     return next();
   });

@@ -31,21 +31,33 @@ export const globalErrorHandling = (error, req, res, next) => {
   // Clean up any uploaded files if an error occurred during request processing
   deleteUploadedFiles(req);
 
-  const messageKey = error.message || "INTERNAL_SERVER_ERROR";
-  const translatedMessage = req?.t ? req.t(messageKey, { defaultValue: messageKey }) : messageKey;
+  const status =
+    typeof error.cause === "number" && error.cause >= 400 && error.cause < 600
+      ? error.cause
+      : 400;
 
-  return res.status(error.cause || 400).json({
+  const rawMessage = error.message || "INTERNAL_SERVER_ERROR";
+
+  // In production, do not leak raw 500 runtime or database errors
+  const is500 = status >= 500;
+  const isDev = process.env.MOOD === "DEV";
+  const messageKey = is500 && !isDev ? "INTERNAL_SERVER_ERROR" : rawMessage;
+
+  const translatedMessage = req?.t
+    ? req.t(messageKey, { defaultValue: messageKey })
+    : messageKey;
+
+  return res.status(status).json({
     message: translatedMessage,
-    status:error.cause,
-    success:false,
-    stack: process.env.MOOD === "DEV" ? error.stack : undefined,
+    code: rawMessage,
+    status: status,
+    success: false,
+    stack: isDev ? error.stack : undefined,
   });
 };
 
-
-
-export const throwError = ({message, status = 400}) => {
-  const err = new Error(message);
-  err.cause = status;
+export const throwError = ({message,status}) => {
+  const err = new Error(message || "INTERNAL_SERVER_ERROR");
+  err.cause = typeof status === "number" ? status : 400;
   throw err;
 };

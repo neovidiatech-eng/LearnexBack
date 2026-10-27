@@ -1,6 +1,48 @@
-import * as db from "../../../db/db.service.js";
+import dbService, * as db from "../../../db/db.service.js";
+import { actionTypeEnum } from "../../../utils/Enums/banner.enum.js";
 import { deleteFile } from "../../../utils/multer/file.utils.js";
 import { throwError } from "../../../utils/response.js";
+
+const reorderTransaction = async ({ order, bannerId, bannerData }) => {
+  return db.transaction(async (tx) => {
+    const existingOrderBanner = await tx.findFirst({
+      model: "banner",
+      where: { order },
+    });
+
+    if (existingOrderBanner) {
+      await tx.updateMany({
+        model: "banner",
+        where: {
+          order: { gte: order },
+          ...(bannerId && { id: { not: bannerId } }),
+        },
+        data: {
+          order: { increment: 1 },
+        },
+      });
+    }
+    if (bannerId) {
+      return tx.updateOne({
+        model: "banner",
+        where: { id: bannerId },
+        data: { order },
+        include: { translations: true },
+      });
+    }
+    return tx.create({
+      model: "banner",
+      data: {
+        ...bannerData,
+        order,
+        translations: {
+          create: bannerData.translations,
+        },
+      },
+      include: { translations: true },
+    });
+  });
+};
 export const getAllBannersService = async (query) => {
   const { page = 1, limit = 10, search = "", locale = "en", isActive } = query;
   const where = {
@@ -33,7 +75,7 @@ export const getAllBannersService = async (query) => {
     where,
     page: Math.max(1, Number(page)),
     limit: Math.max(1, Number(limit)),
-    orderBy: { createdAt: "desc" },
+    orderBy: { order: "asc" },
     include: {
       translations: locale ? { where: { locale } } : true,
     },
@@ -60,8 +102,8 @@ export const getBannerByIdService = async (id, locale) => {
   return banner;
 };
 export const createBannerService = async (body, file) => {
-  const { isActive, actionType, targetId, translations = [] } = body;
-
+  const { isActive, actionType, targetId, order, translations = [] } = body;
+  let banner;
   if (actionType === actionTypeEnum.DISCOUNT_ON_COURSE) {
     const course = await db.findFirst({
       model: "course",
@@ -72,26 +114,17 @@ export const createBannerService = async (body, file) => {
     }
   }
   const imageUrl = file ? file.relativeDestination : null;
-  const banner = await db.create({
-    model: "banner",
-    data: {
+  banner = await reorderTransaction({
+    order: Number(order),
+    bannerData: {
       isActive,
       actionType,
       targetId,
       imageUrl,
-      translations: {
-        create: translations.map((translation) => ({
-          locale: translation.locale,
-          title: translation.title,
-          subtitle: translation.subtitle,
-          buttonText: translation.buttonText,
-        })),
-      },
-    },
-    include: {
-      translations: true,
+      translations,
     },
   });
+
   return banner;
 };
 export const updateBannerService = async (id, body, file) => {
@@ -156,14 +189,21 @@ export const updateBannerStatusService = async (id, isActive) => {
   });
   return { banner: updateStatus };
 };
-export const deleteBannerService = async (id) => {
-  const banner = await db.findFirst({ model: "banner", where: { id } });
-  if (!banner) {
-    throwError({ message: "BANNER_NOT_FOUND", status: 404 });
+export const reOrderBannerService = async (bannerId, order) => {
+  const existingBanner = await dbService.findFirst({
+    model: "banner",
+    where: { id: bannerId },
+  });
+  if (!existingBanner) {
+    throwError({
+      message: "BANNER_NOT_FOUND",
+      status: 404,
+    });
+
+    await reorderTransaction({
+      order,
+      bannerId: existingBanner ? existingBanner.id : bannerId,
+    });
   }
-  if (banner.imageUrl) {
-    deleteFile(banner.imageUrl);
-  }
-  await db.deleteOne({ model: "banner", where: { id } });
   return { success: true };
 };

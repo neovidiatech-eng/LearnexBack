@@ -1,10 +1,10 @@
 import joi from "joi";
 import { generalFields } from "../../../utils/validation/generalField.js";
 import { actionTypeEnum } from "../../../utils/Enums/banner.enum.js";
-import { jsonArray } from "../../../utils/validation/jsonField.js"; 
+import { jsonArray } from "../../../utils/validation/jsonField.js";
 
 const translationSchema = joi.object({
-  locale: joi.string().trim().min(2).max(10).required(), 
+  locale: joi.string().trim().min(2).max(10).required(),
   title: joi.string().trim().required(),
   subtitle: joi.string().trim().required(),
   buttonText: joi.string().trim().required(),
@@ -34,6 +34,7 @@ export const createBanner = {
       .default("DISCOUNT"),
     targetId: joi.string().uuid().allow(null, "").optional(),
     isActive: joi.boolean().default(true),
+    order: generalFields.order.integer().required(),
     translations: jsonArray(translationSchema, { required: true }),
   }),
 };
@@ -44,6 +45,7 @@ export const updateBanner = {
     actionType: joi.string().valid(...Object.values(actionTypeEnum)),
     targetId: joi.string().uuid().allow(null, ""),
     isActive: joi.boolean(),
+    order: joi.number().integer().min(1),
     translations: jsonArray(translationSchema),
   }),
 };
@@ -51,6 +53,10 @@ export const updateBanner = {
 export const updateBannerStatus = {
   params: idParams,
   body: joi.object({ isActive: joi.boolean().required() }),
+};
+export const reOrderBanner = {
+  params: idParams,
+  body: joi.object({ order: generalFields.order.integer().required() }),
 };
 
 export const deleteBanner = { params: idParams };

@@ -20,6 +20,8 @@ export async function seedPermissions(prisma, roles) {
 
   const permissions = [];
   for (const perm of PERMISSIONS_DATA) {
+    console.log(perm.code);
+    
     const upserted = await prisma.permission.upsert({
       where: { code: perm.code },
       update: {},

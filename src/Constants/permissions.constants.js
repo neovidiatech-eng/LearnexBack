@@ -28,6 +28,7 @@ export const PERMISSIONS_V2 = {
     CREATE: "banners:create",
     UPDATE: "banners:update",
     DELETE: "banners:delete",
+    REORDER:"banners:re_order"
   },
   //certificates
   CERTIFICATES: {

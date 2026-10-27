@@ -57,4 +57,13 @@ router.delete(
   bannersController.deleteBanner,
 );
 
+
+router.patch("/:id/re-order",
+  authorize(PERMISSIONS_V2.BANNERS),
+  validation(validator.reOrderBanner),
+  bannersController.reOrderBanner
+
+  
+)
+
 export default router;

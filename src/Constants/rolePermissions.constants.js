@@ -79,6 +79,12 @@ export const PERMISSIONS_DATA = [
     resource: "banners",
     action: "delete",
   },
+  {
+    code: PERMISSIONS_V2.BANNERS.REORDER,
+    name: "Re-orderBanners",
+    resource: "banners",
+    action: "update",
+  },
   //Certificates
   {
     code: PERMISSIONS_V2.CERTIFICATES.READ,

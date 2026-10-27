@@ -168,6 +168,13 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
             translations: { where: { locale } },
           },
         },
+        teacherCourse: {
+          select: {
+            id: true,
+            wallPaper: true,
+            name: true,
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
     }),
@@ -179,7 +186,7 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
       include: {
         translations: { where: { locale } },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { order: "asc" },
     }),
   ]);
 
@@ -268,20 +275,66 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
     const trans = o.translations?.find((t) => t.locale === locale) || o.translations?.[0];
     const courseTrans = o.course?.translations?.find((t) => t.locale === locale) || o.course?.translations?.[0];
     const discountText = o.discount ? `${Number(o.discount)}%` : "";
+
+    const isTeacherCourse = Boolean(o.teacherCourseId);
+    const targetId = o.courseId || o.teacherCourseId || null;
+    const actionType = targetId
+      ? (isTeacherCourse ? "TEACHER_COURSE" : "COURSE")
+      : "NONE";
+    const courseType = isTeacherCourse ? "TEACHER_COURSE" : (o.courseId ? "COURSE" : null);
+
+    const imageUrl =
+      o.course?.thumbnail ||
+      o.teacherCourse?.wallPaper ||
+      "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1000&auto=format&fit=crop";
+
+    const buttonText = targetId
+      ? (locale === "ar" ? "استفد من العرض" : "Claim Offer")
+      : null;
+
     return {
       id: o.id,
-      title: trans?.name || (discountText ? (locale === "ar" ? `خصم حصري ${discountText}` : `Exclusive ${discountText} Off`) : (locale === "ar" ? "عرض حصري" : "Special Offer")),
-      subtitle: trans?.offerDesc || courseTrans?.title || (locale === "ar" ? "عرض خاص لفترة محدودة على أفضل الكورسات" : "Limited time exclusive offer"),
-      imageUrl: o.course?.thumbnail || "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1000&auto=format&fit=crop",
-      actionType: o.courseId ? "COURSE" : "DISCOUNT",
-      targetId: o.courseId || null,
-      buttonText: locale === "ar" ? "استفد من العرض" : "Claim Offer",
+      title:
+        trans?.name ||
+        (discountText
+          ? (locale === "ar" ? `خصم حصري ${discountText}` : `Exclusive ${discountText} Off`)
+          : (locale === "ar" ? "عرض حصري" : "Special Offer")),
+      subtitle:
+        trans?.offerDesc ||
+        courseTrans?.title ||
+        o.teacherCourse?.name ||
+        (locale === "ar" ? "عرض خاص لفترة محدودة على أفضل الكورسات" : "Limited time exclusive offer"),
+      imageUrl,
+      actionType,
+      targetId,
+      courseType,
+      buttonText,
     };
   });
 
+  const formattedBannersRaw = (bannersRaw || []).map((b) => {
+    const trans = b.translations?.find((t) => t.locale === locale) || b.translations?.[0];
+    const actType = (b.actionType || "NONE").toUpperCase();
+    const hasNavigableTarget =
+      actType !== "NONE" &&
+      (Boolean(b.targetId) ||
+        ["CATEGORIES", "CATEGORY", "INSTRUCTORS", "INSTRUCTOR", "COURSES"].includes(actType));
 
+    return {
+      id: b.id,
+      title: trans?.title || "",
+      subtitle: trans?.subtitle || "",
+      imageUrl: b.imageUrl,
+      actionType: b.actionType || "NONE",
+      targetId: b.targetId || null,
+      buttonText: hasNavigableTarget
+        ? (trans?.buttonText || (locale === "ar" ? "المزيد" : "View Details"))
+        : null,
+      order: b.order,
+    };
+  });
 
-  const banners = offerBanners.length > 0 ? [...offerBanners, ...bannersRaw] : bannersRaw;
+  const banners = offerBanners.length > 0 ? [...offerBanners, ...formattedBannersRaw] : formattedBannersRaw;
 
   return {
     banners,
