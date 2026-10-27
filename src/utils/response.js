@@ -56,20 +56,7 @@ export const globalErrorHandling = (error, req, res, next) => {
   });
 };
 
-export const throwError = (arg1, arg2) => {
-  let message;
-  let status = 400;
-
-  if (typeof arg1 === "string") {
-    message = arg1;
-    if (typeof arg2 === "number") {
-      status = arg2;
-    }
-  } else if (arg1 && typeof arg1 === "object") {
-    message = arg1.message;
-    status = arg1.status || arg1.cause || (typeof arg2 === "number" ? arg2 : 400);
-  }
-
+export const throwError = ({message,status}) => {
   const err = new Error(message || "INTERNAL_SERVER_ERROR");
   err.cause = typeof status === "number" ? status : 400;
   throw err;

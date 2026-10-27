@@ -13,6 +13,7 @@ export const generalFields = {
     "string.max": "ROLE_NAME_MAX",
     "any.required": "ROLE_NAME_REQUIRED",
   }),
+  order:Joi.number().positive().min(1),
   timezone: Joi.string()
     .valid(...VALID_TIMEZONE_VALUES)
     .messages({

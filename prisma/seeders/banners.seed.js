@@ -141,6 +141,11 @@ export const bannersSeedData = [
   },
 ];
 
+const newBannersSeedData=bannersSeedData.map((b,i)=>{
+ return {...b,
+  order:i}
+})
+
 export async function seedBanners(prisma, courses = [], categories = []) {
   console.log("🌱 Seeding banners...");
 
@@ -163,7 +168,7 @@ export async function seedBanners(prisma, courses = [], categories = []) {
 
   const seededBanners = [];
 
-  for (const item of bannersSeedData) {
+  for (const item of newBannersSeedData) {
     let resolvedTargetId = null;
 
     if (item.actionType === actionTypeEnum.COURSE && targetCourse?.id) {
@@ -179,6 +184,7 @@ export async function seedBanners(prisma, courses = [], categories = []) {
         actionType: item.actionType,
         targetId: resolvedTargetId,
         isActive: item.isActive,
+        order:item.order
       },
       create: {
         id: item.id,
@@ -186,6 +192,7 @@ export async function seedBanners(prisma, courses = [], categories = []) {
         actionType: item.actionType,
         targetId: resolvedTargetId,
         isActive: item.isActive,
+        order:item.order
       },
     });
 

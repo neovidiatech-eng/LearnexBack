@@ -179,7 +179,7 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
       include: {
         translations: { where: { locale } },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { order: "asc" },
     }),
   ]);
 

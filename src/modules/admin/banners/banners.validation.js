@@ -34,7 +34,7 @@ export const createBanner = {
       .default("DISCOUNT"),
     targetId: joi.string().uuid().allow(null, "").optional(),
     isActive: joi.boolean().default(true),
-    order: joi.number().integer().min(1).default(1),
+    order: generalFields.order.integer().required(),
     translations: jsonArray(translationSchema, { required: true }),
   }),
 };
@@ -53,6 +53,10 @@ export const updateBanner = {
 export const updateBannerStatus = {
   params: idParams,
   body: joi.object({ isActive: joi.boolean().required() }),
+};
+export const reOrderBanner = {
+  params: idParams,
+  body: joi.object({ order: generalFields.order.integer().required() }),
 };
 
 export const deleteBanner = { params: idParams };

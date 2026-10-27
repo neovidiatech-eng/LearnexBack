@@ -1220,6 +1220,7 @@ Include the Bearer JWT token in the Authorization header:
         required: ["image", "translations"],
         properties: {
           image: { type: "string", format: "binary" },
+          order: { type: "integer", example: 2 },
           actionType: {
             type: "string",
             enum: [
@@ -1284,6 +1285,15 @@ Include the Bearer JWT token in the Authorization header:
           buttonText: { type: "string", example: "Join now" },
         },
       },
+
+      BannerReorderDTO: {
+        type: "object",
+        required: ["order"],
+        properties: {
+          order: { type: "integer", example: 1 },
+        },
+      },
+
       BannerDTO: {
         type: "object",
         properties: {
@@ -1293,6 +1303,7 @@ Include the Bearer JWT token in the Authorization header:
             example: "/uploads/banners/banner-1.png",
           },
           isActive: { type: "boolean", example: true },
+          order: { type: "integer", example: 1 },
           actionType: {
             type: "string",
             enum: [
@@ -5224,7 +5235,56 @@ Include the Bearer JWT token in the Authorization header:
         },
       },
     },
-    // ═══════════════════════════════════════════════════════════
+    "/api/v1/admin/banners/{id}/re-order": {
+      patch: {
+        summary: "Update Banner Re-order",
+        tags: ["Admin - Banners"],
+        security: bearerSecurity,
+        parameters: [uuidParam("id", "Banner ID")],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/BannerReorderDTO" },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Banner re-ordered successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    message: { type: "string", example: "SUCCESS" },
+                    data: {
+                      type: "object",
+                      properties: {
+                        banner: {
+                          type: "object",
+                          properties: {
+                            id: { type: "string", format: "uuid" },
+                            isActive: { type: "boolean", example: false },
+                            updatedAt: { type: "string", format: "date-time" },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+    // ══════════════════════════════════════════════════════════
     // ADMIN COUPONS
     // ═══════════════════════════════════════════════════════════
     // ═══════════════════════════════════════════════════════════

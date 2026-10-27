@@ -96,12 +96,20 @@
 
   "TICKET_CREATED": "Ticket created successfully.",
   "TICKET_NOT_CREATED": "Ticket not created.",
+  "BANNER_NOT_FOUND": "Banner not found",
+  "BANNER_ORDER_ALREADY_EXISTS": "This banner order is already in use",
 
   "TICKET_NOT_FOUND": "Ticket not found.",
   "TICKET_DETAILS_FETCHED_SUCCESSFULLY": "Ticket details fetched successfully.",
-  "TEACHER_OPEN_TICKET":"Teacher already has an 2 open ticket.",
-  "NOT_AUTHORIZED_TO_SEND_MESSAGE":"You are not authorized to send a message to this ticket.",
-  "CANT_CLOSE_TICKET":"Cant close ticket "
+  "TEACHER_OPEN_TICKET": "Teacher already has an 2 open ticket.",
+  "NOT_AUTHORIZED_TO_SEND_MESSAGE": "You are not authorized to send a message to this ticket.",
+  "CANT_CLOSE_TICKET": "Cant close ticket ",
+  "BANNERS_FETCHED_SUCCESSFULLY": "Banners fetched successfully",
+  "BANNER_FETCHED_SUCCESSFULLY": "Banner fetched successfully",
+  "BANNER_CREATED_SUCCESSFULLY": "Banner created successfully",
+  "BANNER_UPDATED_SUCCESSFULLY": "Banner updated successfully",
+  "BANNER_STATUS_UPDATED_SUCCESSFULLY": "Banner status updated successfully",
+  "BANNER_DELETED_SUCCESSFULLY": "Banner deleted successfully",
+  "BANNER_REORDERED_SUCCESSFULLY": "Banner order updated successfully"
 
-  
 }

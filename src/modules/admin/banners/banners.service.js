@@ -1,6 +1,63 @@
-import * as db from "../../../db/db.service.js";
+import dbService, * as db from "../../../db/db.service.js";
+import { actionTypeEnum } from "../../../utils/Enums/banner.enum.js";
 import { deleteFile } from "../../../utils/multer/file.utils.js";
 import { throwError } from "../../../utils/response.js";
+
+const reorderTransaction = async ({ order, bannerId }) => {
+  const existingOrderBanner = await db.findFirst({
+    model: "banner",
+    where: { order },
+  });
+
+  if (existingOrderBanner) {
+    await db.transaction(async (tx) => {
+      await tx.updateMany({
+        model: "banner",
+        where: {
+          order: {
+            gte: order,
+          },
+        },
+        data: {
+          order: {
+            increment: 1,
+          },
+        },
+      });
+      await dbService.updateOne({
+        model: "banner",
+        where: {
+          bannerId,
+        },
+        data: {
+          order,
+        },
+      });
+    });
+  } else {
+    banner = await db.create({
+      model: "banner",
+      data: {
+        isActive,
+        actionType,
+        targetId,
+        imageUrl,
+        translations: {
+          create: translations.map((translation) => ({
+            locale: translation.locale,
+            title: translation.title,
+            subtitle: translation.subtitle,
+            buttonText: translation.buttonText,
+          })),
+        },
+      },
+      include: {
+        translations: true,
+      },
+    });
+  }
+};
+
 export const getAllBannersService = async (query) => {
   const { page = 1, limit = 10, search = "", locale = "en", isActive } = query;
   const where = {
@@ -33,7 +90,7 @@ export const getAllBannersService = async (query) => {
     where,
     page: Math.max(1, Number(page)),
     limit: Math.max(1, Number(limit)),
-    orderBy: { createdAt: "desc" },
+    orderBy: { order:'asc' },
     include: {
       translations: locale ? { where: { locale } } : true,
     },
@@ -61,16 +118,12 @@ export const getBannerByIdService = async (id, locale) => {
 };
 export const createBannerService = async (body, file) => {
   const { isActive, actionType, targetId, order, translations = [] } = body;
+  let banner;
 
-
-  const existingOrderBanner=await db.findFirst({
-    model:"banner",
-    where:{order}
-  })
-  if(existingOrderBanner){
-    
-    
-  }
+  const existingOrderBanner = await db.findFirst({
+    model: "banner",
+    where: { order },
+  });
 
   if (actionType === actionTypeEnum.DISCOUNT_ON_COURSE) {
     const course = await db.findFirst({
@@ -82,26 +135,67 @@ export const createBannerService = async (body, file) => {
     }
   }
   const imageUrl = file ? file.relativeDestination : null;
-  const banner = await db.create({
-    model: "banner",
-    data: {
-      isActive,
-      actionType,
-      targetId,
-      imageUrl,
-      translations: {
-        create: translations.map((translation) => ({
-          locale: translation.locale,
-          title: translation.title,
-          subtitle: translation.subtitle,
-          buttonText: translation.buttonText,
-        })),
+  if (existingOrderBanner) {
+    await db.transaction(async (tx) => {
+      await tx.updateMany({
+        model: "banner",
+        where: {
+          order: {
+            gte: order,
+          },
+        },
+        data: {
+          order: {
+            increment: 1,
+          },
+        },
+      });
+
+      banner = await db.create({
+        model: "banner",
+        data: {
+          isActive,
+          actionType,
+          targetId,
+          imageUrl,
+          order,
+          translations: {
+            create: translations.map((translation) => ({
+              locale: translation.locale,
+              title: translation.title,
+              subtitle: translation.subtitle,
+              buttonText: translation.buttonText,
+            })),
+          },
+        },
+        include: {
+          translations: true,
+        },
+      });
+    });
+  } else {
+    banner = await db.create({
+      model: "banner",
+      data: {
+        isActive,
+        actionType,
+        targetId,
+        imageUrl,
+        translations: {
+          create: translations.map((translation) => ({
+            locale: translation.locale,
+            title: translation.title,
+            subtitle: translation.subtitle,
+            buttonText: translation.buttonText,
+          })),
+        },
       },
-    },
-    include: {
-      translations: true,
-    },
-  });
+      include: {
+        translations: true,
+      },
+    });
+  }
+
   return banner;
 };
 export const updateBannerService = async (id, body, file) => {
@@ -166,14 +260,21 @@ export const updateBannerStatusService = async (id, isActive) => {
   });
   return { banner: updateStatus };
 };
-export const deleteBannerService = async (id) => {
-  const banner = await db.findFirst({ model: "banner", where: { id } });
-  if (!banner) {
-    throwError({ message: "BANNER_NOT_FOUND", status: 404 });
+export const reOrderBannerService = async (bannerId, order) => {
+  const existingBanner = await dbService.findFirst({
+    model: "banner",
+    where: { id:bannerId },
+  });
+  if (!existingBanner) {
+    throwError({
+      message: "BANNER_NOT_FOUND",
+      status: 404,
+    });
+
+    await reorderTransaction({
+      order,
+      bannerId: existingBanner ? existingBanner.id : bannerId,
+    });
   }
-  if (banner.imageUrl) {
-    deleteFile(banner.imageUrl);
-  }
-  await db.deleteOne({ model: "banner", where: { id } });
   return { success: true };
 };

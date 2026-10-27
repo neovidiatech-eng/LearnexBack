@@ -10,7 +10,6 @@
     translations BannerTranslation[]
 
     @@index([order,isActive])
-    @@unique([order])
     @@map("banners")
   }
 
