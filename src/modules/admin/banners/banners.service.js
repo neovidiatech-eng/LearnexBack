@@ -1,4 +1,4 @@
-import db, { paginationWithCursor } from "../../../db/db.service.js";
+import * as db from "../../../db/db.service.js";
 import { deleteFile } from "../../../utils/multer/file.utils.js";
 import { throwError } from "../../../utils/response.js";
 export const getAllBannersService = async (query) => {
