@@ -9,6 +9,7 @@ const reorderTransaction = async ({ order, bannerId, bannerData }) => {
       model: "banner",
       where: { order },
     });
+    console.log(existingOrderBanner);
 
     if (existingOrderBanner) {
       await tx.updateMany({
@@ -199,11 +200,11 @@ export const reOrderBannerService = async (bannerId, order) => {
       message: "BANNER_NOT_FOUND",
       status: 404,
     });
-
-    await reorderTransaction({
-      order,
-      bannerId: existingBanner ? existingBanner.id : bannerId,
-    });
   }
+
+  await reorderTransaction({
+    order,
+    bannerId: existingBanner ? existingBanner.id : bannerId,
+  });
   return { success: true };
 };

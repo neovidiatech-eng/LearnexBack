@@ -1,5 +1,6 @@
 import Joi from "joi";
 import { VALID_TIMEZONE_VALUES } from "../date/timezones.js";
+import { languagesEnum } from "../Enums/langs.enum.js";
 
 
 const globalPhonePattern = /^(?:\+[1-9]\d{5,14}|0?\d{5,14})$/;
@@ -13,6 +14,7 @@ export const generalFields = {
     "string.max": "ROLE_NAME_MAX",
     "any.required": "ROLE_NAME_REQUIRED",
   }),
+   lang:Joi.string().default("en").valid(...Object.values(languagesEnum)),
   order:Joi.number().positive().min(1),
   timezone: Joi.string()
     .valid(...VALID_TIMEZONE_VALUES)
