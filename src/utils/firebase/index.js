@@ -1,7 +1,6 @@
 
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getMessaging } from "firebase-admin/messaging";
-import { log } from "node:console";
 
 export const getFirebaseServiceAccount = () => {
   if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_PRIVATE_KEY) {

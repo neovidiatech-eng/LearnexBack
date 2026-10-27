@@ -1,6 +1,7 @@
 import dbService from "../../../db/db.service.js";
 import { reciverNotificationEnum } from "../../../utils/Enums/notifications.js";
 import { baseRoleEnum } from "../../../utils/Enums/role.enum.js";
+import { sendNotificationPushHelper } from "../../../utils/helpers/push-notification.helper.js";
 
 export const getAllNotifications = async (req) => {
   const userId = req.user?.id;
@@ -220,6 +221,6 @@ export const createNotification = async (req) => {
       notificationTranslations: true,
     },
   });
-
+await sendNotificationPushHelper(notification)
   return notification;
 };
