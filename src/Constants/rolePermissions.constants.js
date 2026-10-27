@@ -79,6 +79,25 @@ export const PERMISSIONS_DATA = [
     resource: "banners",
     action: "delete",
   },
+  //Certificates
+  {
+    code: PERMISSIONS_V2.CERTIFICATES.READ,
+    name: "Read Certificates",
+    resource: "certificates",
+    action: "read",
+  },
+  {
+    code: PERMISSIONS_V2.CERTIFICATES.CREATE,
+    name: "Create Certificates",
+    resource: "certificates",
+    action: "create",
+  },
+  {
+    code: PERMISSIONS_V2.CERTIFICATES.DELETE,
+    name: "Delete Certificates",
+    resource: "certificates",
+    action: "delete",
+  },
   // Courses
   {
     code: PERMISSIONS_V2.COURSES.READ,
@@ -609,6 +628,10 @@ export const ROLE_PERMISSIONS_MAP = {
     PERMISSIONS_V2.TICKETS.READ_OWN,
     PERMISSIONS_V2.TICKETS.REOPEN,
     PERMISSIONS_V2.TICKETS.SEND_MESSAGE,
+    //Certificates
+    PERMISSIONS_V2.CERTIFICATES.READ,
+    PERMISSIONS_V2.CERTIFICATES.CREATE,
+    PERMISSIONS_V2.CERTIFICATES.DELETE,
     // Plans
     PERMISSIONS_V2.PLANS.GET_MY_PLANS,
     PERMISSIONS_V2.PLANS.CREATE,
