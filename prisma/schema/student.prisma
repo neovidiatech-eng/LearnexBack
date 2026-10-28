@@ -25,3 +25,18 @@ model CartItem {
   @@index([itemId])
   @@map("cart_items")
 }
+
+model Certificates {
+  id         String   @id @default(uuid())
+  
+  studentId  String
+  student    Student  @relation("StudentCertificates", fields: [studentId], references: [id], onDelete: Cascade)
+  courseType String
+  courseId   String   @unique
+  achivedAt  DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@index([studentId])
+  @@index([courseId])
+  @@map("student_certificates")
+}

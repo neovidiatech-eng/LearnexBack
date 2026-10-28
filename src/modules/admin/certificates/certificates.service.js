@@ -1,27 +1,21 @@
 import * as db from "../../../db/db.service.js";
 import { throwError } from "../../../utils/response.js";
 import { deleteFile } from "../../../utils/multer/file.utils.js";
+import { Prisma, PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import PG from "pg";
 
 export const getAllCertificatesService = async (query) => {
-  const { page = 1, limit = 10, search = "", type, status } = query;
+  const { page = 1, limit = 10, search = ""} = query;
 
   const where = {};
 
-  if (type) {
-    where.type = type;
-  }
-
-  if (status) {
-    where.status = status;
-  }
 
   if (search) {
     const term = search.trim();
     where.OR = [
-      { title: { contains: term, mode: "insensitive" } },
-      { issuer: { contains: term, mode: "insensitive" } },
       {
-        teacher: {
+        student: {
           user: {
             fullName: { contains: term, mode: "insensitive" },
           },
@@ -31,13 +25,13 @@ export const getAllCertificatesService = async (query) => {
   }
 
   const result = await db.findManyWithPaginationAndCount({
-    model: "teacherCertificate",
+    model: "certificates",
     where,
     page: Math.max(1, Number(page)),
     limit: Math.max(1, Number(limit)),
     orderBy: { createdAt: "desc" },
     include: {
-      teacher: {
+      student: {
         include: {
           user: {
             select: {
@@ -57,11 +51,15 @@ export const getAllCertificatesService = async (query) => {
 };
 
 export const getCertificatesByIdService = async (id) => {
+
+
+
   const certificate = await db.findOne({
-    model: "teacherCertificate",
+
+    model: "certificates",
     where: { id },
     include: {
-      teacher: {
+      student: {
         include: {
           user: {
             select: {
@@ -87,27 +85,3 @@ export const getCertificatesByIdService = async (id) => {
   return certificate;
 };
 
-export const deleteCertificatesService = async (id) => {
-  const certificate = await db.findOne({
-    model: "teacherCertificate",
-    where: { id },
-  });
-
-  if (!certificate) {
-    throwError({
-      message: "CERTIFICATE_NOT_FOUND",
-      status: 404,
-    });
-  }
-
-  if (certificate.fileUrl) {
-    deleteFile(certificate.fileUrl);
-  }
-
-  await db.deleteOne({
-    model: "teacherCertificate",
-    where: { id },
-  });
-
-  return certificate;
-};

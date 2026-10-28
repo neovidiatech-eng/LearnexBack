@@ -63,6 +63,7 @@ model Student {
   sessions              Session[]
   customSessionRequests CustomSessionRequest[]
   conversations         conversation[]
+  certificates          Certificates[]         @relation("StudentCertificates")
 
   @@index([userId])
   @@map("students")
