@@ -79,7 +79,7 @@ export const getTeacherByIdService = async ({ teacherId, lang }) => {
     introVideoUrl: true,
     createdAt: true,
     courses: {
-      where: { status: "APPROVED" },
+      where: { status: { in: ["APPROVED", "PUBLISHED"] } },
       select: {
         id: true,
         name: true,
@@ -214,8 +214,39 @@ export const getTeacherByIdService = async ({ teacherId, lang }) => {
     ? Number(teacher.sessionPrice50Min)
     : 50.0;
 
+  const formattedTeacherCourses = (teacher.courses || []).map((c) => ({
+    ...c,
+    title: c.name || c.title,
+    thumbnail: c.wallPaper || c.thumbnail,
+    itemType: "TEACHER_COURSE",
+    provider: "TEACHER",
+  }));
+
+  const formattedUserCourses = (teacher.user?.courses || []).map((c) => {
+    const trans =
+      (c.translations || []).find((t) => t.locale === lang) ||
+      c.translations?.[0];
+    return {
+      ...c,
+      title: trans?.title || c.title || c.name,
+      thumbnail: c.thumbnail,
+      price: c.salePrice || c.originalPrice,
+      totalHours: c.durationHours,
+      itemType: "COURSE",
+      provider: "PLATFORM",
+    };
+  });
+
+  const allCourses = [...formattedTeacherCourses, ...formattedUserCourses];
+
   return {
     ...teacher,
+    courses: allCourses,
+    teacherCourses: formattedTeacherCourses,
+    totalCoursesCount: Math.max(
+      Number(teacher.totalCoursesCount) || 0,
+      allCourses.length
+    ),
     sessionPrice50Min: sessionPriceNum,
     sessionPrice: sessionPriceNum,
     hourlyRate: sessionPriceNum,
