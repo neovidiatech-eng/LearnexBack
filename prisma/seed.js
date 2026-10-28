@@ -24,6 +24,7 @@ import { seedSessions } from "./seeders/sessions.seed.js";
 import { seedChat } from "./seeders/chat.seed.js";
 import { seedTickets } from "./seeders/tickets.seed.js";
 import { seedBanners } from "./seeders/banners.seed.js";
+import { seedCertificates } from "./seeders/certificates.seed.js";
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -49,6 +50,9 @@ async function main() {
 
   // 5. Teachers (depends on roles)
   const teachers = await seedTeachers(prisma, roles);
+
+  // 5.1. Teacher Certificates (depends on teachers)
+  await seedCertificates(prisma, teachers);
 
   // 6. Students (depends on roles)
   const students = await seedStudents(prisma, roles);
