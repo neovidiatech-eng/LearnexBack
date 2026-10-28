@@ -1,5 +1,11 @@
 import dbService from "../../../db/db.service.js";
 import { SESSION_DURATION_MS } from "../../../utils/constants/session.constant.js";
+import {
+  notificationTypeEnum,
+  priorityEnum,
+  reciverNotificationEnum,
+} from "../../../utils/Enums/notifications.js";
+import { notify } from "../../../utils/helpers/notify.helper.js";
 import { requestStatus } from "../../../utils/Enums/session-request.enum.js";
 import { sessionStatus } from "../../../utils/Enums/sessions.enum.js";
 import { generateJitsiToken } from "../../../utils/security/jitsiToken.js";
@@ -38,13 +44,19 @@ const hasStudentConflict = async ({ studentId, startAt, endAt }) => {
   return Boolean(conflict);
 };
 
-export const createSessionRequest = async ({ userId, teacherId, startAt, note, title }) => {
+export const createSessionRequest = async ({
+  userId,
+  teacherId,
+  startAt,
+  note,
+  title,
+}) => {
   const student = await getStudentByUser(userId);
 
   const teacher = await dbService.findFirst({
     model: "teacher",
     where: { id: teacherId },
-    select: { id: true, isAvailable: true },
+    select: { id: true, userId: true, isAvailable: true },
   });
   if (!teacher) throwError("TEACHER_NOT_FOUND", 404);
 
@@ -62,8 +74,12 @@ export const createSessionRequest = async ({ userId, teacherId, startAt, note, t
     select: { id: true, sessionLeft: true },
   });
 
-  const totalSubLeft = activeSubs.reduce((acc, sub) => acc + sub.sessionLeft, 0);
-  const availableBalance = totalSubLeft > 0 ? totalSubLeft : (student.sessionLeft || 0);
+  const totalSubLeft = activeSubs.reduce(
+    (acc, sub) => acc + sub.sessionLeft,
+    0,
+  );
+  const availableBalance =
+    totalSubLeft > 0 ? totalSubLeft : student.sessionLeft || 0;
 
   if (availableBalance <= 0) {
     throwError("INSUFFICIENT_SESSION_BALANCE", 400);
@@ -97,7 +113,13 @@ export const createSessionRequest = async ({ userId, teacherId, startAt, note, t
     throwError("SLOT_NOT_AVAILABLE", 409);
   }
 
-  if (await hasStudentConflict({ studentId: student.id, startAt: start, endAt: end })) {
+  if (
+    await hasStudentConflict({
+      studentId: student.id,
+      startAt: start,
+      endAt: end,
+    })
+  ) {
     throwError("STUDENT_TIME_CONFLICT", 409);
   }
 
@@ -124,6 +146,13 @@ export const createSessionRequest = async ({ userId, teacherId, startAt, note, t
       note: note?.trim() || null,
       status: requestStatus.PENDING,
     },
+  });
+
+  await notify({
+    receiverId: teacher.userId,
+    receiverType: reciverNotificationEnum.USER,
+    type: notificationTypeEnum.SESSION_REQUEST_CREATED,
+    priority: priorityEnum.HIGH,
   });
 
   return request;
@@ -166,7 +195,12 @@ export const createCustomSessionRequest = async ({
   const teacher = await dbService.findFirst({
     model: "teacher",
     where: { id: teacherId },
-    select: { id: true, sessionPrice50Min: true, isAvailable: true },
+    select: {
+      id: true,
+      sessionPrice50Min: true,
+      userId: true,
+      isAvailable: true,
+    },
   });
 
   if (!teacher) throwError("TEACHER_NOT_FOUND", 404);
@@ -183,7 +217,7 @@ export const createCustomSessionRequest = async ({
 
   const totalPrice = Number((count * pricePerSession).toFixed(2));
 
-  return await dbService.create({
+  const request = await dbService.create({
     model: "customSessionRequest",
     data: {
       studentId: student.id,
@@ -195,6 +229,13 @@ export const createCustomSessionRequest = async ({
       status: "PENDING",
     },
   });
+  await notify({
+    receiverId: teacher.userId,
+    receiverType: reciverNotificationEnum.USER,
+    type: notificationTypeEnum.CUSTOM_SESSION_CREATED,
+    priority: priorityEnum.HIGH,
+  });
+  return request;
 };
 
 export const getStudentCustomSessionRequests = async ({
@@ -342,8 +383,7 @@ export const getStudentSessions = async ({
     studentId: student.id,
     ...(status
       ? { status }
-      : { status: { in: ACTIVE_SESSION }, endAt: { gte: new Date() } }
-    ),
+      : { status: { in: ACTIVE_SESSION }, endAt: { gte: new Date() } }),
   };
 
   return dbService.findManyWithPaginationAndCount({
