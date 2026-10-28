@@ -1,31 +1,55 @@
-
 import * as db from "../../../db/db.service.js";
 import { throwError } from "../../../utils/response.js";
+import { deleteFile } from "../../../utils/multer/file.utils.js";
 
 export const getAllCertificatesService = async (query) => {
-  const { page = 1, limit = 10, search = "", isActive } = query;
+  const { page = 1, limit = 10, search = "", type, status } = query;
 
   const where = {};
 
-  if (isActive !== undefined) {
-    where.isActive = isActive === true || isActive === "true";
+  if (type) {
+    where.type = type;
+  }
+
+  if (status) {
+    where.status = status;
   }
 
   if (search) {
-    where.title = {
-      contains: search.trim(),
-      mode: "insensitive",
-    };
+    const term = search.trim();
+    where.OR = [
+      { title: { contains: term, mode: "insensitive" } },
+      { issuer: { contains: term, mode: "insensitive" } },
+      {
+        teacher: {
+          user: {
+            fullName: { contains: term, mode: "insensitive" },
+          },
+        },
+      },
+    ];
   }
 
   const result = await db.findManyWithPaginationAndCount({
-    model: "certificates",
+    model: "teacherCertificate",
     where,
     page: Math.max(1, Number(page)),
     limit: Math.max(1, Number(limit)),
     orderBy: { createdAt: "desc" },
     include: {
-      teacher: true,
+      teacher: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              profilePhoto: true,
+              phone: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -34,10 +58,22 @@ export const getAllCertificatesService = async (query) => {
 
 export const getCertificatesByIdService = async (id) => {
   const certificate = await db.findOne({
-    model: "certificates",
+    model: "teacherCertificate",
     where: { id },
     include: {
-      teacher: true,
+      teacher: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              profilePhoto: true,
+              phone: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -53,7 +89,7 @@ export const getCertificatesByIdService = async (id) => {
 
 export const deleteCertificatesService = async (id) => {
   const certificate = await db.findOne({
-    model: "certificates",
+    model: "teacherCertificate",
     where: { id },
   });
 
@@ -64,8 +100,12 @@ export const deleteCertificatesService = async (id) => {
     });
   }
 
-  await db.delete({
-    model: "certificates",
+  if (certificate.fileUrl) {
+    deleteFile(certificate.fileUrl);
+  }
+
+  await db.deleteOne({
+    model: "teacherCertificate",
     where: { id },
   });
 
