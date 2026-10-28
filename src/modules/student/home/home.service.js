@@ -17,10 +17,33 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
   const endOfToday = new Date();
   endOfToday.setHours(23, 59, 59, 999);
 
+  const teacherCourseInclude = {
+    category: {
+      select: {
+        id: true,
+        slug: true,
+        translations: true,
+      },
+    },
+    teacher: {
+      select: {
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            profilePhoto: true,
+          },
+        },
+      },
+    },
+  };
+
   const [
     categoriesRaw,
     featuredCoursesRaw,
+    featuredTeacherCoursesRaw,
     topRatedCoursesRaw,
+    topRatedTeacherCoursesRaw,
     instructorsRaw,
     cart,
     todaySessionsRaw,
@@ -75,6 +98,14 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
     }),
 
     db.findMany({
+      model: "teacherCourse",
+      where: { status: "APPROVED" },
+      take: 8,
+      orderBy: { createdAt: "desc" },
+      include: teacherCourseInclude,
+    }),
+
+    db.findMany({
       model: "course",
       where: { status: "PUBLISHED" },
       take: 8,
@@ -96,6 +127,14 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
           },
         },
       },
+    }),
+
+    db.findMany({
+      model: "teacherCourse",
+      where: { status: "APPROVED" },
+      take: 8,
+      orderBy: { avgRating: "desc" },
+      include: teacherCourseInclude,
     }),
 
     db.findMany({
@@ -199,8 +238,15 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
 
   const allCourseIds = Array.from(
     new Set([
-      ...featuredCoursesRaw.map((c) => c.id),
-      ...topRatedCoursesRaw.map((c) => c.id),
+      ...(featuredCoursesRaw || []).map((c) => c.id),
+      ...(topRatedCoursesRaw || []).map((c) => c.id),
+    ])
+  );
+
+  const allTeacherCourseIds = Array.from(
+    new Set([
+      ...(featuredTeacherCoursesRaw || []).map((c) => c.id),
+      ...(topRatedTeacherCoursesRaw || []).map((c) => c.id),
     ])
   );
 
@@ -215,6 +261,19 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
       select: { courseId: true, progressPercent: true, status: true },
     });
     enrollmentMap = new Map(userEnrollments.map((e) => [e.courseId, e]));
+  }
+
+  let teacherEnrollmentMap = new Map();
+  if (allTeacherCourseIds.length > 0) {
+    const userTeacherEnrollments = await db.findMany({
+      model: "teacherCourseEnrollment",
+      where: {
+        studentId: userId,
+        courseId: { in: allTeacherCourseIds },
+      },
+      select: { courseId: true, progressPercent: true, status: true },
+    });
+    teacherEnrollmentMap = new Map(userTeacherEnrollments.map((e) => [e.courseId, e]));
   }
 
   const mapCourse = (c) => {
@@ -239,14 +298,57 @@ export const getStudentHomeDataService = async (userId, { locale = "ar" } = {}) 
       instructorPhoto: c.instructor?.profilePhoto || null,
       provider: "PLATFORM",
       type: coursesType.COURSE,
+      avgRating: Number(c.avgRating || 0),
+      reviewsCount: c.reviewsCount || 0,
       isEnrolled: !!enrollment,
       progressPercent: enrollment ? Number(enrollment.progressPercent || 0) : 0,
       enrollmentStatus: enrollment ? enrollment.status : null,
     };
   };
 
-  const featuredCourses = featuredCoursesRaw.map(mapCourse);
-  const topRatedCourses = topRatedCoursesRaw.map(mapCourse);
+  const mapTeacherCourse = (c) => {
+    const enrollment = teacherEnrollmentMap.get(c.id);
+    const categoryTrans =
+      c.category?.translations?.find((t) => t.locale === locale) ||
+      c.category?.translations?.[0];
+
+    return {
+      ...c,
+      title: c.name || "",
+      name: c.name || "",
+      description: c.description || "",
+      thumbnail: c.wallPaper || null,
+      wallPaper: c.wallPaper || null,
+      categoryName: categoryTrans?.name || "",
+      instructorName: c.teacher?.user?.fullName || "",
+      instructorPhoto: c.teacher?.user?.profilePhoto || null,
+      provider: "TEACHER",
+      type: coursesType.TEACHER_COURSE,
+      avgRating: Number(c.avgRating || 0),
+      reviewsCount: c.reviewsCount || 0,
+      isEnrolled: !!enrollment,
+      progressPercent: enrollment ? Number(enrollment.progressPercent || 0) : 0,
+      enrollmentStatus: enrollment ? enrollment.status : null,
+    };
+  };
+
+  const featuredCourses = [
+    ...(featuredCoursesRaw || []).map(mapCourse),
+    ...(featuredTeacherCoursesRaw || []).map(mapTeacherCourse),
+  ]
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 8);
+
+  const topRatedCourses = [
+    ...(topRatedCoursesRaw || []).map(mapCourse),
+    ...(topRatedTeacherCoursesRaw || []).map(mapTeacherCourse),
+  ]
+    .sort((a, b) => {
+      const diff = Number(b.avgRating || 0) - Number(a.avgRating || 0);
+      if (diff !== 0) return diff;
+      return Number(b.reviewsCount || 0) - Number(a.reviewsCount || 0);
+    })
+    .slice(0, 8);
 
   const todaySessions = (todaySessionsRaw || []).map((c) => {
     const trans = c.translations?.[0];

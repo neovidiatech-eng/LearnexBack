@@ -528,7 +528,7 @@ Include the Bearer JWT token in the Authorization header:
         properties: {
           type: {
             type: "string",
-            enum: ["ACADEMIC", "PROFESSIONAL", "OTHER"],
+            enum: ["ACADEMIC", "COURSE", "EXPERIENCE", "OTHER"],
             example: "ACADEMIC",
           },
           title: { type: "string", example: "B.Sc. in Computer Engineering" },
@@ -538,6 +538,86 @@ Include the Bearer JWT token in the Authorization header:
             type: "string",
             format: "binary",
             description: "Certificate file (PDF or Image, max 15MB)",
+          },
+        },
+      },
+      AdminCertificateDTO: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            format: "uuid",
+            example: "550e8400-e29b-41d4-a716-446655440000",
+          },
+          teacherId: {
+            type: "string",
+            format: "uuid",
+            example: "550e8400-e29b-41d4-a716-446655440001",
+          },
+          type: {
+            type: "string",
+            enum: ["ACADEMIC", "COURSE", "EXPERIENCE", "OTHER"],
+            example: "ACADEMIC",
+          },
+          title: {
+            type: "string",
+            example: "B.Sc. in Computer Science",
+          },
+          issuer: {
+            type: "string",
+            example: "Cairo University",
+          },
+          issueYear: {
+            type: "integer",
+            example: 2020,
+          },
+          fileUrl: {
+            type: "string",
+            example: "/uploads/certificates/cert-1.pdf",
+          },
+          fileType: {
+            type: "string",
+            example: "application/pdf",
+          },
+          fileSize: {
+            type: "string",
+            example: "2.4 MB",
+          },
+          status: {
+            type: "string",
+            enum: ["PENDING", "VERIFIED", "REJECTED"],
+            example: "VERIFIED",
+          },
+          rejectionReason: {
+            type: "string",
+            nullable: true,
+            example: null,
+          },
+          createdAt: {
+            type: "string",
+            format: "date-time",
+          },
+          updatedAt: {
+            type: "string",
+            format: "date-time",
+          },
+          teacher: {
+            type: "object",
+            properties: {
+              id: { type: "string", format: "uuid" },
+              userId: { type: "string", format: "uuid" },
+              subject: { type: "string", example: "Web Development" },
+              user: {
+                type: "object",
+                properties: {
+                  id: { type: "string", format: "uuid" },
+                  fullName: { type: "string", example: "Ahmed Hassan" },
+                  email: { type: "string", example: "ahmed.hassan@learnex.com" },
+                  profilePhoto: { type: "string", nullable: true, example: "/uploads/users/ahmed.jpg" },
+                  phone: { type: "string", example: "+201001234567" },
+                },
+              },
+            },
           },
         },
       },
@@ -3276,6 +3356,10 @@ Include the Bearer JWT token in the Authorization header:
         "Teacher verification, application reviews, certificates, and course approvals",
     },
     {
+      name: "Admin - Certificates",
+      description: "Admin certificate management, inspection, and deletion",
+    },
+    {
       name: "Admin - Categories",
       description: "Course categories with multilingual translations and icons",
     },
@@ -3953,6 +4037,89 @@ Include the Bearer JWT token in the Authorization header:
             },
           },
         },
+        responses: {
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/SuccessMessageResponse",
+          }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // ADMIN CERTIFICATES
+    // ═══════════════════════════════════════════════════════════
+    "/api/v1/admin/certificates": {
+      get: {
+        summary: "Get All Certificates (Paginated)",
+        description:
+          "Retrieve a paginated list of all teacher certificates with optional keyword search across certificate title, issuer, or teacher name, plus type and status filtering.",
+        tags: ["Admin - Certificates"],
+        security: bearerSecurity,
+        parameters: [
+          ...paginationQueryParams,
+          {
+            in: "query",
+            name: "type",
+            schema: {
+              type: "string",
+              enum: ["ACADEMIC", "COURSE", "EXPERIENCE", "OTHER"],
+            },
+            description: "Filter certificates by type",
+            example: "ACADEMIC",
+          },
+          {
+            in: "query",
+            name: "status",
+            schema: {
+              type: "string",
+              enum: ["PENDING", "VERIFIED", "REJECTED"],
+            },
+            description: "Filter certificates by verification status",
+            example: "VERIFIED",
+          },
+        ],
+        responses: {
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/GenericSuccessDataResponse",
+          }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+    "/api/v1/admin/certificates/{id}": {
+      get: {
+        summary: "Get Certificate Details by ID",
+        description:
+          "Retrieve detailed information for a specific teacher certificate including teacher profile.",
+        tags: ["Admin - Certificates"],
+        security: bearerSecurity,
+        parameters: [uuidParam("id", "Certificate ID")],
+        responses: {
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/GenericSuccessDataResponse",
+          }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+      delete: {
+        summary: "Delete Certificate by ID",
+        description:
+          "Permanently delete a teacher certificate and its associated uploaded file.",
+        tags: ["Admin - Certificates"],
+        security: bearerSecurity,
+        parameters: [uuidParam("id", "Certificate ID")],
         responses: {
           ...standardResponses[200]({
             $ref: "#/components/schemas/SuccessMessageResponse",
@@ -6914,7 +7081,7 @@ Include the Bearer JWT token in the Authorization header:
             name: "type",
             schema: {
               type: "string",
-              enum: ["ACADEMIC", "PROFESSIONAL", "OTHER"],
+              enum: ["ACADEMIC", "COURSE", "EXPERIENCE", "OTHER"],
             },
           },
           {
@@ -6922,7 +7089,7 @@ Include the Bearer JWT token in the Authorization header:
             name: "status",
             schema: {
               type: "string",
-              enum: ["PENDING", "APPROVED", "REJECTED"],
+              enum: ["PENDING", "VERIFIED", "REJECTED"],
             },
           },
         ],

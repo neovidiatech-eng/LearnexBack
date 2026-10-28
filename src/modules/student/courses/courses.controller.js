@@ -45,9 +45,13 @@ export const getEnrolledCourses = asyncHandler(async (req, res) => {
 });
 
 export const getCourseCatalog = asyncHandler(async (req, res) => {
+  const query = {
+    ...req.query,
+    locale: req.query.locale || req.headers['accept-language'] || 'ar',
+  };
   const result = await studentCourseService.getCourseCatalogService(
     req.user.id,
-    req.query
+    query
   );
   return successResponse({ res, data: result });
 });

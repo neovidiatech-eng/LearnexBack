@@ -1,21 +1,27 @@
-
 import * as db from "../../../db/db.service.js";
 import { throwError } from "../../../utils/response.js";
+import { deleteFile } from "../../../utils/multer/file.utils.js";
+import { Prisma, PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import PG from "pg";
 
 export const getAllCertificatesService = async (query) => {
-  const { page = 1, limit = 10, search = "", isActive } = query;
+  const { page = 1, limit = 10, search = ""} = query;
 
   const where = {};
 
-  if (isActive !== undefined) {
-    where.isActive = isActive === true || isActive === "true";
-  }
 
   if (search) {
-    where.title = {
-      contains: search.trim(),
-      mode: "insensitive",
-    };
+    const term = search.trim();
+    where.OR = [
+      {
+        student: {
+          user: {
+            fullName: { contains: term, mode: "insensitive" },
+          },
+        },
+      },
+    ];
   }
 
   const result = await db.findManyWithPaginationAndCount({
@@ -25,7 +31,19 @@ export const getAllCertificatesService = async (query) => {
     limit: Math.max(1, Number(limit)),
     orderBy: { createdAt: "desc" },
     include: {
-      teacher: true,
+      student: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              profilePhoto: true,
+              phone: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -33,11 +51,27 @@ export const getAllCertificatesService = async (query) => {
 };
 
 export const getCertificatesByIdService = async (id) => {
+
+
+
   const certificate = await db.findOne({
+
     model: "certificates",
     where: { id },
     include: {
-      teacher: true,
+      student: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+              profilePhoto: true,
+              phone: true,
+            },
+          },
+        },
+      },
     },
   });
 
@@ -51,23 +85,3 @@ export const getCertificatesByIdService = async (id) => {
   return certificate;
 };
 
-export const deleteCertificatesService = async (id) => {
-  const certificate = await db.findOne({
-    model: "certificates",
-    where: { id },
-  });
-
-  if (!certificate) {
-    throwError({
-      message: "CERTIFICATE_NOT_FOUND",
-      status: 404,
-    });
-  }
-
-  await db.delete({
-    model: "certificates",
-    where: { id },
-  });
-
-  return certificate;
-};
