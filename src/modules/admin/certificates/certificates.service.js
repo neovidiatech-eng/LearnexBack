@@ -82,6 +82,22 @@ export const getCertificatesByIdService = async (id) => {
     });
   }
 
-  return certificate;
+  const course = await db.findOne({
+    model:"course",
+    where:{id:certificate.courseId},
+    include:{
+      instructor:{
+        select:{
+          fullName:true,
+        }
+      }
+    }
+  })
+
+  return {
+    ...certificate,
+    teacherName: course?.instructor?.fullName ?? null,
+  };
+
 };
 
