@@ -97,6 +97,7 @@ export const getCertificatesByIdService = async (id) => {
   return {
     ...certificate,
     teacherName: course?.instructor?.fullName ?? null,
+    courseName: course?.name ?? null,
   };
 
 };
