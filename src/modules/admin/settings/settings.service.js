@@ -127,20 +127,47 @@ export const updateCommissionService = async (body) => {
   const { commissionType, commissionValue } = body;
 
   const currentSetting = await db.findFirst({
-    model: "AppSetting",
-
+    model: "appSetting",
   });
+
+  if (!currentSetting) {
+    return await db.create({
+      model: "appSetting",
+      data: {
+        commissionType,
+        commissionValue,
+      },
+    });
+  }
 
   return await db.updateOne({
     model: "appSetting",
     where: {
-      id: currentSetting.id
+      id: currentSetting.id,
     },
     data: {
       commissionType,
       commissionValue,
     },
   });
+};
+
+export const getCommissionService = async () => {
+  const currentSetting = await db.findFirst({
+    model: "appSetting",
+    select: {
+      id: true,
+      commissionType: true,
+      commissionValue: true,
+      updatedAt: true,
+    },
+  });
+
+  return {
+    commissionType: currentSetting?.commissionType || "PERCENTAGE",
+    commissionValue: currentSetting?.commissionValue ?? 10,
+    updatedAt: currentSetting?.updatedAt || null,
+  };
 };
 export const getAllPagesService = async ({
   page = 1,

@@ -4,6 +4,17 @@ import { enrollmentTypeEnum } from "../../../utils/Enums/enrollmentType.enum.js"
 import { requestPriorityEnum, requestReferenceModelEnum, requestTabEnum, requestTypeEnum } from "../../../utils/Enums/request.enum.js";
 import { coursesType } from "../../../utils/Enums/teacherCourse.enum.js";
 import { createSystemRequest } from "../../../utils/helpers/requests.helper.js";
+import {
+  getCommissionSettings,
+  calculateCommissionSplit,
+  creditSystemWallet,
+  creditTeacherWallet,
+} from "../../../utils/helpers/commission.helper.js";
+import {
+  paymentMethod as paymentMethodEnum,
+  transactionStatus,
+  transactionType,
+} from "../../../utils/Enums/transactions.enum.js";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -279,68 +290,124 @@ export const clearCartService = async (userId) => {
 
 /**
  * POST /cart/checkout
- * Converts all cart items to CourseEnrollments and clears the cart.
+ * Converts all cart items to CourseEnrollments, processes payments,
+ * applies platform commission according to AppSettings, credits wallets,
+ * records the transaction, and clears the cart.
  */
-export const checkoutCartService = async (userId, locale = "ar") => {
+export const checkoutCartService = async (userId, body = {}, locale = "ar") => {
   const cart = await db.findOne({
     model: "cart",
     where: { userId },
     include: { cartItems: true },
   });
-  
+
   if (!cart || !cart.cartItems || cart.cartItems.length === 0) {
     throwError("CART_IS_EMPTY", 400);
   }
 
-  const enrolled = [];
+  const commissionSettings = await getCommissionSettings();
 
-  for (const item of cart.cartItems) {
-    if (item.type === coursesType.COURSE) {
-      const course = await db.findOne({
-        model: "course",
-        where: { id: item.itemId },
-        select: {
-          id: true,
-          status: true,
-          originalPrice: true,
-          salePrice: true,
-          totalStudentsCount: true,
-          totalRevenue: true,
-        },
-      });
+  return await db.transaction(async (tx) => {
+    const enrolled = [];
+    const processedItems = [];
+    let totalPaid = 0;
+    let totalPlatformCommission = 0;
+    let totalTeacherEarnings = 0;
 
-      if (!course || course.status !== courseStatusEnum.PUBLISHED) {
-        continue;
-      }
+    for (const item of cart.cartItems) {
+      if (item.type === coursesType.COURSE) {
+        const course = await tx.findOne({
+          model: "course",
+          where: { id: item.itemId },
+          select: {
+            id: true,
+            status: true,
+            provider: true,
+            originalPrice: true,
+            salePrice: true,
+            totalStudentsCount: true,
+            totalRevenue: true,
+            instructorId: true,
+            translations: {
+              where: { locale },
+              select: { title: true },
+            },
+          },
+        });
 
-      const existingEnrollment = await db.findFirst({
-        model: "courseEnrollment",
-        where: { studentId: userId, courseId: course.id },
-      });
+        if (!course || course.status !== courseStatusEnum.PUBLISHED) {
+          continue;
+        }
 
-      if (!existingEnrollment) {
+        const existingEnrollment = await tx.findFirst({
+          model: "courseEnrollment",
+          where: { studentId: userId, courseId: course.id },
+        });
+
+        if (existingEnrollment) {
+          continue;
+        }
+
         const paidAmount = Number(course.salePrice ?? course.originalPrice ?? 0);
-        const enrollment = await db.create({
+        const hasTeacher = Boolean(course.instructorId);
+        const teacherUserId = course.instructorId;
+
+        const split = calculateCommissionSplit({
+          price: paidAmount,
+          settings: commissionSettings,
+          hasTeacher,
+        });
+
+        if (split.price > 0) {
+          await creditSystemWallet({
+            tx,
+            amount: split.platformCommission,
+          });
+
+          if (hasTeacher && split.teacherEarnings > 0) {
+            await creditTeacherWallet({
+              tx,
+              userId: teacherUserId,
+              amount: split.teacherEarnings,
+            });
+          }
+        }
+
+        const enrollment = await tx.create({
           model: "courseEnrollment",
           data: {
             studentId: userId,
             courseId: course.id,
             status: "ACTIVE",
-            paidAmount,
+            paidAmount: split.price,
             progressPercent: 0,
           },
         });
 
-        await db.updateOne({
+        await tx.updateOne({
           model: "course",
           where: { id: course.id },
           data: {
             totalStudentsCount: { increment: 1 },
-            totalRevenue: { increment: paidAmount },
+            totalRevenue: { increment: split.price },
           },
         });
 
         enrolled.push(enrollment);
+        totalPaid += split.price;
+        totalPlatformCommission += split.platformCommission;
+        totalTeacherEarnings += split.teacherEarnings;
+
+        processedItems.push({
+          courseId: course.id,
+          courseTitle: course.translations?.[0]?.title || "Course",
+          itemType: coursesType.COURSE,
+          provider: course.provider || "PLATFORM",
+          price: split.price,
+          platformCommission: split.platformCommission,
+          teacherEarnings: split.teacherEarnings,
+          instructorId: course.instructorId,
+        });
 
         await createSystemRequest({
           tab: requestTabEnum.STUDENT,
@@ -354,56 +421,109 @@ export const checkoutCartService = async (userId, locale = "ar") => {
             courseId: course.id,
             amount: enrollment.paidAmount,
             status: enrollment.status,
+            provider: course.provider || "PLATFORM",
+            platformCommission: split.platformCommission,
+            teacherEarnings: split.teacherEarnings,
           },
         });
-      }
-    } else if (item.type === coursesType.TEACHER_COURSE) {
-      const course = await db.findOne({
-        model: "teacherCourse",
-        where: { id: item.itemId },
-        select: {
-          id: true,
-          status: true,
-          price: true,
-          totalStudentsCount: true,
-          totalRevenue: true,
-        },
-      });
+      } else if (item.type === coursesType.TEACHER_COURSE) {
+        const course = await tx.findOne({
+          model: "teacherCourse",
+          where: { id: item.itemId },
+          select: {
+            id: true,
+            name: true,
+            status: true,
+            provider: true,
+            price: true,
+            totalStudentsCount: true,
+            totalRevenue: true,
+            teacherId: true,
+            teacher: {
+              select: {
+                id: true,
+                userId: true,
+              },
+            },
+          },
+        });
 
-      if (!course || course.status !== "APPROVED") {
-        continue;
-      }
+        if (!course || course.status !== "APPROVED") {
+          continue;
+        }
 
-      const existingEnrollment = await db.findFirst({
-        model: "teacherCourseEnrollment",
-        where: { studentId: userId, courseId: course.id },
-      });
+        const existingEnrollment = await tx.findFirst({
+          model: "teacherCourseEnrollment",
+          where: { studentId: userId, courseId: course.id },
+        });
 
-      if (!existingEnrollment) {
+        if (existingEnrollment) {
+          continue;
+        }
+
         const paidAmount = Number(course.price || 0);
-        const enrollment = await db.create({
+        const teacherUserId = course.teacher?.userId;
+        const hasTeacher = Boolean(teacherUserId);
+
+        const split = calculateCommissionSplit({
+          price: paidAmount,
+          settings: commissionSettings,
+          hasTeacher,
+        });
+
+        if (split.price > 0) {
+          await creditSystemWallet({
+            tx,
+            amount: split.platformCommission,
+          });
+
+          if (hasTeacher && split.teacherEarnings > 0) {
+            await creditTeacherWallet({
+              tx,
+              userId: teacherUserId,
+              amount: split.teacherEarnings,
+            });
+          }
+        }
+
+        const enrollment = await tx.create({
           model: "teacherCourseEnrollment",
           data: {
             studentId: userId,
             courseId: course.id,
             status: "ACTIVE",
-            paidAmount,
+            paidAmount: split.price,
             progressPercent: 0,
           },
         });
 
-        await db.updateOne({
+        await tx.updateOne({
           model: "teacherCourse",
           where: { id: course.id },
           data: {
             totalStudentsCount: { increment: 1 },
-            totalRevenue: { increment: paidAmount },
+            totalRevenue: { increment: split.price },
           },
         });
 
         enrolled.push({
           ...enrollment,
           type: coursesType.TEACHER_COURSE,
+        });
+        totalPaid += split.price;
+        totalPlatformCommission += split.platformCommission;
+        totalTeacherEarnings += split.teacherEarnings;
+
+        processedItems.push({
+          courseId: course.id,
+          courseTitle: course.name || "Teacher Course",
+          itemType: coursesType.TEACHER_COURSE,
+          provider: course.provider || "TEACHER",
+          price: split.price,
+          platformCommission: split.platformCommission,
+          teacherEarnings: split.teacherEarnings,
+          teacherId: course.teacherId,
+          teacherUserId,
         });
 
         await createSystemRequest({
@@ -419,28 +539,72 @@ export const checkoutCartService = async (userId, locale = "ar") => {
             amount: enrollment.paidAmount,
             status: enrollment.status,
             itemType: coursesType.TEACHER_COURSE,
+            provider: course.provider || "TEACHER",
+            platformCommission: split.platformCommission,
+            teacherEarnings: split.teacherEarnings,
           },
         });
       }
     }
-  }
 
-  // Clear cart items
-  await db.deleteMany({
-    model: "cartItem",
-    where: { cartId: cart.id },
+    if (enrolled.length === 0) {
+      throwError("NO_NEW_COURSES_TO_ENROLL", 400);
+    }
+
+    // Record Transaction
+    const transaction = await tx.create({
+      model: "transaction",
+      data: {
+        userId,
+        amount: totalPaid,
+        type: transactionType.PAYMENT,
+        status: transactionStatus.COMPLETED,
+        paymentMethod: body.paymentMethod || paymentMethodEnum.CARD,
+        reason: {
+          action: "CART_CHECKOUT",
+          cartId: cart.id,
+          coursesCount: enrolled.length,
+          totalAmount: totalPaid,
+          totalCommission: totalPlatformCommission,
+          totalTeacherEarnings,
+          commissionType: commissionSettings.commissionType,
+          commissionValue: commissionSettings.commissionValue,
+          items: processedItems,
+          confirmedAt: new Date().toISOString(),
+        },
+      },
+    });
+
+    // Clear cart items
+    await tx.deleteMany({
+      model: "cartItem",
+      where: { cartId: cart.id },
+    });
+
+    // Reset cart totals
+    await tx.updateOne({
+      model: "cart",
+      where: { id: cart.id },
+      data: { totalItems: 0, totalPrice: 0 },
+    });
+
+    return {
+      totalEnrolled: enrolled.length,
+      enrolled,
+      transaction: {
+        id: transaction.id,
+        amount: Number(transaction.amount),
+        status: transaction.status,
+        paymentMethod: transaction.paymentMethod,
+        createdAt: transaction.createdAt,
+      },
+      summary: {
+        totalAmount: totalPaid,
+        totalCommission: totalPlatformCommission,
+        totalTeacherEarnings,
+        commissionType: commissionSettings.commissionType,
+        commissionValue: commissionSettings.commissionValue,
+      },
+    };
   });
-
-  // Reset cart totals
-  await db.updateOne({
-    model: "cart",
-    where: { id: cart.id },
-    data: { totalItems: 0, totalPrice: 0 },
-  });
-
-  
-  return {
-    totalEnrolled: enrolled.length,
-    enrolled,
-  };
 };

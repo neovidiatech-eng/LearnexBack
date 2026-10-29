@@ -3417,6 +3417,11 @@ Include the Bearer JWT token in the Authorization header:
       name: "Admin - Sessions",
       description: "Admin monitoring of sessions (today, upcoming, history)",
     },
+    {
+      name: "Admin - Finance",
+      description:
+        "Finance dashboard overview, 4 key metrics, revenue trends, top courses breakdown, and transactions export",
+    },
 
     {
       name: "Teacher - Auth",
@@ -5840,6 +5845,70 @@ Include the Bearer JWT token in the Authorization header:
     // ═══════════════════════════════════════════════════════════
     // ADMIN SETTINGS & CMS
     // ═══════════════════════════════════════════════════════════
+    "/api/v1/admin/settings/commission": {
+      get: {
+        summary: "Get Platform Commission Settings",
+        description: "Returns the platform commission type and value applied to course purchases.",
+        tags: ["Admin - Settings & CMS"],
+        security: bearerSecurity,
+        responses: {
+          200: {
+            description: "Commission settings fetched successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    status: { type: "string", example: "success" },
+                    data: {
+                      type: "object",
+                      properties: {
+                        commissionType: { type: "string", enum: ["FIXED", "PERCENTAGE"], example: "PERCENTAGE" },
+                        commissionValue: { type: "number", example: 10 },
+                        updatedAt: { type: "string", example: "2026-10-29T10:00:00.000Z" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+      patch: {
+        summary: "Update Platform Commission Settings",
+        description: "Sets the commission type (FIXED or PERCENTAGE) and value applied to all incoming course payments.",
+        tags: ["Admin - Settings & CMS"],
+        security: bearerSecurity,
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["commissionType", "commissionValue"],
+                properties: {
+                  commissionType: { type: "string", enum: ["FIXED", "PERCENTAGE"], example: "PERCENTAGE" },
+                  commissionValue: { type: "number", example: 15 },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[200]({
+            $ref: "#/components/schemas/GenericSuccessDataResponse",
+          }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
     "/api/v1/admin/settings/pages": {
       get: {
         summary: "Get All CMS Static Pages",
@@ -6713,6 +6782,295 @@ Include the Bearer JWT token in the Authorization header:
           401: standardResponses[401],
           403: standardResponses[403],
           404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // ADMIN FINANCE DASHBOARD
+    // ═══════════════════════════════════════════════════════════
+
+    "/api/v1/admin/finance/overview": {
+      get: {
+        summary: "Get Finance Dashboard Overview",
+        description:
+          "Returns the 4 metric cards (Total Revenue, This Month, Pending, Refunds) with growth comparison, revenue breakdown by top courses, 12-month revenue trend for the selected year, and recent transactions.",
+        tags: ["Admin - Finance"],
+        security: bearerSecurity,
+        parameters: [
+          {
+            name: "year",
+            in: "query",
+            description: "Calendar year for trend metrics (e.g. 2026)",
+            required: false,
+            schema: { type: "integer", example: 2026 },
+          },
+          localeQueryParam,
+        ],
+        responses: {
+          200: {
+            description: "Finance dashboard data fetched successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    status: { type: "string", example: "success" },
+                    data: {
+                      type: "object",
+                      properties: {
+                        year: { type: "integer", example: 2026 },
+                        cards: {
+                          type: "object",
+                          properties: {
+                            totalRevenue: {
+                              type: "object",
+                              properties: {
+                                title: { type: "string", example: "إجمالي الإيرادات" },
+                                value: { type: "number", example: 12450 },
+                                changePercent: { type: "number", example: 18.2 },
+                                isPositive: { type: "boolean", example: true },
+                                trendText: { type: "string", example: "+18.2%" },
+                                subtitle: { type: "string", example: "مقارنة بالشهر الماضي" },
+                              },
+                            },
+                            thisMonth: {
+                              type: "object",
+                              properties: {
+                                title: { type: "string", example: "هذا الشهر" },
+                                value: { type: "number", example: 12450 },
+                                changePercent: { type: "number", example: 14.8 },
+                                isPositive: { type: "boolean", example: true },
+                                trendText: { type: "string", example: "+14.8%" },
+                                subtitle: { type: "string", example: "مقارنة بالشهر الماضي" },
+                              },
+                            },
+                            pending: {
+                              type: "object",
+                              properties: {
+                                title: { type: "string", example: "معلق" },
+                                value: { type: "number", example: 12450 },
+                                changePercent: { type: "number", example: 2.1 },
+                                isPositive: { type: "boolean", example: false },
+                                trendText: { type: "string", example: "-2.1%" },
+                                subtitle: { type: "string", example: "مقارنة بالشهر الماضي" },
+                              },
+                            },
+                            refunds: {
+                              type: "object",
+                              properties: {
+                                title: { type: "string", example: "المستردات" },
+                                value: { type: "number", example: 12450 },
+                                changePercent: { type: "number", example: 0.8 },
+                                isPositive: { type: "boolean", example: true },
+                                trendText: { type: "string", example: "+0.8%" },
+                                subtitle: { type: "string", example: "مقارنة بالشهر الماضي" },
+                              },
+                            },
+                          },
+                        },
+                        revenueBreakdown: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              id: { type: "string", format: "uuid" },
+                              title: { type: "string", example: "Complete Web Development 2024" },
+                              revenue: { type: "number", example: 87861 },
+                              percentage: { type: "number", example: 100 },
+                              studentsCount: { type: "integer", example: 350 },
+                            },
+                          },
+                        },
+                        revenueTrend: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              month: { type: "string", example: "Oct" },
+                              monthName: { type: "string", example: "أكتوبر" },
+                              revenue: { type: "number", example: 400 },
+                              studentsCount: { type: "integer", example: 15 },
+                            },
+                          },
+                        },
+                        recentTransactions: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              id: { type: "string", format: "uuid" },
+                              transactionNumber: { type: "string", example: "TXN - 1" },
+                              student: {
+                                type: "object",
+                                properties: {
+                                  name: { type: "string", example: "Muneeb" },
+                                  email: { type: "string" },
+                                },
+                              },
+                              course: {
+                                type: "object",
+                                properties: {
+                                  title: { type: "string", example: "Complete Web Development 2024" },
+                                },
+                              },
+                              amount: { type: "number", example: 233 },
+                              date: { type: "string", example: "2026-10-29" },
+                              paymentMethod: { type: "string", example: "VISA" },
+                              status: { type: "string", example: "COMPLETED" },
+                              statusLabel: { type: "string", example: "مدفوع" },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/admin/finance/transactions": {
+      get: {
+        summary: "Get All Financial Transactions",
+        description: "Returns paginated list of transactions with search and status filters.",
+        tags: ["Admin - Finance"],
+        security: bearerSecurity,
+        parameters: [
+          ...paginationQueryParams,
+          {
+            name: "search",
+            in: "query",
+            description: "Search by student name, email, or transaction ID",
+            required: false,
+            schema: { type: "string" },
+          },
+          {
+            name: "status",
+            in: "query",
+            description: "Filter by transaction status (ALL, COMPLETED, PENDING, FAILED, REFUNDED)",
+            required: false,
+            schema: { type: "string", enum: ["ALL", "COMPLETED", "PENDING", "FAILED", "REFUNDED"], default: "ALL" },
+          },
+          {
+            name: "paymentMethod",
+            in: "query",
+            description: "Filter by payment method (e.g. CARD, VISA, CASH)",
+            required: false,
+            schema: { type: "string" },
+          },
+          localeQueryParam,
+        ],
+        responses: {
+          200: {
+            description: "Transactions list fetched successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    status: { type: "string", example: "success" },
+                    data: {
+                      type: "object",
+                      properties: {
+                        transactions: { type: "array", items: {} },
+                        pagination: {
+                          type: "object",
+                          properties: {
+                            page: { type: "integer", example: 1 },
+                            limit: { type: "integer", example: 10 },
+                            total: { type: "integer", example: 45 },
+                            totalPages: { type: "integer", example: 5 },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          401: standardResponses[401],
+          403: standardResponses[403],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/admin/finance/transactions/{id}": {
+      get: {
+        summary: "Get Transaction Details by ID",
+        tags: ["Admin - Finance"],
+        security: bearerSecurity,
+        parameters: [uuidParam("id", "Transaction UUID")],
+        responses: {
+          200: {
+            description: "Transaction details fetched successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    status: { type: "string", example: "success" },
+                    data: { type: "object" },
+                  },
+                },
+              },
+            },
+          },
+          401: standardResponses[401],
+          403: standardResponses[403],
+          404: standardResponses[404],
+          500: standardResponses[500],
+        },
+      },
+    },
+
+    "/api/v1/admin/finance/export": {
+      get: {
+        summary: "Export Transactions to Excel (.xlsx)",
+        description: "Downloads an Excel spreadsheet containing all transactions matching filter criteria.",
+        tags: ["Admin - Finance"],
+        security: bearerSecurity,
+        parameters: [
+          {
+            name: "search",
+            in: "query",
+            required: false,
+            schema: { type: "string" },
+          },
+          {
+            name: "status",
+            in: "query",
+            required: false,
+            schema: { type: "string", enum: ["ALL", "COMPLETED", "PENDING", "FAILED", "REFUNDED"] },
+          },
+          {
+            name: "paymentMethod",
+            in: "query",
+            required: false,
+            schema: { type: "string" },
+          },
+          localeQueryParam,
+        ],
+        responses: {
+          200: {
+            description: "Excel file download stream (.xlsx)",
+            content: {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                schema: { type: "string", format: "binary" },
+              },
+            },
+          },
+          401: standardResponses[401],
+          403: standardResponses[403],
           500: standardResponses[500],
         },
       },
@@ -8558,6 +8916,45 @@ Include the Bearer JWT token in the Authorization header:
       },
     },
 
+    "/api/v1/student/courses/{courseId}/buy": {
+      post: {
+        summary: "Direct purchase for a course",
+        description:
+          "Buys and enrolls directly in a paid or free course (Platform or Teacher course). Applies platform commission from AppSettings, credits system and teacher wallets, and logs a completed transaction.",
+        tags: ["Student - Courses"],
+        security: bearerSecurity,
+        parameters: [uuidParam("courseId", "Course ID")],
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  paymentMethod: {
+                    type: "string",
+                    enum: ["CARD", "CASH"],
+                    default: "CARD",
+                    example: "CARD",
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          ...standardResponses[201]({
+            $ref: "#/components/schemas/GenericSuccessDataResponse",
+          }),
+          400: standardResponses[400],
+          401: standardResponses[401],
+          404: standardResponses[404],
+          409: standardResponses[409],
+          500: standardResponses[500],
+        },
+      },
+    },
+
     "/api/v1/student/courses/filters": {
       get: {
         summary: "Get Faceted Search & Filter Options (Udemy-style)",
@@ -9258,9 +9655,27 @@ Include the Bearer JWT token in the Authorization header:
       post: {
         summary: "Checkout student cart",
         description:
-          "Enrolls student in all course items in their cart and clears the cart.",
+          "Enrolls student in all course items in their cart, applies platform commission from AppSettings, credits system & teacher wallets, records the transaction, and clears the cart.",
         tags: ["Student - Cart"],
         security: bearerSecurity,
+        requestBody: {
+          required: false,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  paymentMethod: {
+                    type: "string",
+                    enum: ["CARD", "CASH"],
+                    default: "CARD",
+                    example: "CARD",
+                  },
+                },
+              },
+            },
+          },
+        },
         responses: {
           200: {
             description: "Checkout completed and courses enrolled successfully",
@@ -9275,6 +9690,26 @@ Include the Bearer JWT token in the Authorization header:
                       properties: {
                         totalEnrolled: { type: "integer", example: 2 },
                         enrolled: { type: "array", items: {} },
+                        transaction: {
+                          type: "object",
+                          properties: {
+                            id: { type: "string", format: "uuid" },
+                            amount: { type: "number", example: 250 },
+                            status: { type: "string", example: "COMPLETED" },
+                            paymentMethod: { type: "string", example: "CARD" },
+                            createdAt: { type: "string" },
+                          },
+                        },
+                        summary: {
+                          type: "object",
+                          properties: {
+                            totalAmount: { type: "number", example: 250 },
+                            totalCommission: { type: "number", example: 25 },
+                            totalTeacherEarnings: { type: "number", example: 225 },
+                            commissionType: { type: "string", example: "PERCENTAGE" },
+                            commissionValue: { type: "number", example: 10 },
+                          },
+                        },
                       },
                     },
                   },

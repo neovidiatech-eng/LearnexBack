@@ -12,3 +12,9 @@ export const removeFromCart = {
     itemId: joi.string().uuid().required(),
   }),
 };
+
+export const checkoutCart = {
+  body: joi.object({
+    paymentMethod: joi.string().valid("CARD", "CASH").default("CARD"),
+  }),
+};

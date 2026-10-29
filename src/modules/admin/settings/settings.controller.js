@@ -20,11 +20,12 @@ export const updatePages = asyncHandler(async (req, res) => {
 });
 
 export const updateCommission = asyncHandler(async (req, res) => {
-  const result = await settingService.updateCommissionService(
-    req.body,
-    req.params.slug,
-    req.query.locale || "ar",
-  );
+  const result = await settingService.updateCommissionService(req.body);
+  return successResponse({ res, data: result });
+});
+
+export const getCommission = asyncHandler(async (req, res) => {
+  const result = await settingService.getCommissionService();
   return successResponse({ res, data: result });
 });
 

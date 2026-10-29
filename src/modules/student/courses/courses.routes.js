@@ -54,6 +54,12 @@ router.post(
 );
 
 router.post(
+  "/:courseId/buy",
+  validation(courseValidation.buyCourse),
+  courseController.buyCourse
+);
+
+router.post(
   "/:courseId/lessons/:lessonId/complete",
   validation(courseValidation.completeLesson),
   courseController.completeLesson

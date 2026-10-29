@@ -15,12 +15,18 @@ router.get(
   settingController.getAllPages,
 );
 
-router.patch("/commission",
-  authorize(PERMISSIONS_V2.SETTINGS.UPDATE),
-validation(schema.commission),
-settingController.updateCommission,
+router.get(
+  "/commission",
+  authorize(PERMISSIONS_V2.SETTINGS.READ),
+  settingController.getCommission
+);
 
-) 
+router.patch(
+  "/commission",
+  authorize(PERMISSIONS_V2.SETTINGS.UPDATE),
+  validation(schema.commission),
+  settingController.updateCommission
+); 
 
 router.get(
   "/app-info",

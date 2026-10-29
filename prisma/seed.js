@@ -26,6 +26,7 @@ import { seedTickets } from "./seeders/tickets.seed.js";
 import { seedBanners } from "./seeders/banners.seed.js";
 import { seedCertificates } from "./seeders/certificates.seed.js";
 import { seedStudentCertificates } from "./seeders/studentCertificates.seed.js";
+import { seedFinance } from "./seeders/finance.seed.js";
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -105,6 +106,9 @@ async function main() {
 
   // 18. Banners (depends on courses + categories)
   await seedBanners(prisma, courses, categories);
+
+  // 19. Finance (wallets, transactions, revenue)
+  await seedFinance(prisma, students, teachers, courses, teacherCourses);
 
   console.log("\n✅ Database seeding completed successfully!");
 

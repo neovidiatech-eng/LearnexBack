@@ -191,5 +191,8 @@
   "NOTIFICATION_NEW_SYSTEM_REQUEST_TITLE": "New system request",
   "NOTIFICATION_NEW_SYSTEM_REQUEST_MESSAGE": "A new request is waiting for your review.",
   "NOTIFICATION_NEW_SUPPORT_TICKET_TITLE": "New support ticket",
-  "NOTIFICATION_NEW_SUPPORT_TICKET_MESSAGE": "A new support ticket has been opened."
+  "NOTIFICATION_NEW_SUPPORT_TICKET_MESSAGE": "A new support ticket has been opened.",
+  "CHECKOUT_SUCCESSFUL": "Checkout completed successfully.",
+  "COURSE_PURCHASED_SUCCESSFULLY": "Course purchased successfully.",
+  "NO_NEW_COURSES_TO_ENROLL": "No new courses to enroll. You may already be enrolled in all selected courses."
 }

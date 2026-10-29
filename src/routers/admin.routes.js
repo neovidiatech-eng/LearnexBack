@@ -21,6 +21,7 @@ import adminRequestsRouter from "../modules/admin/requests/requests.routes.js";
 import adminSessionsRouter from "../modules/admin/sessions/session.routes.js";
 import adminTicketsRouter from "../modules/admin/tickets/tickets.routes.js";
 import adminCertificatesRouter from "../modules/admin/certificates/certificates.route.js";
+import adminFinanceRouter from "../modules/admin/finance/finance.routes.js";
 
 const router = Router();
 router.use("/auth", adminAuthRouter);
@@ -44,6 +45,7 @@ router.use("/requests", adminRequestsRouter);
 router.use("/sessions", adminSessionsRouter);
 router.use("/tickets", adminTicketsRouter);
 router.use("/certificates", adminCertificatesRouter);
+router.use("/finance", adminFinanceRouter);
 
 export default router;
 

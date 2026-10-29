@@ -15,6 +15,15 @@ export const enrollCourse = {
   }),
 };
 
+export const buyCourse = {
+  params: joi.object({
+    courseId: joi.string().uuid().required(),
+  }),
+  body: joi.object({
+    paymentMethod: joi.string().valid("CARD", "CASH").default("CARD"),
+  }),
+};
+
 export const getEnrolledCourses = {
   query: joi.object({
     search: joi.string().allow("", null).optional(),
