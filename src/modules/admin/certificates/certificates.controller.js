@@ -26,12 +26,3 @@ export const getCertificatesById = asyncHandler(async (req, res) => {
   });
 });
 
-export const deleteCertificates = asyncHandler(async (req, res) => {
-  await certificatesService.deleteCertificatesService(req.params.id);
-
-  return successResponse({
-    res,
-    message: "CERTIFICATE_DELETED_SUCCESSFULLY",
-    status: 200,
-  });
-});

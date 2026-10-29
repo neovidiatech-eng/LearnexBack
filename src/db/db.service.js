@@ -346,9 +346,9 @@ export const deleteOne = ({ model, where = {}, filter, include, select }) => {
   });
 };
 
-export const count = ({ model, where = {}, filter }) => {
-  return getClient(model).count({ where: where || filter || {} });
-};
+export const count = ({ model, where = {}, filter,distinct }) => {
+  return getClient(model).count({ where: where || filter || {},distinct });
+  };
 
 export const groupBy = ({
   model,
