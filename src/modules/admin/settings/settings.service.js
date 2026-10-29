@@ -123,6 +123,25 @@ export const updatePagesService = async (body, slug, locale = "ar") => {
   });
 };
 
+export const updateCommissionService = async (body) => {
+  const { commissionType, commissionValue } = body;
+
+  const currentSetting = await db.findFirst({
+    model: "AppSetting",
+
+  });
+
+  return await db.updateOne({
+    model: "appSetting",
+    where: {
+      id: currentSetting.id
+    },
+    data: {
+      commissionType,
+      commissionValue,
+    },
+  });
+};
 export const getAllPagesService = async ({
   page = 1,
   limit = 10,

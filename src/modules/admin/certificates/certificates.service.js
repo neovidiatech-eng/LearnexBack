@@ -76,14 +76,16 @@ export const getAllCertificatesService = async (query) => {
     }),
   ]);
 
-
-    const resultWithCourses = await Promise.all(
+  const resultWithCourses = await Promise.all(
     result?.items?.map(async (certificate) => {
       let course;
       if (certificate?.courseType === "COURSE") {
         course = await db.findOne({
           model: "course",
           where: { id: certificate?.courseId },
+          include: {
+            translations: true,
+          },
         });
       } else {
         course = await db.findOne({
@@ -114,14 +116,12 @@ export const getAllCertificatesService = async (query) => {
     }),
   );
 
-
-
   return {
     totalStudentsCertificates: totalStudentsCertificates.length,
     totalCourses: totalCourses.length,
     totalCertificatesThisMonth: totalCertificatesThisMonth.length,
     resultWithCourses,
-    pagination:result.pagination
+    pagination: result.pagination,
   };
 };
 
@@ -148,8 +148,11 @@ export const getCertificatesByIdService = async (id) => {
   });
   if (certificate.courseType === "COURSE") {
     course = await db.findOne({
-      model: "courses",
+      model: "course",
       where: { id: certificate.courseId },
+      include: {
+        translations: true,
+      },
     });
   } else {
     course = await db.findOne({
