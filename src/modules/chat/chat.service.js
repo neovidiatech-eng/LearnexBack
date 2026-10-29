@@ -236,13 +236,14 @@ export const startConversationService = async ({
     }
   }
 
-  const other = isStudent ? conversation.teacher : conversation.student;
+  const callerIsStudent = Boolean(user.student?.id);
+  const other = callerIsStudent ? conversation.teacher : conversation.student;
 
   return {
     id: conversation.id,
     lastMessage: conversation.lastMessage,
     lastMessageAt: conversation.lastMessageAt,
-    unreadCount: isStudent
+    unreadCount: callerIsStudent
       ? conversation.unreadStudentCount
       : conversation.unreadTeacherCount,
     participant: {
