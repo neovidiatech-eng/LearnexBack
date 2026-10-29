@@ -222,9 +222,8 @@ export const forgotPasswordService = async ({ email }) => {
     where: { email: normalizedEmail },
   });
   if (!user) {
-    const error = new Error("ACCOUNT_NOT_FOUND");
-    error.cause = 404;
-    throw error;
+    // Return early to prevent user enumeration while keeping response consistent
+    return { email: normalizedEmail };
   }
   const otp = customAlphabet("0123456789", 6)();
   const hashOtp = await generateHash({ plainText: otp });

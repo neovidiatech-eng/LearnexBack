@@ -291,6 +291,81 @@ socket.on("stop_typing",(payload)=>{
     })
 })
 
+socket.on("edit_message", async (payload, ack) => {
+    const reply = typeof ack === "function" ? ack : () => {};
+    try {
+        const { messageId, newContent } = payload ?? {};
+        if (typeof messageId !== "string" || !messageId.trim() || typeof newContent !== "string" || !newContent.trim()) {
+            return reply({ ok: false, code: "INVALID_DATA" });
+        }
+        const userId = socket.data.user?.id;
+        const msg = await dbService.findFirst({
+            model: "message",
+            where: { id: messageId, senderId: userId }
+        });
+        if (!msg) {
+            return reply({ ok: false, code: "MESSAGE_NOT_FOUND_OR_FORBIDDEN" });
+        }
+        const updated = await dbService.updateOne({
+            model: "message",
+            where: { id: messageId },
+            data: { content: newContent.trim() }
+        });
+        const roomName = `conversation:${msg.conversationId}`;
+        io.to(roomName).emit("message_edited", {
+            messageId: msg.id,
+            conversationId: msg.conversationId,
+            content: newContent.trim(),
+            updatedAt: updated.updatedAt
+        });
+        return reply({ ok: true, message: updated });
+    } catch (err) {
+        console.error("edit_message_failed:", err);
+        return reply({ ok: false, code: "INTERNAL_SERVER_ERROR" });
+    }
+});
+
+socket.on("delete_message", async (payload, ack) => {
+    const reply = typeof ack === "function" ? ack : () => {};
+    try {
+        const { messageId, forEveryone } = payload ?? {};
+        if (typeof messageId !== "string" || !messageId.trim()) {
+            return reply({ ok: false, code: "INVALID_DATA" });
+        }
+        const userId = socket.data.user?.id;
+        const msg = await dbService.findFirst({
+            model: "message",
+            where: { id: messageId }
+        });
+        if (!msg) {
+            return reply({ ok: false, code: "MESSAGE_NOT_FOUND" });
+        }
+        if (forEveryone) {
+            if (msg.senderId !== userId) {
+                return reply({ ok: false, code: "FORBIDDEN" });
+            }
+            await dbService.deleteOne({
+                model: "message",
+                where: { id: messageId }
+            });
+            const roomName = `conversation:${msg.conversationId}`;
+            io.to(roomName).emit("message_deleted_for_everyone", {
+                messageId: msg.id,
+                conversationId: msg.conversationId
+            });
+        } else {
+            socket.emit("message_deleted_for_me", {
+                messageId: msg.id,
+                conversationId: msg.conversationId
+            });
+        }
+        return reply({ ok: true, messageId });
+    } catch (err) {
+        console.error("delete_message_failed:", err);
+        return reply({ ok: false, code: "INTERNAL_SERVER_ERROR" });
+    }
+});
+
 socket.on("disconnecting", () => {
   for (const roomName of socket.rooms) {
     if (roomName.startsWith("conversation:")) {

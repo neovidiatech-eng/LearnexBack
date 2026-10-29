@@ -27,30 +27,36 @@ export const getSavedService = async (userId, locale = "ar") => {
     return { totalItems: 0, items: [] };
   }
 
-  // Enrich each item with course details
-  const enrichedItems = await Promise.all(
-    savedItems.map(async (item) => {
-      const currentType = item.itemType || item.type;
-      if (currentType === coursesType.COURSE) {
-        const course = await db.findOne({
+  // Batch fetch course details to eliminate N+1 queries
+  const courseIds = [];
+  const teacherCourseIds = [];
+
+  for (const item of savedItems) {
+    const currentType = item.itemType || item.type;
+    if (currentType === coursesType.COURSE) {
+      courseIds.push(item.itemId);
+    } else if (currentType === coursesType.TEACHER_COURSE) {
+      teacherCourseIds.push(item.itemId);
+    }
+  }
+
+  const [platformCourses, teacherCourses] = await Promise.all([
+    courseIds.length > 0
+      ? db.findMany({
           model: "course",
-          where: { id: item.itemId },
+          where: { id: { in: courseIds } },
           include: {
             translations: { where: { locale } },
             instructor: {
               select: { fullName: true, profilePhoto: true },
             },
           },
-        });
-        return {
-          ...item,
-          type: currentType,
-          course: course ?? null,
-        };
-      } else if (currentType === coursesType.TEACHER_COURSE) {
-        const course = await db.findOne({
+        })
+      : [],
+    teacherCourseIds.length > 0
+      ? db.findMany({
           model: "teacherCourse",
-          where: { id: item.itemId },
+          where: { id: { in: teacherCourseIds } },
           include: {
             teacher: {
               include: {
@@ -58,18 +64,28 @@ export const getSavedService = async (userId, locale = "ar") => {
               },
             },
           },
-        });
-        return {
-          ...item,
-          type: currentType,
-          course: course
-            ? { ...course, instructor: course.teacher?.user ?? null }
-            : null,
-        };
-      }
-      return { ...item, type: currentType, course: null };
-    })
+        })
+      : [],
+  ]);
+
+  const platformCourseMap = new Map(platformCourses.map((c) => [c.id, c]));
+  const teacherCourseMap = new Map(
+    teacherCourses.map((c) => [
+      c.id,
+      { ...c, instructor: c.teacher?.user ?? null },
+    ])
   );
+
+  const enrichedItems = savedItems.map((item) => {
+    const currentType = item.itemType || item.type;
+    let course = null;
+    if (currentType === coursesType.COURSE) {
+      course = platformCourseMap.get(item.itemId) ?? null;
+    } else if (currentType === coursesType.TEACHER_COURSE) {
+      course = teacherCourseMap.get(item.itemId) ?? null;
+    }
+    return { ...item, type: currentType, course };
+  });
 
   return {
     totalItems: enrichedItems.length,

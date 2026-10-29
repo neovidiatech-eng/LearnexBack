@@ -24,7 +24,11 @@ router.delete(
 
 router.delete("/clear", cartController.clearCart);
 
-router.post("/checkout", cartController.checkoutCart);
+router.post(
+  "/checkout",
+  validation(cartValidation.checkoutCart),
+  cartController.checkoutCart
+);
 
 
 

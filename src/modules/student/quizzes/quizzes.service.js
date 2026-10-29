@@ -21,6 +21,19 @@ export const getStudentQuizService = async (userId, quizId) => {
     model: "teacherCourseQuiz",
     where: { id: quizId },
     include: {
+      section: {
+        select: {
+          id: true,
+          courseId: true,
+          course: {
+            select: {
+              id: true,
+              price: true,
+              status: true,
+            },
+          },
+        },
+      },
       questions: {
         orderBy: { order: "asc" },
         include: {
@@ -39,6 +52,25 @@ export const getStudentQuizService = async (userId, quizId) => {
   });
 
   if (!quiz) throwError("QUIZ_NOT_FOUND", 404);
+
+  const course = quiz.section?.course;
+  const isPaidCourse = course && Number(course.price || 0) > 0;
+
+  if (isPaidCourse) {
+    const enrollment = await db.findFirst({
+      model: "teacherCourseEnrollment",
+      where: {
+        studentId: userId,
+        courseId: quiz.section.courseId,
+        status: "ACTIVE",
+      },
+      select: { id: true },
+    });
+
+    if (!enrollment) {
+      throwError("COURSE_NOT_ENROLLED", 403);
+    }
+  }
 
   // Check if student has already submitted
   const existingSubmission = await db.findFirst({
@@ -85,6 +117,19 @@ export const submitStudentQuizService = async (userId, quizId, { answers }) => {
     model: "teacherCourseQuiz",
     where: { id: quizId },
     include: {
+      section: {
+        select: {
+          id: true,
+          courseId: true,
+          course: {
+            select: {
+              id: true,
+              price: true,
+              status: true,
+            },
+          },
+        },
+      },
       questions: {
         include: { options: true },
       },
@@ -99,6 +144,25 @@ export const submitStudentQuizService = async (userId, quizId, { answers }) => {
   });
 
   if (!quiz) throwError("QUIZ_NOT_FOUND", 404);
+
+  const course = quiz.section?.course;
+  const isPaidCourse = course && Number(course.price || 0) > 0;
+
+  if (isPaidCourse) {
+    const enrollment = await db.findFirst({
+      model: "teacherCourseEnrollment",
+      where: {
+        studentId: userId,
+        courseId: quiz.section.courseId,
+        status: "ACTIVE",
+      },
+      select: { id: true },
+    });
+
+    if (!enrollment) {
+      throwError("COURSE_NOT_ENROLLED", 403);
+    }
+  }
 
   // Check if already submitted
   const existingSubmission = await db.findFirst({

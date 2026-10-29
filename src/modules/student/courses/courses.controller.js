@@ -36,6 +36,22 @@ export const enrollFreeCourse = asyncHandler(async (req, res) => {
   });
 });
 
+export const buyCourse = asyncHandler(async (req, res) => {
+  const locale = req.query.locale || req.headers["accept-language"] || "ar";
+  const result = await studentCourseService.buyCourseService(
+    req.user.id,
+    req.params.courseId,
+    req.body || {},
+    locale
+  );
+  return successResponse({
+    res,
+    status: 201,
+    message: "COURSE_PURCHASED_SUCCESSFULLY",
+    data: result,
+  });
+});
+
 export const getEnrolledCourses = asyncHandler(async (req, res) => {
   const result = await studentCourseService.getEnrolledCoursesService(
     req.user.id,

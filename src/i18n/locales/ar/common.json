@@ -190,5 +190,8 @@
   "NOTIFICATION_NEW_SYSTEM_REQUEST_TITLE": "طلب جديد في النظام",
   "NOTIFICATION_NEW_SYSTEM_REQUEST_MESSAGE": "يوجد طلب جديد بانتظار مراجعتك.",
   "NOTIFICATION_NEW_SUPPORT_TICKET_TITLE": "تذكرة دعم جديدة",
-  "NOTIFICATION_NEW_SUPPORT_TICKET_MESSAGE": "تم فتح تذكرة دعم جديدة."
+  "NOTIFICATION_NEW_SUPPORT_TICKET_MESSAGE": "تم فتح تذكرة دعم جديدة.",
+  "CHECKOUT_SUCCESSFUL": "تمت عملية الشراء بنجاح.",
+  "COURSE_PURCHASED_SUCCESSFULLY": "تم شراء الكورس بنجاح.",
+  "NO_NEW_COURSES_TO_ENROLL": "لا توجد كورسات جديدة للتسجيل، ربما أنت مسجل بالفعل في جميع الكورسات المحددة."
 }

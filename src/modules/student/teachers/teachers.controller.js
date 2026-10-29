@@ -12,6 +12,7 @@ export const getTeacherById = asyncHandler(async (req, res) => {
   const teachers = await teachersService.getTeacherByIdService({
     teacherId,
     lang,
+    user: req.user,
   });
   return successResponse({ res, data: teachers });
 });

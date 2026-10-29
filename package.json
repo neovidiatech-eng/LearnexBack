@@ -19,6 +19,7 @@
     "seed:banners": "node prisma/seeders/banners.seed.js",
     "seed:certificates": "node prisma/seeders/certificates.seed.js",
     "seed:student-certificates": "node prisma/seeders/studentCertificates.seed.js",
+    "seed:finance": "node prisma/seeders/finance.seed.js",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:build": "docker compose build",

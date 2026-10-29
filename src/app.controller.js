@@ -22,8 +22,8 @@ const bootstrap = async () => {
 
   app.set("trust proxy", true);
 
-  // Security HTTP headers
-  app.use(helmet());
+  // Security HTTP headers
+  app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 
   //CORS
   const allowedOrigins = process.env.CORS_ORIGINS

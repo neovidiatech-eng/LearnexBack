@@ -139,6 +139,18 @@ export const loginService = async ({ email, password }) => {
     throw error;
   }
 
+  if (user.status && user.status !== userStatusEnum.ACTIVE) {
+    const errorMsg =
+      user.status === userStatusEnum.SUSPENDED
+        ? "ACCOUNT_SUSPENDED"
+        : user.status === userStatusEnum.BLOCKED
+        ? "ACCOUNT_BLOCKED"
+        : "ACCOUNT_NOT_ACTIVE";
+    const error = new Error(errorMsg);
+    error.cause = 403;
+    throw error;
+  }
+
   if (!user.confirmEmail) {
     const error = new Error("ACCOUNT_NOT_VERIFIED");
     error.cause = 403;
@@ -218,9 +230,8 @@ export const forgotPasswordService = async ({ email }) => {
     where: { email: normalizedEmail },
   });
   if (!user) {
-    const error = new Error("ACCOUNT_NOT_FOUND");
-    error.cause = 404;
-    throw error;
+    // Return early to prevent user enumeration while keeping response consistent
+    return { email: normalizedEmail };
   }
   const otp = customAlphabet("0123456789", 6)();
   const hashOtp = await generateHash({ plainText: otp });

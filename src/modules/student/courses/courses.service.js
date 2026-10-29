@@ -12,6 +12,17 @@ import {
 } from "../../../utils/Enums/request.enum.js";
 import { notify } from "../../../utils/helpers/notify.helper.js";
 import { notificationTypeEnum, priorityEnum, reciverNotificationEnum } from "../../../utils/Enums/notifications.js";
+import {
+  getCommissionSettings,
+  calculateCommissionSplit,
+  creditSystemWallet,
+  creditTeacherWallet,
+} from "../../../utils/helpers/commission.helper.js";
+import {
+  paymentMethod as paymentMethodEnum,
+  transactionStatus,
+  transactionType,
+} from "../../../utils/Enums/transactions.enum.js";
 
 export const toggleFavouriteService = async (
   userId,
@@ -363,6 +374,314 @@ export const enrollFreeCourseService = async (userId, courseId) => {
   });
 
   return enrollment;
+};
+
+/**
+ * POST /student/courses/:courseId/buy
+ * Direct purchase for a single course (Platform Course or Teacher Course).
+ * Applies platform commission according to AppSettings, credits wallets,
+ * enrolls the student, records the transaction, and clears the item from cart if present.
+ */
+export const buyCourseService = async (
+  userId,
+  courseId,
+  body = {},
+  locale = "ar"
+) => {
+  let course = await db.findOne({
+    model: "course",
+    where: { id: courseId },
+    select: {
+      id: true,
+      status: true,
+      provider: true,
+      enrollmentType: true,
+      originalPrice: true,
+      salePrice: true,
+      instructorId: true,
+      translations: {
+        where: { locale },
+        select: { title: true },
+      },
+    },
+  });
+
+  let isTeacherCourse = false;
+  let teacherCourse = null;
+
+  if (!course) {
+    teacherCourse = await db.findOne({
+      model: "teacherCourse",
+      where: { id: courseId },
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        provider: true,
+        price: true,
+        teacherId: true,
+        teacher: {
+          select: { id: true, userId: true },
+        },
+      },
+    });
+
+    if (teacherCourse) {
+      isTeacherCourse = true;
+    }
+  }
+
+  if (!course && !teacherCourse) {
+    const error = new Error("COURSE_NOT_FOUND");
+    error.cause = 404;
+    throw error;
+  }
+
+  if (isTeacherCourse) {
+    if (teacherCourse.status !== "APPROVED") {
+      const error = new Error("COURSE_NOT_PUBLISHED");
+      error.cause = 400;
+      throw error;
+    }
+
+    const existing = await db.findFirst({
+      model: "teacherCourseEnrollment",
+      where: { studentId: userId, courseId },
+    });
+    if (existing) {
+      const error = new Error("ALREADY_ENROLLED");
+      error.cause = 409;
+      throw error;
+    }
+  } else {
+    if (course.status !== courseStatusEnum.PUBLISHED) {
+      const error = new Error("COURSE_NOT_PUBLISHED");
+      error.cause = 400;
+      throw error;
+    }
+
+    const existing = await db.findFirst({
+      model: "courseEnrollment",
+      where: { studentId: userId, courseId },
+    });
+    if (existing) {
+      const error = new Error("ALREADY_ENROLLED");
+      error.cause = 409;
+      throw error;
+    }
+  }
+
+  const commissionSettings = await getCommissionSettings();
+
+  const price = isTeacherCourse
+    ? Number(teacherCourse.price || 0)
+    : Number(course.salePrice ?? course.originalPrice ?? 0);
+
+  const teacherUserId = isTeacherCourse
+    ? teacherCourse.teacher?.userId
+    : course.instructorId;
+
+  const hasTeacher = Boolean(teacherUserId);
+
+  const split = calculateCommissionSplit({
+    price,
+    settings: commissionSettings,
+    hasTeacher,
+  });
+
+  return await db.transaction(async (tx) => {
+    if (split.price > 0) {
+      await creditSystemWallet({
+        tx,
+        amount: split.platformCommission,
+      });
+
+      if (hasTeacher && split.teacherEarnings > 0) {
+        await creditTeacherWallet({
+          tx,
+          userId: teacherUserId,
+          amount: split.teacherEarnings,
+        });
+      }
+    }
+
+    let enrollment = null;
+    if (isTeacherCourse) {
+      enrollment = await tx.create({
+        model: "teacherCourseEnrollment",
+        data: {
+          studentId: userId,
+          courseId,
+          status: "ACTIVE",
+          paidAmount: split.price,
+          progressPercent: 0,
+        },
+      });
+
+      await tx.updateOne({
+        model: "teacherCourse",
+        where: { id: courseId },
+        data: {
+          totalStudentsCount: { increment: 1 },
+          totalRevenue: { increment: split.price },
+        },
+      });
+
+      await createSystemRequest({
+        tab: requestTabEnum.STUDENT,
+        type: requestTypeEnum.COURSE_ENROLLMENT,
+        priority: requestPriorityEnum.HIGH,
+        requesterId: userId,
+        requesterRole: requestTabEnum.STUDENT,
+        referenceId: enrollment.id,
+        referenceModel: requestReferenceModelEnum.TEACHER_COURSE,
+        details: {
+          courseId,
+          amount: enrollment.paidAmount,
+          status: enrollment.status,
+          provider: teacherCourse.provider || "TEACHER",
+          platformCommission: split.platformCommission,
+          teacherEarnings: split.teacherEarnings,
+        },
+      });
+    } else {
+      enrollment = await tx.create({
+        model: "courseEnrollment",
+        data: {
+          studentId: userId,
+          courseId,
+          status: "ACTIVE",
+          paidAmount: split.price,
+          progressPercent: 0,
+        },
+      });
+
+      await tx.updateOne({
+        model: "course",
+        where: { id: courseId },
+        data: {
+          totalStudentsCount: { increment: 1 },
+          totalRevenue: { increment: split.price },
+        },
+      });
+
+      await createSystemRequest({
+        tab: requestTabEnum.STUDENT,
+        type: requestTypeEnum.COURSE_ENROLLMENT,
+        priority: requestPriorityEnum.HIGH,
+        requesterId: userId,
+        requesterRole: requestTabEnum.STUDENT,
+        referenceId: enrollment.id,
+        referenceModel: requestReferenceModelEnum.COURSE_ENROLLMENT,
+        details: {
+          courseId,
+          amount: enrollment.paidAmount,
+          status: enrollment.status,
+          provider: course.provider || "PLATFORM",
+          platformCommission: split.platformCommission,
+          teacherEarnings: split.teacherEarnings,
+        },
+      });
+    }
+
+    const courseTitle = isTeacherCourse
+      ? teacherCourse.name || "Teacher Course"
+      : course.translations?.[0]?.title || "Course";
+
+    const transaction = await tx.create({
+      model: "transaction",
+      data: {
+        userId,
+        amount: split.price,
+        type: transactionType.PAYMENT,
+        status: transactionStatus.COMPLETED,
+        paymentMethod: body.paymentMethod || paymentMethodEnum.CARD,
+        reason: {
+          action: "COURSE_BUY",
+          courseId,
+          courseTitle,
+          itemType: isTeacherCourse
+            ? coursesType.TEACHER_COURSE
+            : coursesType.COURSE,
+          provider: isTeacherCourse
+            ? teacherCourse.provider || "TEACHER"
+            : course.provider || "PLATFORM",
+          totalAmount: split.price,
+          platformCommission: split.platformCommission,
+          teacherEarnings: split.teacherEarnings,
+          commissionType: split.commissionType,
+          commissionValue: split.commissionValue,
+          teacherUserId: teacherUserId || null,
+          confirmedAt: new Date().toISOString(),
+        },
+      },
+    });
+
+    // If this course exists in student's cart, remove it and update cart totals
+    const cart = await tx.findFirst({
+      model: "cart",
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (cart) {
+      await tx.deleteMany({
+        model: "cartItem",
+        where: { cartId: cart.id, itemId: courseId },
+      });
+
+      const remainingItems = await tx.findMany({
+        model: "cartItem",
+        where: { cartId: cart.id },
+      });
+
+      let remainingTotal = 0;
+      for (const item of remainingItems) {
+        if (item.type === coursesType.COURSE) {
+          const c = await tx.findOne({
+            model: "course",
+            where: { id: item.itemId },
+            select: { originalPrice: true, salePrice: true },
+          });
+          if (c) remainingTotal += Number(c.salePrice ?? c.originalPrice ?? 0);
+        } else if (item.type === coursesType.TEACHER_COURSE) {
+          const c = await tx.findOne({
+            model: "teacherCourse",
+            where: { id: item.itemId },
+            select: { price: true },
+          });
+          if (c) remainingTotal += Number(c.price ?? 0);
+        }
+      }
+
+      await tx.updateOne({
+        model: "cart",
+        where: { id: cart.id },
+        data: {
+          totalItems: remainingItems.length,
+          totalPrice: Math.round(remainingTotal),
+        },
+      });
+    }
+
+    return {
+      enrollment,
+      transaction: {
+        id: transaction.id,
+        amount: Number(transaction.amount),
+        status: transaction.status,
+        paymentMethod: transaction.paymentMethod,
+        createdAt: transaction.createdAt,
+      },
+      summary: {
+        totalAmount: split.price,
+        totalCommission: split.platformCommission,
+        totalTeacherEarnings: split.teacherEarnings,
+        commissionType: split.commissionType,
+        commissionValue: split.commissionValue,
+      },
+    };
+  });
 };
 
 /**

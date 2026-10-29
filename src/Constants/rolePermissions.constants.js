@@ -21,6 +21,19 @@ export const PERMISSIONS_DATA = [
     resource: "reports",
     action: "read",
   },
+  // Finance
+  {
+    code: PERMISSIONS_V2.FINANCE.READ,
+    name: "Read Finance Dashboard & Transactions",
+    resource: "finance",
+    action: "read",
+  },
+  {
+    code: PERMISSIONS_V2.FINANCE.EXPORT,
+    name: "Export Finance Reports & Transactions",
+    resource: "finance",
+    action: "export",
+  },
   //calendar
   {
     code: PERMISSIONS_V2.CALENDAR.READ,

@@ -180,7 +180,47 @@ export const startConversationService = async ({
       select: { id: true },
     });
 
-    if (!subscription) {
+    let hasAccess = !!subscription;
+
+    if (!hasAccess && Boolean(user.student?.id)) {
+      const teacherCourseEnrollment = await dbService.findFirst({
+        model: "teacherCourseEnrollment",
+        where: {
+          studentId: user.id,
+          status: { in: ["ACTIVE", "COMPLETED"] },
+          course: { teacherId: pair.teacherId },
+        },
+        select: { id: true },
+      });
+
+      if (teacherCourseEnrollment) {
+        hasAccess = true;
+      } else {
+        const teacherRec = await dbService.findFirst({
+          model: "teacher",
+          where: { id: pair.teacherId },
+          select: { userId: true },
+        });
+
+        if (teacherRec?.userId) {
+          const platformEnrollment = await dbService.findFirst({
+            model: "courseEnrollment",
+            where: {
+              studentId: user.id,
+              status: { in: ["ACTIVE", "COMPLETED"] },
+              course: { instructorId: teacherRec.userId },
+            },
+            select: { id: true },
+          });
+
+          if (platformEnrollment) {
+            hasAccess = true;
+          }
+        }
+      }
+    }
+
+    if (!hasAccess) {
       throwError({ message: "NO_ACTIVE_SUBSCRIPTION", status: 403 });
     }
 
@@ -196,13 +236,14 @@ export const startConversationService = async ({
     }
   }
 
-  const other = isStudent ? conversation.teacher : conversation.student;
+  const callerIsStudent = Boolean(user.student?.id);
+  const other = callerIsStudent ? conversation.teacher : conversation.student;
 
   return {
     id: conversation.id,
     lastMessage: conversation.lastMessage,
     lastMessageAt: conversation.lastMessageAt,
-    unreadCount: isStudent
+    unreadCount: callerIsStudent
       ? conversation.unreadStudentCount
       : conversation.unreadTeacherCount,
     participant: {

@@ -5,6 +5,7 @@ import { authentication } from "../../../middleware/authentication.middleware.js
 import { validation } from "../../../middleware/validation.middleware.js";
 
 import { tokenTypeEnum } from "../../../utils/Enums/token.enum.js";
+import { loginRateLimiter, otpRateLimiter, authRateLimiter } from "../../../middleware/rateLimiter.middleware.js";
 import { localFileUpload } from "../../../utils/multer/local.multer.js";
 import { fileValidation } from "../../../utils/multer/fileValidation.js";
 
@@ -54,7 +55,7 @@ router.post(
  *       403:
  *         description: Account under review or not active
  */
-router.post("/login", validation(authValidation.login), authController.login);
+router.post("/login", loginRateLimiter, validation(authValidation.login), authController.login);
 
 /**
  * @openapi
@@ -69,12 +70,14 @@ router.post("/login", validation(authValidation.login), authController.login);
  */
 router.post(
   "/forgot-password",
+  authRateLimiter,
   validation(authValidation.forgotPassword),
   authController.forgotPassword,
 );
 
 router.patch(
   "/reset-password",
+  otpRateLimiter,
   validation(authValidation.resetPassword),
   authController.resetPassword,
 );

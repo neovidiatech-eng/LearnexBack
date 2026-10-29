@@ -12,6 +12,11 @@ export const PERMISSIONS_V2 = {
     READ: "reports:read",
   },
 
+  FINANCE: {
+    READ: "finance:read",
+    EXPORT: "finance:export",
+  },
+
   CALENDAR: {
     READ: "calendar:read",
   },

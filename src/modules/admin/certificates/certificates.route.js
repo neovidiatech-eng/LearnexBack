@@ -23,11 +23,5 @@ router.get(
   certificatesController.getCertificatesById,
 );
 
-router.delete(
-  "/:id",
-  authorize(PERMISSIONS_V2.CERTIFICATES.DELETE),
-  validation(schema.deleteCertificates),
-  certificatesController.deleteCertificates,
-);
 
 export default router;

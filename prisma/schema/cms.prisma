@@ -1,12 +1,14 @@
 model AppSetting {
-  id          String   @id @default(uuid())
-  appVersion  String   @default("1.0.0")
-  logoUrl     String?
-  facebookUrl String?
-  instaUrl    String?
-  websiteUrl  String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(uuid())
+  appVersion      String   @default("1.0.0")
+  logoUrl         String?
+  facebookUrl     String?
+  instaUrl        String?
+  websiteUrl      String?
+  commissionType  String? @default("FIXED")
+  commissionValue Float?  @default(10)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   translations AppSettingTranslation[]
 
