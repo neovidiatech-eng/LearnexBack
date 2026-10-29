@@ -1,8 +1,15 @@
 import * as db from "../../../db/db.service.js";
 import { courseStatusEnum } from "../../../utils/Enums/courseStatus.enum.js";
 import { enrollmentTypeEnum } from "../../../utils/Enums/enrollmentType.enum.js";
-import { requestPriorityEnum, requestReferenceModelEnum, requestTabEnum, requestTypeEnum } from "../../../utils/Enums/request.enum.js";
+import { notificationTypeEnum, priorityEnum, reciverNotificationEnum } from "../../../utils/Enums/notifications.js";
+import {
+  requestPriorityEnum,
+  requestReferenceModelEnum,
+  requestTabEnum,
+  requestTypeEnum,
+} from "../../../utils/Enums/request.enum.js";
 import { coursesType } from "../../../utils/Enums/teacherCourse.enum.js";
+import { notify } from "../../../utils/helpers/notify.helper.js";
 import { createSystemRequest } from "../../../utils/helpers/requests.helper.js";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -12,7 +19,6 @@ const throwError = (message, status = 400) => {
   err.cause = status;
   throw err;
 };
-
 
 /**
  * Get-or-create the cart for a user.
@@ -115,18 +121,16 @@ export const getCartService = async (userId, locale = "ar") => {
           },
         });
         return { ...item, course: course ?? null };
-      }
-      else if (item.type === coursesType.TEACHER_COURSE) {
+      } else if (item.type === coursesType.TEACHER_COURSE) {
         const course = await db.findOne({
           model: "teacherCourse",
           where: { id: item.itemId },
           include: {
-            teacher:{
-              include:{
-                user:{select:{fullName:true,profilePhoto:true}}
-              }
-            }
-            
+            teacher: {
+              include: {
+                user: { select: { fullName: true, profilePhoto: true } },
+              },
+            },
           },
         });
         return {
@@ -134,10 +138,10 @@ export const getCartService = async (userId, locale = "ar") => {
           course: course
             ? { ...course, instructor: course.teacher?.user ?? null }
             : null,
-        }
+        };
       }
       return item;
-    })
+    }),
   );
 
   return {
@@ -191,15 +195,13 @@ export const addToCartService = async (userId, { type, itemId }) => {
     });
 
     if (!course) throwError("COURSE_NOT_FOUND", 404);
-    if (course.status !== "APPROVED")
-      throwError("COURSE_NOT_AVAILABLE", 400);
+    if (course.status !== "APPROVED") throwError("COURSE_NOT_AVAILABLE", 400);
 
     const existingEnrollment = await db.findFirst({
       model: "teacherCourseEnrollment",
       where: { studentId: userId, courseId: itemId },
-    })
+    });
     if (existingEnrollment) throwError("ALREADY_ENROLLED", 409);
-
   } else {
     throwError("INVALID_ITEM_TYPE", 400);
   }
@@ -287,7 +289,7 @@ export const checkoutCartService = async (userId, locale = "ar") => {
     where: { userId },
     include: { cartItems: true },
   });
-  
+
   if (!cart || !cart.cartItems || cart.cartItems.length === 0) {
     throwError("CART_IS_EMPTY", 400);
   }
@@ -319,7 +321,9 @@ export const checkoutCartService = async (userId, locale = "ar") => {
       });
 
       if (!existingEnrollment) {
-        const paidAmount = Number(course.salePrice ?? course.originalPrice ?? 0);
+        const paidAmount = Number(
+          course.salePrice ?? course.originalPrice ?? 0,
+        );
         const enrollment = await db.create({
           model: "courseEnrollment",
           data: {
@@ -367,6 +371,7 @@ export const checkoutCartService = async (userId, locale = "ar") => {
           price: true,
           totalStudentsCount: true,
           totalRevenue: true,
+          teacher: { select: { userId: true } },
         },
       });
 
@@ -421,6 +426,13 @@ export const checkoutCartService = async (userId, locale = "ar") => {
             itemType: coursesType.TEACHER_COURSE,
           },
         });
+
+       await notify({
+         receiverId: course.teacher.userId,
+         receiverType: reciverNotificationEnum.USER,
+         type: notificationTypeEnum.COURSE_ENROLLED,
+         priority: priorityEnum.MEDIUM,
+       });
       }
     }
   }
@@ -438,7 +450,6 @@ export const checkoutCartService = async (userId, locale = "ar") => {
     data: { totalItems: 0, totalPrice: 0 },
   });
 
-  
   return {
     totalEnrolled: enrolled.length,
     enrolled,

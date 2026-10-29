@@ -1,10 +1,15 @@
 import * as db from "../../../db/db.service.js";
+import {
+  notificationTypeEnum,
+  priorityEnum,
+  reciverNotificationEnum,
+} from "../../../utils/Enums/notifications.js";
 import { SupportTicketStatus } from "../../../utils/Enums/tickets.enum.js";
+import { notify } from "../../../utils/helpers/notify.helper.js";
 import { throwError } from "../../../utils/response.js";
 
 export const getAllTicketsService = async ({ user, query }) => {
   const { page, limit, sort, status, priority } = query;
-
 
   const where = { userId: user };
 
@@ -25,8 +30,6 @@ export const getAllTicketsService = async ({ user, query }) => {
 };
 
 export const getTicketByIdService = async ({ user, ticketId }) => {
-
-
   const ticket = await db.findFirst({
     model: "supportTicket",
     where: {
@@ -74,17 +77,13 @@ export const getTicketByIdService = async ({ user, ticketId }) => {
 export const createTicketService = async ({ user, body, file }) => {
   const { subject, message, priority } = body;
 
-
   const openTicketsCount = await db.count({
     model: "supportTicket",
     where: {
       userId: user,
       status: {
-        notIn:[
-          SupportTicketStatus.CLOSED,
-          SupportTicketStatus.RESOLVED,
-        ]
-      }
+        notIn: [SupportTicketStatus.CLOSED, SupportTicketStatus.RESOLVED],
+      },
     },
   });
 
@@ -123,7 +122,11 @@ export const createTicketService = async ({ user, body, file }) => {
       },
     },
   });
-
+  await notify({
+    receiverType: reciverNotificationEnum.ADMIN,
+    type: notificationTypeEnum.NEW_SUPPORT_TICKET,
+    priority: priorityEnum.HIGH,
+  });
   return ticket;
 };
 
@@ -185,13 +188,20 @@ export const sendMessage = async ({ user, body, file, ticketId }) => {
       },
     });
   });
+  if (ticket.assignedStaffId && ticket.assignedStaffId !== user) {
+    await notify({
+      receiverId: ticket.assignedStaffId,
+      receiverType: reciverNotificationEnum.USER,
+      type: notificationTypeEnum.NEW_MESSAGE,
+      priority: priorityEnum.MEDIUM,
+    });
+  }
 
   return result;
 };
 
 export const reopenTicket = async ({ user, body, file, ticketId }) => {
   const { message } = body;
-
 
   const ticket = await db.findFirst({
     model: "supportTicket",
@@ -251,10 +261,24 @@ export const reopenTicket = async ({ user, body, file, ticketId }) => {
     });
   });
 
+  if (ticket.assignedStaffId && ticket.assignedStaffId !== user) {
+    await notify({
+      receiverId: ticket.assignedStaffId,
+      receiverType: reciverNotificationEnum.USER,
+      type: notificationTypeEnum.NEW_MESSAGE,
+      priority: priorityEnum.MEDIUM,
+    });
+  }
+
   return result;
 };
-export const getMessagesService = async ({ user,id,createdAt,limit, ticketId }) => {
-
+export const getMessagesService = async ({
+  user,
+  id,
+  createdAt,
+  limit,
+  ticketId,
+}) => {
   const ticket = await db.findFirst({
     model: "supportTicket",
     where: {
@@ -271,7 +295,7 @@ export const getMessagesService = async ({ user,id,createdAt,limit, ticketId }) 
   }
 
   console.log(ticket.status);
-  
+
   if (
     ticket.status === SupportTicketStatus.CLOSED ||
     ticket.status === SupportTicketStatus.RESOLVED
@@ -287,14 +311,11 @@ export const getMessagesService = async ({ user,id,createdAt,limit, ticketId }) 
     where: {
       ticketId,
     },
-    cursor: {id,createdAt} || null,
+    cursor: id && createdAt ? { id, createdAt } : null,
     limit,
     cursorField: "id",
     timestampField: "createdAt",
-    orderBy: [
-      { createdAt: "asc" },
-      { id: "asc" },
-    ],
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     include: {
       sender: {
         select: {

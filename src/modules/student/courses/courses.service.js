@@ -10,6 +10,8 @@ import {
   requestTabEnum,
   requestTypeEnum,
 } from "../../../utils/Enums/request.enum.js";
+import { notify } from "../../../utils/helpers/notify.helper.js";
+import { notificationTypeEnum, priorityEnum, reciverNotificationEnum } from "../../../utils/Enums/notifications.js";
 
 export const toggleFavouriteService = async (
   userId,
@@ -220,6 +222,7 @@ export const enrollFreeCourseService = async (userId, courseId) => {
         status: true,
         price: true,
         totalStudentsCount: true,
+        teacher: { select: { userId: true } },
       },
     });
     if (teacherCourse) {
@@ -293,6 +296,12 @@ export const enrollFreeCourseService = async (userId, courseId) => {
       },
     });
 
+ await notify({
+   receiverId: course.teacher.userId,
+   receiverType: reciverNotificationEnum.USER,
+   type: notificationTypeEnum.COURSE_ENROLLED,
+   priority: priorityEnum.MEDIUM
+ });
     return enrollment;
   }
 

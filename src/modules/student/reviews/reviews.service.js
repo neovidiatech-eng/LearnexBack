@@ -1,11 +1,15 @@
 import * as db from "../../../db/db.service.js";
+import { notificationTypeEnum, priorityEnum, reciverNotificationEnum } from "../../../utils/Enums/notifications.js";
+import { notify } from "../../../utils/helpers/notify.helper.js";
 import {
   checkReviewEligibility,
   recalculateReview,
 } from "../../../utils/helpers/reviews.helper.js";
 
+
 export const addReviewService = async (userId, body) => {
-  let { type, courseId, teacherId, targetId, rating, comment, bookingId } = body;
+  let { type, courseId, teacherId, targetId, rating, comment, bookingId } =
+    body;
 
   if (type === "COURSE" && targetId && !courseId) {
     courseId = targetId;
@@ -16,10 +20,14 @@ export const addReviewService = async (userId, body) => {
 
   await checkReviewEligibility(userId, { courseId, teacherId });
 
-  const isCourse = type ? (type === "COURSE" || type === "TEACHER_COURSE") : Boolean(courseId);
+  const isCourse = type
+    ? type === "COURSE" || type === "TEACHER_COURSE"
+    : Boolean(courseId);
   let model = "courseReview";
   let parentModel = "course";
   let parentId = courseId;
+  let notifType = notificationTypeEnum.COURSE_REVIEW_CREATED;
+  let include = { course: { select: { instructorId: true } } }; 
 
   if (isCourse) {
     const isPlatformCourse = await db.findFirst({
@@ -30,11 +38,16 @@ export const addReviewService = async (userId, body) => {
     if (!isPlatformCourse) {
       model = "teacherCourseReview";
       parentModel = "teacherCourse";
+      include = {
+        course: { select: { teacher: { select: { userId: true } } } },
+      };
     }
   } else {
     model = "teacherReview";
     parentModel = "teacher";
     parentId = teacherId;
+    notifType = notificationTypeEnum.TEACHER_REVIEW_CREATED; 
+    include = { teacher: { select: { userId: true } } }; 
   }
 
   const review = await db.upsertOne({
@@ -56,6 +69,7 @@ export const addReviewService = async (userId, body) => {
         : { teacherId, bookingId: bookingId || null }),
       isHidden: false,
     },
+    include, 
   });
 
   const { avgRating, reviewsCount } = await recalculateReview({
@@ -66,6 +80,21 @@ export const addReviewService = async (userId, body) => {
     parentModel,
     parentId,
   });
+
+  const receiverUserId = !isCourse
+    ? review.teacher?.userId
+    : model === "courseReview"
+      ? review.course?.instructorId
+      : review.course?.teacher?.userId;
+
+  if (receiverUserId && receiverUserId !== userId) {
+    await notify({
+      receiverId: receiverUserId,
+      receiverType: reciverNotificationEnum.USER,
+      type: notifType,
+      priority: priorityEnum.HIGH,
+    });
+  }
 
   return { review, avgRating, reviewsCount };
 };

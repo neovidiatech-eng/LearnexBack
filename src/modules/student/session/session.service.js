@@ -163,6 +163,7 @@ export const cancelSessionRequest = async ({ userId, requestId }) => {
   const request = await dbService.findFirst({
     model: "sessionRequest",
     where: { id: requestId },
+    include: { teacher: { select: { userId: true } } },
   });
 
   if (!request) throwError("REQUEST_NOT_FOUND", 404);
@@ -171,9 +172,9 @@ export const cancelSessionRequest = async ({ userId, requestId }) => {
   if (request.status !== requestStatus.PENDING) {
     throwError("REQUEST_NOT_PENDING", 400);
   }
-
+let updated
   try {
-    return await dbService.updateOne({
+    updated= await dbService.updateOne({
       model: "sessionRequest",
       where: { id: requestId, status: requestStatus.PENDING },
       data: { status: requestStatus.CANCELLED },
@@ -182,6 +183,14 @@ export const cancelSessionRequest = async ({ userId, requestId }) => {
     if (err?.code === "P2025") throwError("REQUEST_NOT_PENDING", 409);
     throw err;
   }
+ await notify({
+   receiverId: request.teacher.userId,
+   receiverType: reciverNotificationEnum.USER,
+   type: notificationTypeEnum.SESSION_REQUEST_CANCELLED,
+   priority: priorityEnum.MEDIUM,
+ });
+
+return updated
 };
 
 export const createCustomSessionRequest = async ({
@@ -278,6 +287,7 @@ export const cancelCustomSessionRequest = async ({ userId, requestId }) => {
   const request = await dbService.findFirst({
     model: "customSessionRequest",
     where: { id: requestId },
+    include: { teacher: { select: { userId: true } } },
   });
 
   if (!request) throwError("REQUEST_NOT_FOUND", 404);
@@ -286,11 +296,19 @@ export const cancelCustomSessionRequest = async ({ userId, requestId }) => {
     throwError("REQUEST_NOT_PENDING", 400);
   }
 
-  return await dbService.updateOne({
+  const updated= await dbService.updateOne({
     model: "customSessionRequest",
     where: { id: requestId, status: "PENDING" },
     data: { status: "CANCELLED" },
   });
+  await notify({
+    receiverId: request.teacher.userId,
+    receiverType: reciverNotificationEnum.USER,
+    type: notificationTypeEnum.CUSTOM_SESSION_CANCELLED,
+    priority: priorityEnum.MEDIUM,
+  });
+
+  return updated
 };
 
 export const joinSession = async ({ userId, sessionId }) => {
