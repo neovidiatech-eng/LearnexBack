@@ -71,7 +71,7 @@ export const addReviewService = async (userId, body) => {
 };
 
 export const getReviewsService = async (userId) => {
-  const [courseReviews, teacherReviews] = await Promise.all([
+  const [courseReviews, teacherCourseReviews, teacherReviews] = await Promise.all([
     db.findMany({
       model: "courseReview",
       where: { studentId: userId, isHidden: false },
@@ -81,6 +81,20 @@ export const getReviewsService = async (userId) => {
             id: true,
             thumbnail: true,
             translations: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    db.findMany({
+      model: "teacherCourseReview",
+      where: { studentId: userId, isHidden: false },
+      include: {
+        course: {
+          select: {
+            id: true,
+            wallPaper: true,
+            name: true,
           },
         },
       },
@@ -104,8 +118,30 @@ export const getReviewsService = async (userId) => {
     }),
   ]);
 
+  const formattedTeacherCourseReviews = (teacherCourseReviews || []).map((r) => ({
+    id: r.id,
+    rating: r.rating,
+    comment: r.comment,
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
+    type: "TEACHER_COURSE",
+    course: r.course
+      ? {
+          id: r.course.id,
+          thumbnail: r.course.wallPaper,
+          translations: [{ locale: "ar", title: r.course.name }],
+        }
+      : null,
+  }));
+
+  const allCourseReviews = [
+    ...courseReviews.map((r) => ({ ...r, type: "COURSE" })),
+    ...formattedTeacherCourseReviews,
+  ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
   return {
-    courseReviews,
+    courseReviews: allCourseReviews,
+    teacherCourseReviews: formattedTeacherCourseReviews,
     teacherReviews,
   };
 };
