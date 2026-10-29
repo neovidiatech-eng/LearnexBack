@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import * as DBService from "../../db/db.service.js";
 import { baseRoleEnum } from "../Enums/role.enum.js";
 import { tokenTypeEnum } from "../Enums/token.enum.js";
+import { userStatusEnum } from "../Enums/userStatus.enum.js";
 
 
 export const generateToken = async ({
@@ -84,6 +85,18 @@ export const decodedToken = async ({
   });
   if (!user) {
     return next(new Error("ACCOUNT_NOT_FOUND", { cause: 404 }));
+  }
+
+  if (model === "user" && user.status && user.status !== userStatusEnum.ACTIVE) {
+    const errorMsg =
+      user.status === userStatusEnum.SUSPENDED
+        ? "ACCOUNT_SUSPENDED"
+        : user.status === userStatusEnum.BLOCKED
+        ? "ACCOUNT_BLOCKED"
+        : user.status === userStatusEnum.PENDING_REVIEW
+        ? "ACCOUNT_UNDER_REVIEW"
+        : "ACCOUNT_NOT_ACTIVE";
+    return next(new Error(errorMsg, { cause: 403 }));
   }
 
   if (model === "admin" && !user.role) {
