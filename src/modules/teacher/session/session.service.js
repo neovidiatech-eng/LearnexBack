@@ -1,10 +1,15 @@
-
 import { nanoid } from "nanoid";
 import dbService from "../../../db/db.service.js";
 import { requestStatus } from "../../../utils/Enums/session-request.enum.js";
 import { sessionStatus } from "../../../utils/Enums/sessions.enum.js";
 import { generateJitsiToken } from "../../../utils/security/jitsiToken.js";
 import { isSlotAvailable } from "../../student/session/avialbilty/avilability.service.js";
+import { notify } from "../../../utils/helpers/notify.helper.js";
+import {
+  notificationTypeEnum,
+  priorityEnum,
+  reciverNotificationEnum,
+} from "../../../utils/Enums/notifications.js";
 
 const throwError = (message, status = 400) => {
   const error = new Error(message);
@@ -21,10 +26,9 @@ const getTeacherId = async (userId) => {
   return teacher.id;
 };
 
-
-const ACTIVE_SESSIONS = [sessionStatus.SCHEDULED,sessionStatus.LIVE]
+const ACTIVE_SESSIONS = [sessionStatus.SCHEDULED, sessionStatus.LIVE];
 const JOIN_EARLY_MS = 10 * 60 * 1000; // 10 دقايق قبل الميعاد
-const JOIN_LATE_MS = 15 * 60 * 1000;  // 15 دقيقة بعد الميعاد
+const JOIN_LATE_MS = 15 * 60 * 1000; // 15 دقيقة بعد الميعاد
 
 export const getTeacherSessionRequests = async ({
   userId,
@@ -68,10 +72,13 @@ export const getTeacherSessionRequests = async ({
 export const acceptRequest = async ({ userId, requestId }) => {
   const teacherId = await getTeacherId(userId);
 
-  return dbService.transaction(async (tx) => {
+  const result = await dbService.transaction(async (tx) => {
     const request = await tx.findFirst({
       model: "sessionRequest",
       where: { id: requestId, teacherId },
+      include: {
+        student: { select: { userId: true } },
+      },
     });
 
     if (!request) throwError("REQUEST_NOT_FOUND", 404);
@@ -116,15 +123,9 @@ export const acceptRequest = async ({ userId, requestId }) => {
         teacherId,
         status: "ACTIVE",
         sessionLeft: { gt: 0 },
-        OR: [
-          { expiresAt: null },
-          { expiresAt: { gt: now } },
-        ],
+        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
       },
-      orderBy: [
-        { expiresAt: "asc" },
-        { createdAt: "asc" },
-      ],
+      orderBy: [{ expiresAt: "asc" }, { createdAt: "asc" }],
       select: { id: true },
     });
 
@@ -156,16 +157,22 @@ export const acceptRequest = async ({ userId, requestId }) => {
         status: sessionStatus.SCHEDULED,
       },
     });
-
-    return { requestId: request.id, session };
+    return {
+      requestId: request.id,
+      session,
+      studentUserId: request.student.userId,
+    };
   });
+  await notify({
+    receiverId: result.studentUserId,
+    receiverType: reciverNotificationEnum.USER,
+    type: notificationTypeEnum.SESSION_REQUEST_ACCEPTED,
+    priority: priorityEnum.HIGH,
+  });
+  return { requestId: result.requestId, session: result.session };
 };
 
-export const rejectRequest = async ({
-  userId,
-  requestId,
-  rejectedReason,
-}) => {
+export const rejectRequest = async ({ userId, requestId, rejectedReason }) => {
   const teacher = await dbService.findFirst({
     model: "teacher",
     where: { userId },
@@ -183,6 +190,7 @@ export const rejectRequest = async ({
     select: {
       id: true,
       status: true,
+      student: { select: { userId: true } },
     },
   });
 
@@ -191,9 +199,9 @@ export const rejectRequest = async ({
   if (request.status !== requestStatus.PENDING) {
     throwError("REQUEST_NOT_PENDING", 409);
   }
-
+  let updated;
   try {
-    return await dbService.updateOne({
+    updated= await dbService.updateOne({
       model: "sessionRequest",
       where: {
         id: request.id,
@@ -211,6 +219,14 @@ export const rejectRequest = async ({
     }
     throw error;
   }
+
+   await notify({
+     receiverId: request.student.userId,
+     receiverType: reciverNotificationEnum.USER,
+     type: notificationTypeEnum.SESSION_REQUEST_REJECTED,
+     priority: priorityEnum.HIGH,
+   });
+  return updated
 };
 
 export const getMySessions = async ({
@@ -228,12 +244,11 @@ export const getMySessions = async ({
   if (!teacher) throwError("TEACHER_NOT_FOUND", 404);
 
   const where = {
-    teacherId:teacher.id,
+    teacherId: teacher.id,
     ...(status
-      ?{status}
-      :{status:{in:ACTIVE_SESSIONS},endAt:{gte:new Date()}}
-    )
-  }
+      ? { status }
+      : { status: { in: ACTIVE_SESSIONS }, endAt: { gte: new Date() } }),
+  };
 
   return dbService.findManyWithPaginationAndCount({
     model: "session",
@@ -272,42 +287,35 @@ export const getMySessions = async ({
   });
 };
 
-
-export const startSession = async({userId,sessionId})=>{
+export const startSession = async ({ userId, sessionId }) => {
   const teacher = await dbService.findFirst({
-    model:"teacher",
-    where:{userId},
-    select:{id:true}
+    model: "teacher",
+    where: { userId },
+    select: { id: true },
   });
 
-  if(!teacher){
+  if (!teacher) {
     throwError("TEACHER_NOT_FOUND", 404);
-
   }
   const session = await dbService.findFirst({
-    model:"session",
-    where:{
-      id:sessionId,
-      teacherId:teacher.id
-    }
-
-  })
-  if(!session){
-    throwError("SESSION_NOT_FOUND", 404)
+    model: "session",
+    where: {
+      id: sessionId,
+      teacherId: teacher.id,
+    },
+    include: { student: { select: { userId: true } } },
+  });
+  if (!session) {
+    throwError("SESSION_NOT_FOUND", 404);
   }
-  
 
-  if(session.status !== sessionStatus.SCHEDULED){
-    throwError("SESSION_NOT_SCHEDULED", 409)
+  if (session.status !== sessionStatus.SCHEDULED) {
+    throwError("SESSION_NOT_SCHEDULED", 409);
   }
   const now = new Date();
 
-  const earliestStart = new Date(
-    session.startAt.getTime() - JOIN_EARLY_MS
-  );
-  const latestStart = new Date(
-    session.startAt.getTime() + JOIN_LATE_MS
-  );
+  const earliestStart = new Date(session.startAt.getTime() - JOIN_EARLY_MS);
+  const latestStart = new Date(session.startAt.getTime() + JOIN_LATE_MS);
 
   if (now < earliestStart) {
     throwError("SESSION_START_TOO_EARLY", 400);
@@ -316,9 +324,9 @@ export const startSession = async({userId,sessionId})=>{
   if (now > latestStart) {
     throwError("SESSION_START_TIME_EXPIRED", 409);
   }
-
+let updated
   try {
-    return await dbService.updateOne({
+    updated= await dbService.updateOne({
       model: "session",
       where: {
         id: session.id,
@@ -337,7 +345,14 @@ export const startSession = async({userId,sessionId})=>{
 
     throw error;
   }
-}
+  await notify({
+    receiverId: session.student.userId,
+    receiverType: reciverNotificationEnum.USER,
+    type: notificationTypeEnum.SESSION_STARTED,
+    priority: priorityEnum.HIGH,
+  });
+  return updated
+};
 
 export const endSession = async ({ userId, sessionId }) => {
   const teacherId = await getTeacherId(userId);
@@ -371,10 +386,7 @@ export const endSession = async ({ userId, sessionId }) => {
           teacherId,
           status: "ACTIVE",
           sessionLeft: { gt: 0 },
-          OR: [
-            { expiresAt: null },
-            { expiresAt: { gt: new Date() } },
-          ],
+          OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
         },
         select: {
           id: true,
@@ -390,15 +402,9 @@ export const endSession = async ({ userId, sessionId }) => {
           teacherId,
           status: "ACTIVE",
           sessionLeft: { gt: 0 },
-          OR: [
-            { expiresAt: null },
-            { expiresAt: { gt: new Date() } },
-          ],
+          OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
         },
-        orderBy: [
-          { expiresAt: "asc" },
-          { createdAt: "asc" },
-        ],
+        orderBy: [{ expiresAt: "asc" }, { createdAt: "asc" }],
         select: {
           id: true,
         },
@@ -435,10 +441,7 @@ export const endSession = async ({ userId, sessionId }) => {
         id: subscription.id,
         status: "ACTIVE",
         sessionLeft: { gt: 0 },
-        OR: [
-          { expiresAt: null },
-          { expiresAt: { gt: new Date() } },
-        ],
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
       },
       data: {
         sessionLeft: { decrement: 1 },
@@ -531,10 +534,11 @@ export const getTeacherCustomSessionRequests = async ({
 export const acceptCustomSessionRequest = async ({ userId, requestId }) => {
   const teacherId = await getTeacherId(userId);
 
-  return dbService.transaction(async (tx) => {
+  const result=await dbService.transaction(async (tx) => {
     const request = await tx.findFirst({
       model: "customSessionRequest",
       where: { id: requestId, teacherId },
+      include: { student: { select: { userId: true } } },
     });
 
     if (!request) throwError("REQUEST_NOT_FOUND", 404);
@@ -583,14 +587,26 @@ export const acceptCustomSessionRequest = async ({ userId, requestId }) => {
         model: "student",
         where: { id: studentRecord.id },
         data: {
-          sessionCount: (studentRecord.sessionCount || 0) + request.sessionsCount,
+          sessionCount:
+            (studentRecord.sessionCount || 0) + request.sessionsCount,
           sessionLeft: (studentRecord.sessionLeft || 0) + request.sessionsCount,
         },
       });
     }
 
-    return { request: updatedRequest, subscription };
+    return {
+      request: updatedRequest,
+      subscription,
+      studentUserId: request.student.userId,
+    };
   });
+  await notify({
+    receiverId: result.studentUserId,
+    receiverType: reciverNotificationEnum.USER,
+    type: notificationTypeEnum.CUSTOM_SESSION_ACCEPTED,
+    priority: priorityEnum.HIGH,
+  });
+  return { request: result.request, subscription: result.subscription };
 };
 
 export const rejectCustomSessionRequest = async ({
@@ -603,6 +619,7 @@ export const rejectCustomSessionRequest = async ({
   const request = await dbService.findFirst({
     model: "customSessionRequest",
     where: { id: requestId, teacherId },
+    include: { student: { select: { userId: true } } },
   });
 
   if (!request) throwError("REQUEST_NOT_FOUND", 404);
@@ -610,7 +627,7 @@ export const rejectCustomSessionRequest = async ({
     throwError("REQUEST_NOT_PENDING", 409);
   }
 
-  return await dbService.updateOne({
+  const updated= await dbService.updateOne({
     model: "customSessionRequest",
     where: { id: request.id, status: "PENDING" },
     data: {
@@ -619,22 +636,29 @@ export const rejectCustomSessionRequest = async ({
       respondedAt: new Date(),
     },
   });
+  await notify({
+    receiverId: request.student.userId,
+    receiverType: reciverNotificationEnum.USER,
+    type: notificationTypeEnum.CUSTOM_SESSION_REJECTED,
+    priority: priorityEnum.HIGH,
+  });
+  return updated
 };
 
-export const joinSession = async({userId,sessionId})=>{
+export const joinSession = async ({ userId, sessionId }) => {
   const teacherId = await getTeacherId(userId);
   const session = await dbService.findFirst({
-    model:"session",
-    where:{id:sessionId,teacherId},
-    select:{
-      id:true,
-      status:true,
-      endAt:true,
-      roomName:true,
+    model: "session",
+    where: { id: sessionId, teacherId },
+    select: {
+      id: true,
+      status: true,
+      endAt: true,
+      roomName: true,
       teacher: { select: { user: { select: { fullName: true } } } },
-    }
-  })
-if (!session) {
+    },
+  });
+  if (!session) {
     throwError("SESSION_NOT_FOUND", 404);
   }
 
@@ -645,7 +669,7 @@ if (!session) {
   if (!session.roomName) {
     throwError("ROOM_NOT_READY", 409);
   }
-  
+
   const now = Date.now();
 
   if (now > session.endAt.getTime() + JOIN_LATE_MS) {
@@ -660,20 +684,16 @@ if (!session) {
     throwError("SESSION_JOIN_EXPIRED", 409);
   }
 
-
-
   const token = generateJitsiToken({
     userId,
-    roomName:session.roomName,
-    userName:session.teacher.user.fullName,
-    isModerator:true,
+    roomName: session.roomName,
+    userName: session.teacher.user.fullName,
+    isModerator: true,
     ttlSeconds,
-  })
+  });
   return {
-    sessionId:session.id,
-    roomName:session.roomName,
+    sessionId: session.id,
+    roomName: session.roomName,
     token,
-  }
-  
-}
-
+  };
+};

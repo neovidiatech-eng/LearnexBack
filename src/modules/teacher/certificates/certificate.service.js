@@ -97,6 +97,7 @@ export const getCertificateByIdService = async (userId, certificateId) => {
     where: {
       id: certificateId,
       teacherId: teacher.id,
+      
     },
   });
 
