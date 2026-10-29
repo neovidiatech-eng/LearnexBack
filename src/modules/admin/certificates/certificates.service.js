@@ -121,6 +121,7 @@ export const getAllCertificatesService = async (query) => {
     totalCourses: totalCourses.length,
     totalCertificatesThisMonth: totalCertificatesThisMonth.length,
     resultWithCourses,
+    pagination:result.pagination
   };
 };
 
