@@ -13,9 +13,11 @@ import { i18nMiddleware } from "./i18n/middleware.js";
 import { getAdmin } from "./utils/firebase/index.js";
 import { createServer } from "node:http";
 import { initializeSocket } from "./utils/socket/chat.socket.js";
+import { validateEnv } from "./config/env.validation.js";
 
 
 const bootstrap = async () => {
+  validateEnv();
   const app = express();
   const httpServer = createServer(app);
   const port = process.env.PORT || 3000;

@@ -57,25 +57,49 @@ const syncCartTotals = async (cartId) => {
     where: { cartId },
   });
 
+  const courseIds = [];
+  const teacherCourseIds = [];
+
+  for (const item of items) {
+    if (item.type === coursesType.COURSE) {
+      courseIds.push(item.itemId);
+    } else if (item.type === coursesType.TEACHER_COURSE) {
+      teacherCourseIds.push(item.itemId);
+    }
+  }
+
+  const [platformCourses, teacherCourses] = await Promise.all([
+    courseIds.length > 0
+      ? db.findMany({
+          model: "course",
+          where: { id: { in: courseIds } },
+          select: { id: true, originalPrice: true, salePrice: true },
+        })
+      : [],
+    teacherCourseIds.length > 0
+      ? db.findMany({
+          model: "teacherCourse",
+          where: { id: { in: teacherCourseIds } },
+          select: { id: true, price: true },
+        })
+      : [],
+  ]);
+
+  const platformMap = new Map(platformCourses.map((c) => [c.id, c]));
+  const teacherMap = new Map(teacherCourses.map((c) => [c.id, c]));
+
   let totalPrice = 0;
   for (const item of items) {
     if (item.type === coursesType.COURSE) {
-      const course = await db.findOne({
-        model: "course",
-        where: { id: item.itemId },
-        select: { originalPrice: true, salePrice: true },
-      });
+      const course = platformMap.get(item.itemId);
       if (course) {
-        totalPrice += Number(course.salePrice ?? course.originalPrice ?? 0);
+        const rawPrice = course.salePrice ?? course.originalPrice ?? 0;
+        totalPrice += Math.max(0, Number(rawPrice) || 0);
       }
     } else if (item.type === coursesType.TEACHER_COURSE) {
-      const course = await db.findOne({
-        model: "teacherCourse",
-        where: { id: item.itemId },
-        select: { price: true },
-      });
+      const course = teacherMap.get(item.itemId);
       if (course) {
-        totalPrice += Number(course.price ?? 0);
+        totalPrice += Math.max(0, Number(course.price) || 0);
       }
     }
   }
