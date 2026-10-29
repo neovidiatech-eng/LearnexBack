@@ -63,7 +63,7 @@ export const getAllTeachersService = async ({
     pagination: result.pagination,
   };
 };
-export const getTeacherByIdService = async ({ teacherId, lang }) => {
+export const getTeacherByIdService = async ({ teacherId, lang, user }) => {
   const select = {
     id: true,
     subject: true,
@@ -239,6 +239,76 @@ export const getTeacherByIdService = async ({ teacherId, lang }) => {
 
   const allCourses = [...formattedTeacherCourses, ...formattedUserCourses];
 
+  let hasActiveSubscription = false;
+  let isEnrolledInCourse = false;
+  let hasExistingConversation = false;
+
+  const realTeacherId = teacher.id;
+  const teacherUserId = teacher.user?.id || teacher.userId;
+
+  if (user) {
+    const studentId = user.student?.id;
+    const userId = user.id;
+
+    if (studentId && realTeacherId) {
+      const [activeSub, existingConv] = await Promise.all([
+        db.findFirst({
+          model: 'teacherSubscription',
+          where: {
+            teacherId: realTeacherId,
+            studentId: studentId,
+            status: 'ACTIVE',
+            OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+          },
+          select: { id: true },
+        }),
+        db.findFirst({
+          model: 'conversation',
+          where: {
+            teacherId: realTeacherId,
+            studentId: studentId,
+          },
+          select: { id: true },
+        }),
+      ]);
+
+      if (activeSub) hasActiveSubscription = true;
+      if (existingConv) hasExistingConversation = true;
+    }
+
+    if (userId && realTeacherId) {
+      const teacherCourseEnrollment = await db.findFirst({
+        model: 'teacherCourseEnrollment',
+        where: {
+          studentId: userId,
+          status: { in: ['ACTIVE', 'COMPLETED'] },
+          course: { teacherId: realTeacherId },
+        },
+        select: { id: true },
+      });
+      if (teacherCourseEnrollment) {
+        isEnrolledInCourse = true;
+      }
+    }
+
+    if (!isEnrolledInCourse && userId && teacherUserId) {
+      const platformCourseEnrollment = await db.findFirst({
+        model: 'courseEnrollment',
+        where: {
+          studentId: userId,
+          status: { in: ['ACTIVE', 'COMPLETED'] },
+          course: { instructorId: teacherUserId },
+        },
+        select: { id: true },
+      });
+      if (platformCourseEnrollment) {
+        isEnrolledInCourse = true;
+      }
+    }
+  }
+
+  const canChat = hasActiveSubscription || isEnrolledInCourse || hasExistingConversation;
+
   return {
     ...teacher,
     courses: allCourses,
@@ -251,6 +321,9 @@ export const getTeacherByIdService = async ({ teacherId, lang }) => {
     sessionPrice: sessionPriceNum,
     hourlyRate: sessionPriceNum,
     currency: teacher.currency || 'EGP',
+    hasActiveSubscription,
+    isEnrolledInCourse,
+    canChat,
   };
 };
 export const bookPlanService = async ({
