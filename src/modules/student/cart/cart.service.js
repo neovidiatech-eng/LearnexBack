@@ -1,8 +1,19 @@
 import * as db from "../../../db/db.service.js";
 import { courseStatusEnum } from "../../../utils/Enums/courseStatus.enum.js";
 import { enrollmentTypeEnum } from "../../../utils/Enums/enrollmentType.enum.js";
-import { requestPriorityEnum, requestReferenceModelEnum, requestTabEnum, requestTypeEnum } from "../../../utils/Enums/request.enum.js";
+import {
+  notificationTypeEnum,
+  priorityEnum,
+  reciverNotificationEnum,
+} from "../../../utils/Enums/notifications.js";
+import {
+  requestPriorityEnum,
+  requestReferenceModelEnum,
+  requestTabEnum,
+  requestTypeEnum,
+} from "../../../utils/Enums/request.enum.js";
 import { coursesType } from "../../../utils/Enums/teacherCourse.enum.js";
+import { notify } from "../../../utils/helpers/notify.helper.js";
 import { createSystemRequest } from "../../../utils/helpers/requests.helper.js";
 import {
   getCommissionSettings,
@@ -24,11 +35,6 @@ const throwError = (message, status = 400) => {
   throw err;
 };
 
-
-/**
- * Get-or-create the cart for a user.
- * Returns the cart with its items included.
- */
 const getOrCreateCart = async (userId) => {
   let cart = await db.findOne({
     model: "cart",
@@ -47,10 +53,6 @@ const getOrCreateCart = async (userId) => {
   return cart;
 };
 
-/**
- * Recalculate totalItems & totalPrice from the cart's items
- * and persist the updated totals.
- */
 const syncCartTotals = async (cartId) => {
   const items = await db.findMany({
     model: "cartItem",
@@ -116,10 +118,6 @@ const syncCartTotals = async (cartId) => {
 
 // ─── service functions ───────────────────────────────────────────────────────
 
-/**
- * GET /cart
- * Returns the user's cart with rich course details per item.
- */
 export const getCartService = async (userId, locale = "ar") => {
   const cart = await db.findOne({
     model: "cart",
@@ -135,7 +133,6 @@ export const getCartService = async (userId, locale = "ar") => {
     return { cart: null, items: [], totalItems: 0, totalPrice: 0 };
   }
 
-  // Batch fetch course details to eliminate N+1 queries
   const courseIds = [];
   const teacherCourseIds = [];
 
@@ -180,7 +177,7 @@ export const getCartService = async (userId, locale = "ar") => {
     teacherCourses.map((c) => [
       c.id,
       { ...c, instructor: c.teacher?.user ?? null },
-    ])
+    ]),
   );
 
   const enrichedItems = cart.cartItems.map((item) => {
@@ -201,14 +198,6 @@ export const getCartService = async (userId, locale = "ar") => {
   };
 };
 
-/**
- * POST /cart/add
- * Adds a course to the cart. Validates:
- *   - course exists and is PUBLISHED
- *   - course is PAID (free courses can be enrolled directly)
- *   - student is not already enrolled
- *   - item not already in cart
- */
 export const addToCartService = async (userId, { type, itemId }) => {
   if (type === coursesType.COURSE) {
     const course = await db.findOne({
@@ -229,14 +218,12 @@ export const addToCartService = async (userId, { type, itemId }) => {
     if (course.enrollmentType === enrollmentTypeEnum.FREE)
       throwError("FREE_COURSE_NO_CART", 400);
 
-    // Check if already enrolled in this course
     const enrollment = await db.findFirst({
       model: "courseEnrollment",
       where: { studentId: userId, courseId: itemId },
     });
     if (enrollment) throwError("ALREADY_ENROLLED", 409);
   } else if (type === coursesType.TEACHER_COURSE) {
-    // TeacherCourse uses: status APPROVED, price field, no enrollmentType
     const course = await db.findOne({
       model: "teacherCourse",
       where: { id: itemId },
@@ -244,41 +231,32 @@ export const addToCartService = async (userId, { type, itemId }) => {
     });
 
     if (!course) throwError("COURSE_NOT_FOUND", 404);
-    if (course.status !== "APPROVED")
-      throwError("COURSE_NOT_AVAILABLE", 400);
+    if (course.status !== "APPROVED") throwError("COURSE_NOT_AVAILABLE", 400);
 
     const existingEnrollment = await db.findFirst({
       model: "teacherCourseEnrollment",
       where: { studentId: userId, courseId: itemId },
-    })
+    });
     if (existingEnrollment) throwError("ALREADY_ENROLLED", 409);
-
   } else {
     throwError("INVALID_ITEM_TYPE", 400);
   }
 
   const cart = await getOrCreateCart(userId);
 
-  // Check duplicate item in cart
   const exists = cart.cartItems.some((i) => i.itemId === itemId);
   if (exists) throwError("ITEM_ALREADY_IN_CART", 409);
 
-  // Add item
   await db.create({
     model: "cartItem",
     data: { cartId: cart.id, type, itemId },
   });
 
-  // Sync totals
   await syncCartTotals(cart.id);
 
   return getCartService(userId);
 };
 
-/**
- * DELETE /cart/remove/:itemId
- * Removes a specific item (by CartItem.id) from the cart.
- */
 export const removeFromCartService = async (userId, cartItemId) => {
   const cart = await db.findOne({
     model: "cart",
@@ -304,10 +282,6 @@ export const removeFromCartService = async (userId, cartItemId) => {
   return getCartService(userId);
 };
 
-/**
- * DELETE /cart/clear
- * Removes all items from the user's cart.
- */
 export const clearCartService = async (userId) => {
   const cart = await db.findOne({
     model: "cart",
@@ -330,12 +304,6 @@ export const clearCartService = async (userId) => {
   return { id: cart.id, totalItems: 0, totalPrice: 0, items: [] };
 };
 
-/**
- * POST /cart/checkout
- * Converts all cart items to CourseEnrollments, processes payments,
- * applies platform commission according to AppSettings, credits wallets,
- * records the transaction, and clears the cart.
- */
 export const checkoutCartService = async (userId, body = {}, locale = "ar") => {
   const cart = await db.findOne({
     model: "cart",
@@ -349,7 +317,10 @@ export const checkoutCartService = async (userId, body = {}, locale = "ar") => {
 
   const commissionSettings = await getCommissionSettings();
 
-  return await db.transaction(async (tx) => {
+  // المستلمين اللي هنبعتلهم إشعار بعد نجاح الـ transaction
+  const enrollNotifyReceivers = [];
+
+  const result = await db.transaction(async (tx) => {
     const enrolled = [];
     const processedItems = [];
     let totalPaid = 0;
@@ -390,7 +361,9 @@ export const checkoutCartService = async (userId, body = {}, locale = "ar") => {
           continue;
         }
 
-        const paidAmount = Number(course.salePrice ?? course.originalPrice ?? 0);
+        const paidAmount = Number(
+          course.salePrice ?? course.originalPrice ?? 0,
+        );
         const hasTeacher = Boolean(course.instructorId);
         const teacherUserId = course.instructorId;
 
@@ -468,6 +441,8 @@ export const checkoutCartService = async (userId, body = {}, locale = "ar") => {
             teacherEarnings: split.teacherEarnings,
           },
         });
+
+        if (teacherUserId) enrollNotifyReceivers.push(teacherUserId);
       } else if (item.type === coursesType.TEACHER_COURSE) {
         const course = await tx.findOne({
           model: "teacherCourse",
@@ -586,6 +561,8 @@ export const checkoutCartService = async (userId, body = {}, locale = "ar") => {
             teacherEarnings: split.teacherEarnings,
           },
         });
+
+        if (teacherUserId) enrollNotifyReceivers.push(teacherUserId);
       }
     }
 
@@ -593,7 +570,6 @@ export const checkoutCartService = async (userId, body = {}, locale = "ar") => {
       throwError("NO_NEW_COURSES_TO_ENROLL", 400);
     }
 
-    // Record Transaction
     const transaction = await tx.create({
       model: "transaction",
       data: {
@@ -617,13 +593,11 @@ export const checkoutCartService = async (userId, body = {}, locale = "ar") => {
       },
     });
 
-    // Clear cart items
     await tx.deleteMany({
       model: "cartItem",
       where: { cartId: cart.id },
     });
 
-    // Reset cart totals
     await tx.updateOne({
       model: "cart",
       where: { id: cart.id },
@@ -649,4 +623,17 @@ export const checkoutCartService = async (userId, body = {}, locale = "ar") => {
       },
     };
   });
+
+  // الإشعارات بعد نجاح الـ transaction (مش جواها)
+  for (const receiverId of enrollNotifyReceivers) {
+    if (receiverId === userId) continue;
+    await notify({
+      receiverId,
+      receiverType: reciverNotificationEnum.USER,
+      type: notificationTypeEnum.COURSE_ENROLLED,
+      priority: priorityEnum.MEDIUM,
+    });
+  }
+
+  return result;
 };

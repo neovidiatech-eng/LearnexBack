@@ -1,4 +1,10 @@
 import * as db from "../../../db/db.service.js";
+import {
+  notificationTypeEnum,
+  priorityEnum,
+  reciverNotificationEnum,
+} from "../../../utils/Enums/notifications.js";
+import { notify } from "../../../utils/helpers/notify.helper.js";
 
 const throwError = (message, status = 400) => {
   const err = new Error(message);
@@ -125,8 +131,13 @@ export const submitStudentQuizService = async (userId, quizId, { answers }) => {
         },
       },
       questions: {
-        include: {
-          options: true,
+        include: { options: true },
+      },
+      section: {
+        select: {
+          course: {
+            select: { teacher: { select: { userId: true } } },
+          },
         },
       },
     },
@@ -180,9 +191,11 @@ export const submitStudentQuizService = async (userId, quizId, { answers }) => {
       });
     } else {
       const selectedOption = question.options.find(
-        (opt) => opt.id === ans.selectedOptionId
+        (opt) => opt.id === ans.selectedOptionId,
       );
-      const isCorrect = selectedOption ? Boolean(selectedOption.isCorrect) : false;
+      const isCorrect = selectedOption
+        ? Boolean(selectedOption.isCorrect)
+        : false;
       if (isCorrect) correctCount++;
 
       processedAnswers.push({
@@ -223,7 +236,20 @@ export const submitStudentQuizService = async (userId, quizId, { answers }) => {
       answers: true,
     },
   });
-
+  if (hasWritten) {
+    await notify({
+      receiverId: quiz.section.course.teacher.userId,
+      receiverType: reciverNotificationEnum.USER,
+      type: notificationTypeEnum.QUIZ_SUBMITTED,
+      priority: priorityEnum.MEDIUM,
+    });
+  }
+  await notify({
+    receiverId: quiz.section.course.teacher.userId,
+    receiverType: reciverNotificationEnum.USER,
+    type: notificationTypeEnum.QUIZ_SUBMITTED,
+    priority: priorityEnum.MEDIUM,
+  });
   return submission;
 };
 

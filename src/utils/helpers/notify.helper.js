@@ -9,31 +9,37 @@ export const notify = async ({
   priority = "LOW",
   link = null,
 }) => {
-  const translations = SUPPORTED_LANGUAGES.map((lng) => ({
-    locale: lng,
-    title: i18next.t(`NOTIFICATION_${type}_TITLE`, { lng }),
-    message: i18next.t(`NOTIFICATION_${type}_MESSAGE`, { lng }),
-  }));
-
-  const notification = await db.create({
-    model: "notification",
-    data: {
-      receiverId,
-      receiverType,
-      type,
-      priority,
-      link,
-      isRead: false,
-      notificationTranslations: { create: translations },
-    },
-    include: { notificationTranslations: true },
-  });
-
   try {
-    await sendNotificationPushHelper(notification);
-  } catch (e) {
-    console.error("Push failed:", e.message);
-  }
+     const translations = SUPPORTED_LANGUAGES.map((lng) => ({
+       locale: lng,
+       title: i18next.t(`NOTIFICATION_${type}_TITLE`, { lng }),
+       message: i18next.t(`NOTIFICATION_${type}_MESSAGE`, { lng }),
+     }));
 
-  return notification;
+     const notification = await db.create({
+       model: "notification",
+       data: {
+         receiverId,
+         receiverType,
+         type,
+         priority,
+         link,
+         isRead: false,
+         notificationTranslations: { create: translations },
+       },
+       include: { notificationTranslations: true },
+     });
+
+     try {
+       await sendNotificationPushHelper(notification);
+     } catch (e) {
+       console.error("Push failed:", e.message);
+     }
+
+     return notification;
+  } catch (e) {
+    console.error("Notify failed:", e.message);
+    return null;
+  }
+ 
 };

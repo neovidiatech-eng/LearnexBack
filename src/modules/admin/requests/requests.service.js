@@ -1,5 +1,10 @@
 import * as db from "../../../db/db.service.js";
 import {
+  notificationTypeEnum,
+  priorityEnum,
+  reciverNotificationEnum,
+} from "../../../utils/Enums/notifications.js";
+import {
   requestReferenceModelEnum,
   requestStatusEnum,
   requestTypeEnum,
@@ -7,6 +12,7 @@ import {
 import { CertificateStatus } from "../../../utils/Enums/teacherCertificate.enum.js";
 import { teacherCourseStatusEnum } from "../../../utils/Enums/teacherCourse.enum.js";
 import { userStatusEnum } from "../../../utils/Enums/userStatus.enum.js";
+import { notify } from "../../../utils/helpers/notify.helper.js";
 
 export const getRequestStatsService = async (query = {}) => {
   const { tab } = query;
@@ -135,7 +141,7 @@ export const approveRequestService = async (requestId) => {
     const teacher = await db.findFirst({
       model: "teacher",
       where: { id: request.referenceId },
-      select: { id: true },
+      select: { id: true, userId: true },
     });
 
     if (!teacher) {
@@ -144,7 +150,7 @@ export const approveRequestService = async (requestId) => {
       throw error;
     }
 
-    await db.updateOne({
+    const updated = await db.updateOne({
       model: "teacher",
       where: { id: teacher.id },
       data: {
@@ -157,6 +163,13 @@ export const approveRequestService = async (requestId) => {
         },
       },
     });
+    await notify({
+      receiverId: teacher.userId,
+      receiverType: reciverNotificationEnum.USER,
+      type: notificationTypeEnum.TEACHER_APPROVED,
+      priority: priorityEnum.HIGH,
+    });
+    return updated;
   }
 
   if (
@@ -166,7 +179,10 @@ export const approveRequestService = async (requestId) => {
     const course = await db.findFirst({
       model: "teacherCourse",
       where: { id: request.referenceId },
-      select: { id: true },
+      select: {
+        id: true,
+        teacher: { select: { userId: true } },
+      },
     });
 
     if (!course) {
@@ -175,7 +191,7 @@ export const approveRequestService = async (requestId) => {
       throw error;
     }
 
-    await db.updateOne({
+    const updated = await db.updateOne({
       model: "teacherCourse",
       where: { id: course.id },
       data: {
@@ -183,6 +199,13 @@ export const approveRequestService = async (requestId) => {
         rejectionReason: null,
       },
     });
+    await notify({
+      receiverId: course.teacher.userId,
+      receiverType: reciverNotificationEnum.USER,
+      type: notificationTypeEnum.COURSE_APPROVED,
+      priority: priorityEnum.HIGH,
+    });
+    return updated;
   }
 
   if (
@@ -192,7 +215,7 @@ export const approveRequestService = async (requestId) => {
     const certificate = await db.findFirst({
       model: "teacherCertificate",
       where: { id: request.referenceId },
-      select: { id: true },
+      select: { id: true, teacher: { select: { userId: true } } },
     });
 
     if (!certificate) {
@@ -201,7 +224,7 @@ export const approveRequestService = async (requestId) => {
       throw error;
     }
 
-    await db.updateOne({
+    const updated = await db.updateOne({
       model: "teacherCertificate",
       where: { id: certificate.id },
       data: {
@@ -209,8 +232,14 @@ export const approveRequestService = async (requestId) => {
         rejectionReason: null,
       },
     });
+    await notify({
+      receiverId: certificate.teacher.userId,
+      receiverType: reciverNotificationEnum.USER,
+      type: notificationTypeEnum.CERTIFICATE_APPROVED,
+      priority: priorityEnum.MEDIUM,
+    });
+    return updated;
   }
-  //Student
 
   return await db.updateOne({
     model: "systemRequest",
@@ -304,10 +333,17 @@ export const rejectRequestService = async (requestId, body = {}) => {
         },
       },
     });
+       await notify({
+         receiverId: teacher.userId,
+         receiverType: reciverNotificationEnum.USER,
+         type: notificationTypeEnum.TEACHER_REJECTED,
+         priority: priorityEnum.HIGH,
+       });
     await db.deleteOne({
       model: "user",
       where: { id: teacher.userId },
     });
+  
     return rejectedRequest;
   }
 
@@ -318,7 +354,10 @@ export const rejectRequestService = async (requestId, body = {}) => {
     const course = await db.findFirst({
       model: "teacherCourse",
       where: { id: request.referenceId },
-      select: { id: true },
+      select: {
+        id: true,
+        teacher: { select: { userId: true } },
+      },
     });
 
     if (!course) {
@@ -327,7 +366,7 @@ export const rejectRequestService = async (requestId, body = {}) => {
       throw error;
     }
 
-    await db.updateOne({
+    const updated = await db.updateOne({
       model: "teacherCourse",
       where: { id: course.id },
       data: {
@@ -335,6 +374,13 @@ export const rejectRequestService = async (requestId, body = {}) => {
         rejectionReason: null,
       },
     });
+    await notify({
+      receiverId: course.teacher.userId,
+      receiverType: reciverNotificationEnum.USER,
+      type: notificationTypeEnum.COURSE_REJECTED,
+      priority: priorityEnum.HIGH,
+    });
+    return updated;
   }
 
   if (
@@ -344,7 +390,7 @@ export const rejectRequestService = async (requestId, body = {}) => {
     const certificate = await db.findFirst({
       model: "teacherCertificate",
       where: { id: request.referenceId },
-      select: { id: true },
+      select: { id: true, teacher: { select: { userId: true } } },
     });
 
     if (!certificate) {
@@ -353,7 +399,7 @@ export const rejectRequestService = async (requestId, body = {}) => {
       throw error;
     }
 
-    await db.updateOne({
+    const updated=await db.updateOne({
       model: "teacherCertificate",
       where: { id: certificate.id },
       data: {
@@ -361,6 +407,13 @@ export const rejectRequestService = async (requestId, body = {}) => {
         rejectionReason: null,
       },
     });
+     await notify({
+       receiverId: certificate.teacher.userId,
+       receiverType: reciverNotificationEnum.USER,
+       type: notificationTypeEnum.CERTIFICATE_REJECTED,
+       priority: priorityEnum.MEDIUM,
+     });
+    return updated
   }
   return await db.updateOne({
     model: "systemRequest",

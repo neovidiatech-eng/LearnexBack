@@ -116,7 +116,7 @@
   "CERTIFICATE_FETCHED_SUCCESSFULLY": "Certificate fetched successfully",
   "CERTIFICATE_NOT_FOUND": "Certificate not found",
   "CERTIFICATE_DELETED_SUCCESSFULLY": "Certificate deleted successfully",
-  
+
   "NOTIFICATION_INFO_TITLE": "Notification",
   "NOTIFICATION_INFO_MESSAGE": "You have a new notification.",
   "NOTIFICATION_ANNOUNCEMENT_TITLE": "New announcement",
@@ -141,6 +141,8 @@
   "NOTIFICATION_CUSTOM_SESSION_ACCEPTED_MESSAGE": "Your teacher accepted your custom sessions request.",
   "NOTIFICATION_CUSTOM_SESSION_REJECTED_TITLE": "Custom request rejected",
   "NOTIFICATION_CUSTOM_SESSION_REJECTED_MESSAGE": "Your teacher rejected your custom sessions request.",
+  "NOTIFICATION_CUSTOM_SESSION_CANCELLED_TITLE": "Custom request cancelled",
+  "NOTIFICATION_CUSTOM_SESSION_CANCELLED_MESSAGE": "Your teacher cancelled your custom sessions request.",
 
   "NOTIFICATION_SUBSCRIPTION_CREATED_TITLE": "New subscription",
   "NOTIFICATION_SUBSCRIPTION_CREATED_MESSAGE": "A subscription has been activated successfully.",
