@@ -279,3 +279,14 @@ export const resetPasswordService = async ({ email, otp, password }) => {
   await deleteCache(`forgotPassword:${normalizedEmail}:otp`);
   return { success: true };
 };
+
+export const logoutService = async ({ userId }) => {
+  if (userId) {
+    await db.updateOne({
+      model: "user",
+      where: { id: userId },
+      data: { fcmToken: null },
+    }).catch(() => {});
+  }
+  return { success: true };
+};

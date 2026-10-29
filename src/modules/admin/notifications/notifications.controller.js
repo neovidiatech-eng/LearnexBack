@@ -51,3 +51,12 @@ export const createNotification = asyncHandler(async (req, res) => {
     data: result,
   });
 });
+export const updateFcmToken = asyncHandler(async (req, res) => {
+  const result = await notificationsService.updateFcmTokenService(req);
+  return successResponse({
+    req,
+    res,
+    message: "FCM_TOKEN_UPDATED_SUCCESSFULLY",
+    data: result,
+  });
+});

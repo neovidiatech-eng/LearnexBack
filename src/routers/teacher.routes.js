@@ -17,6 +17,7 @@ router.use("/auth", teacherAuthRouter);
 router.use("/courses", teacherCoursesRouter);
 router.use("/sections", teacherSectionRouter);
 router.use("/quizes", teacherQuizRouter);
+router.use("/quizzes", teacherQuizRouter);
 router.use("/items", teacherItemsRouter);
 router.use("/me", teacherProfileRouter);
 router.use("/analytics", teacherProfileRouter);

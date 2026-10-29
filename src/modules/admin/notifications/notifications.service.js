@@ -224,3 +224,16 @@ export const createNotification = async (req) => {
 await sendNotificationPushHelper(notification)
   return notification;
 };
+
+export const updateFcmTokenService = async (req) => {
+  const { fcmToken } = req.body;
+  if (!fcmToken || typeof fcmToken !== "string") {
+    return { updated: false, message: "FCM_TOKEN_REQUIRED" };
+  }
+  await dbService.updateOne({
+    model: "user",
+    where: { id: req.user.id },
+    data: { fcmToken: fcmToken.trim() },
+  });
+  return { updated: true };
+};

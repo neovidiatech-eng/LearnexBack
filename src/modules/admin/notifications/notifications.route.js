@@ -20,6 +20,8 @@ router.post(
   notificationsController.createNotification
 );
 
+router.post("/fcm-token", notificationsController.updateFcmToken);
+
 router.patch("/read-all", notificationsController.markAllAsRead);
 
 router.patch(

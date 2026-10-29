@@ -62,3 +62,13 @@ export const resetPassword = asyncHandler(async (req, res) => {
     data: result,
   });
 });
+
+export const logout = asyncHandler(async (req, res) => {
+  const result = await authService.logoutService({ userId: req.user?.id });
+  return successResponse({
+    req,
+    res,
+    message: "LOGGED_OUT_SUCCESSFULLY",
+    data: result,
+  });
+});
