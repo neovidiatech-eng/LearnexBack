@@ -2,7 +2,7 @@ import joi from "joi";
 
 export const addToSaved = {
   body: joi.object({
-    itemType: joi.string().valid("COURSE", "TEACHER_COURSE"),
+    itemType: joi.string().valid("COURSE", "TEACHER_COURSE").default("COURSE"),
     itemId: joi.string().uuid().required(),
   }),
 };

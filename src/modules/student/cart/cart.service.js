@@ -111,45 +111,63 @@ export const getCartService = async (userId, locale = "ar") => {
     return { cart: null, items: [], totalItems: 0, totalPrice: 0 };
   }
 
-  // Enrich each item with course details
-  const enrichedItems = await Promise.all(
-    cart.cartItems.map(async (item) => {
-      if (item.type === coursesType.COURSE) {
-        const course = await db.findOne({
+  // Batch fetch course details to eliminate N+1 queries
+  const courseIds = [];
+  const teacherCourseIds = [];
+
+  for (const item of cart.cartItems) {
+    if (item.type === coursesType.COURSE) {
+      courseIds.push(item.itemId);
+    } else if (item.type === coursesType.TEACHER_COURSE) {
+      teacherCourseIds.push(item.itemId);
+    }
+  }
+
+  const [platformCourses, teacherCourses] = await Promise.all([
+    courseIds.length > 0
+      ? db.findMany({
           model: "course",
-          where: { id: item.itemId },
+          where: { id: { in: courseIds } },
           include: {
             translations: { where: { locale } },
             instructor: {
               select: { fullName: true, profilePhoto: true },
             },
           },
-        });
-        return { ...item, course: course ?? null };
-      }
-      else if (item.type === coursesType.TEACHER_COURSE) {
-        const course = await db.findOne({
+        })
+      : [],
+    teacherCourseIds.length > 0
+      ? db.findMany({
           model: "teacherCourse",
-          where: { id: item.itemId },
+          where: { id: { in: teacherCourseIds } },
           include: {
-            teacher:{
-              include:{
-                user:{select:{fullName:true,profilePhoto:true}}
-              }
-            }
-            
+            teacher: {
+              include: {
+                user: { select: { fullName: true, profilePhoto: true } },
+              },
+            },
           },
-        });
-        return {
-          ...item,
-          course: course
-            ? { ...course, instructor: course.teacher?.user ?? null }
-            : null,
-        }
-      }
-      return item;
-    })
+        })
+      : [],
+  ]);
+
+  const platformCourseMap = new Map(platformCourses.map((c) => [c.id, c]));
+  const teacherCourseMap = new Map(
+    teacherCourses.map((c) => [
+      c.id,
+      { ...c, instructor: c.teacher?.user ?? null },
+    ])
   );
+
+  const enrichedItems = cart.cartItems.map((item) => {
+    let course = null;
+    if (item.type === coursesType.COURSE) {
+      course = platformCourseMap.get(item.itemId) ?? null;
+    } else if (item.type === coursesType.TEACHER_COURSE) {
+      course = teacherCourseMap.get(item.itemId) ?? null;
+    }
+    return { ...item, course };
+  });
 
   return {
     id: cart.id,
