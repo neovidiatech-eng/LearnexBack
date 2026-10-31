@@ -76,7 +76,7 @@ const bootstrap = async () => {
   app.get("/health", async (req, res) => {
     let dbStatus = "CONNECTED";
     try {
-      const db = (await import("./DB/db.service.js")).default;
+      const db = (await import("./db/db.service.js")).default;
       await db.count({ model: "user" });
     } catch (_) {
       dbStatus = "DISCONNECTED";
