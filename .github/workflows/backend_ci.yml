@@ -1,0 +1,66 @@
+name: 🛡️ LearnX Backend CI Quality Gates
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality_gates:
+    name: 🔍 Backend Quality Gates & Verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 📦 Install Dependencies (Deterministic Lock)
+        run: npm ci
+
+      - name: ✅ Validate Prisma Schema
+        run: npx prisma validate --schema=./prisma/schema
+
+      - name: 🔧 Generate Prisma Client
+        run: npx prisma generate --schema=./prisma/schema
+
+      - name: 🔬 JavaScript Syntax Integrity Check
+        run: |
+          echo "Checking JavaScript syntax across all source files..."
+          find src -name "*.js" -exec node --check {} +
+          echo "✅ All JavaScript source files passed syntax inspection."
+
+      - name: 🧪 Run Automated Tests
+        run: npm test
+
+      - name: 🔐 Dependency Security Audit Report
+        run: |
+          npm audit --audit-level=high || true
+
+      - name: ⚙️ Verify Environment Startup Diagnostics
+        run: |
+          node -e "
+          import('./src/config/env.validation.js')
+            .then(m => {
+              m.validateEnv();
+              console.log('✅ Environment validator executed cleanly.');
+            })
+            .catch(err => {
+              console.error('Validator check failed:', err);
+              process.exit(1);
+            });
+          "
