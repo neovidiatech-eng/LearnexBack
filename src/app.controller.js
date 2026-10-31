@@ -14,6 +14,7 @@ import { getAdmin } from "./utils/firebase/index.js";
 import { createServer } from "node:http";
 import { initializeSocket } from "./utils/socket/chat.socket.js";
 import { validateEnv } from "./config/env.validation.js";
+import { requestIdMiddleware } from "./middleware/requestId.middleware.js";
 
 
 const bootstrap = async () => {
@@ -23,6 +24,7 @@ const bootstrap = async () => {
   const port = process.env.PORT || 3000;
 
   app.set("trust proxy", true);
+  app.use(requestIdMiddleware);
 
   // Security HTTP headers
   app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
@@ -70,6 +72,25 @@ const bootstrap = async () => {
 
   // Setup Swagger UI Documentation
   setupSwagger(app);
+
+  app.get("/health", async (req, res) => {
+    let dbStatus = "CONNECTED";
+    try {
+      const db = (await import("./DB/db.service.js")).default;
+      await db.count({ model: "user" });
+    } catch (_) {
+      dbStatus = "DISCONNECTED";
+    }
+
+    const isHealthy = dbStatus === "CONNECTED";
+    return res.status(isHealthy ? 200 : 503).json({
+      status: isHealthy ? "UP" : "DOWN",
+      database: dbStatus,
+      timestamp: new Date().toISOString(),
+      requestId: req.id || null,
+      uptime: Math.floor(process.uptime()),
+    });
+  });
 
   app.get("/", (req, res) => {
     res.json({

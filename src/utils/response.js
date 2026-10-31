@@ -11,7 +11,7 @@ export const asyncHandler = (fn) => {
   };
 };
 
-// success response with i18n translation support
+// success response with i18n translation support and request correlation ID
 export const successResponse = ({
   res,
   message = "SUCCESS",
@@ -23,10 +23,14 @@ export const successResponse = ({
   }
   const req = res.req;
   const translatedMessage = req?.t ? req.t(message, { defaultValue: message }) : message;
-  return res.status(status).json({ message: translatedMessage, data });
+  return res.status(status).json({
+    message: translatedMessage,
+    data,
+    requestId: req?.id || undefined,
+  });
 };
 
-// global error handling with i18n translation support
+// global error handling with i18n translation support and correlation ID
 export const globalErrorHandling = (error, req, res, next) => {
   // Clean up any uploaded files if an error occurred during request processing
   deleteUploadedFiles(req);
@@ -47,11 +51,21 @@ export const globalErrorHandling = (error, req, res, next) => {
     ? req.t(messageKey, { defaultValue: messageKey })
     : messageKey;
 
+  const requestId = req?.id || null;
+
+  // Structured diagnostic logging for unexpected or server failures (sanitized)
+  if (status >= 500 || isDev) {
+    console.error(
+      `[DIAGNOSTICS] [${new Date().toISOString()}] [${requestId || "NO_REQ_ID"}] ${req.method} ${req.originalUrl || req.url} - Status: ${status} - Error: ${rawMessage}`
+    );
+  }
+
   return res.status(status).json({
     message: translatedMessage,
     code: rawMessage,
     status: status,
     success: false,
+    requestId: requestId || undefined,
     stack: isDev ? error.stack : undefined,
   });
 };
